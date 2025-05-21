@@ -47,7 +47,7 @@ type OrderInfo struct {
 	USERID     UserID      `json:"user_id"`
 	Expires    time.Time   `json:"expires_at"`
 	Status     OrderStatus `json:"status"`
-	ReturnedAt *time.Time  `json:"returned_at,omitempty"`
+	ReturnedAt *time.Time  `json:"returned_at"`
 }
 
 func (o *OrderInfo) IsExpired(now time.Time) bool {

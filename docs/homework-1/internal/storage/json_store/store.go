@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"sort"
 	"strconv"
 	"time"
 
@@ -12,9 +13,10 @@ import (
 )
 
 type Storage struct {
-	path    string
-	store   map[pvz.UserID]map[pvz.OrderID]*pvz.OrderInfo
-	history []OrderHistoryEvent
+	path      string
+	store     map[pvz.UserID]map[pvz.OrderID]*pvz.OrderInfo
+	history   []OrderHistoryEvent
+	orderList map[pvz.UserID]*pvz.OrderInfo
 }
 
 type OrderHistoryEvent struct {
@@ -62,7 +64,7 @@ func (s *Storage) accept(orderID pvz.OrderID, userID pvz.UserID, expires time.Ti
 	}
 
 	if _, exists := s.store[userID][orderID]; exists {
-		return storage_errors.ORDER_ALREADY_EXISTS
+		return storage_errors.VALIDATION_FAILED
 	}
 	if _, ok := s.store[userID][orderID]; !ok {
 		s.store[userID][orderID] = &pvz.OrderInfo{
@@ -77,17 +79,21 @@ func (s *Storage) accept(orderID pvz.OrderID, userID pvz.UserID, expires time.Ti
 func (s *Storage) Return(orderID uint64) error {
 	for _, orders := range s.store {
 		if order, ok := orders[pvz.OrderID(orderID)]; ok {
-			if order.Status == pvz.StatusIssued {
+			if order.Status == 2 {
+
 				return storage_errors.VALIDATION_FAILED
 			}
+			if order.Status == 1 && order.Expires.After(time.Now()) {
+				return storage_errors.STORAGE_EXPIRED
+			}
 
-			order.Status = pvz.StatusReturned
+			order.Status = 3
 			now := time.Now()
 			order.ReturnedAt = &now
 
 			s.history = append(s.history, OrderHistoryEvent{
 				OrderID: pvz.OrderID(orderID),
-				Status:  pvz.StatusReturned,
+				Status:  3,
 				Data:    now,
 			})
 
@@ -192,7 +198,8 @@ func (s *Storage) ListReturns(options pvz.ListOrdersOptions) ([]*pvz.OrderInfo, 
 func (s *Storage) OrderHistory() ([]OrderHistoryEvent, error) {
 	return s.history, nil
 }
-func (s *Storage) ImportOrdersFromFile(filePath string) (int, error) {
+
+func (s *Storage) ImportOrders(filePath string) (int, error) {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return 0, fmt.Errorf("cannot read file: %w", err)
@@ -231,6 +238,50 @@ func (s *Storage) ImportOrdersFromFile(filePath string) (int, error) {
 	}
 
 	return count, nil
+}
+
+func (s *Storage) ScrollOrders(userID uint64, limit uint, lastID *pvz.OrderID) ([]*pvz.OrderInfo, *pvz.OrderID, error) {
+	ordersMap, ok := s.store[pvz.UserID(userID)]
+	if !ok || len(ordersMap) == 0 {
+		return nil, nil, storage_errors.ORDER_NOT_FOUND
+	}
+
+	scrollListOrders := make([]*pvz.OrderInfo, 0, len(ordersMap))
+	for _, order := range ordersMap {
+		scrollListOrders = append(scrollListOrders, order)
+	}
+
+	sort.Slice(scrollListOrders, func(i, j int) bool {
+		return scrollListOrders[i].ORDERID < scrollListOrders[j].ORDERID
+	})
+
+	startIndex := 0
+	if lastID != nil {
+		found := false
+		for i, order := range scrollListOrders {
+			if order.ORDERID == *lastID {
+				startIndex = i + 1
+				found = true
+				break
+			}
+		}
+		if !found {
+			return nil, nil, fmt.Errorf("lastID %v not found", *lastID)
+		}
+	}
+
+	endIndex := startIndex + int(limit)
+	if endIndex > len(scrollListOrders) {
+		endIndex = len(scrollListOrders)
+	}
+	result := scrollListOrders[startIndex:endIndex]
+
+	var nextLastID *pvz.OrderID
+	if endIndex < len(scrollListOrders) {
+		nextLastID = &result[len(result)-1].ORDERID
+	}
+
+	return result, nextLastID, nil
 }
 
 func (s *Storage) readDataFromFile(file *os.File) (err error) {
