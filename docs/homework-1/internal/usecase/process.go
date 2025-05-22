@@ -18,8 +18,8 @@ func (s *StorageService) ProcessOrdersCommand(cmd *cobra.Command, args []string)
 	}
 	var orderIDs []pvz.OrderID
 	for _, idStr := range orderIDsStr {
-		id, err := strconv.Atoi(idStr)
-		if err != nil {
+		id, err3 := strconv.Atoi(idStr)
+		if err3 != nil {
 			return fmt.Errorf("ERROR: %w", idStr)
 		}
 		orderIDs = append(orderIDs, pvz.OrderID(id))

@@ -3,13 +3,14 @@ package json_store
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"sort"
 	"strconv"
 	"time"
 
 	"gitlab.ozon.dev/gleb_evseev/homework/homework-1/internal/domain/pvz"
-	storage_errors "gitlab.ozon.dev/gleb_evseev/homework/homework-1/internal/storage/errors"
+	storageErrors "gitlab.ozon.dev/gleb_evseev/homework/homework-1/internal/storage/errors"
 )
 
 type Storage struct {
@@ -49,14 +50,9 @@ func NewJsonStorage(path string) (*Storage, error) {
 	return s, nil
 }
 
-func (s *Storage) Accept(orderID uint64, userID uint64, expires time.Time) error {
-	return s.accept(pvz.OrderID(orderID), pvz.UserID(userID), expires)
-}
-
 func (s *Storage) accept(orderID pvz.OrderID, userID pvz.UserID, expires time.Time) (err error) {
-
-	if expires.Before(time.Now()) {
-		return storage_errors.STORAGE_EXPIRED
+	if expires.Before(time.Now().UTC()) {
+		return storageErrors.VALIDATION_FAILED
 	}
 
 	if _, ok := s.store[userID]; !ok {
@@ -64,71 +60,88 @@ func (s *Storage) accept(orderID pvz.OrderID, userID pvz.UserID, expires time.Ti
 	}
 
 	if _, exists := s.store[userID][orderID]; exists {
-		return storage_errors.VALIDATION_FAILED
+		return storageErrors.ORDER_ALREADY_EXISTS
 	}
-	if _, ok := s.store[userID][orderID]; !ok {
-		s.store[userID][orderID] = &pvz.OrderInfo{
-			ORDERID: orderID,
-			Expires: expires,
-			Status:  pvz.StatusAccepted,
-		}
+
+	s.store[userID][orderID] = &pvz.OrderInfo{
+		Userid:        userID,
+		Orderid:       orderID,
+		Time:          expires,
+		Status:        1,
+		StatusChanged: true,
 	}
 	return s.writeDataToFile()
 }
 
-func (s *Storage) Return(orderID uint64) error {
+func (s *Storage) Accept(orderID uint64, userID uint64, expires time.Time) error {
+	return s.accept(pvz.OrderID(orderID), pvz.UserID(userID), expires)
+}
+
+func (s *Storage) returnOrder(orderID pvz.OrderID) error {
 	for _, orders := range s.store {
 		if order, ok := orders[pvz.OrderID(orderID)]; ok {
 			if order.Status == 2 {
+				return fmt.Errorf("Invalid order status %d: %w", orderID, storageErrors.VALIDATION_FAILED)
 
-				return storage_errors.VALIDATION_FAILED
 			}
-			if order.Status == 1 && order.Expires.After(time.Now()) {
-				return storage_errors.STORAGE_EXPIRED
+			if order.Status == 1 && order.Time.After(time.Now().UTC()) {
+				return fmt.Errorf("order %d storage has expired: %v\n", orderID, storageErrors.STORAGE_EXPIRED)
 			}
 
 			order.Status = 3
-			now := time.Now()
+			now := time.Now().UTC()
 			order.ReturnedAt = &now
-
-			s.history = append(s.history, OrderHistoryEvent{
-				OrderID: pvz.OrderID(orderID),
-				Status:  3,
-				Data:    now,
-			})
-
+			order.StatusChanged = true
 			return s.writeDataToFile()
 		}
 	}
-	return storage_errors.ORDER_NOT_FOUND
+	return storageErrors.ORDER_NOT_FOUND
 }
 
-func (s *Storage) Process(userID uint64, act string, orderIDs []pvz.OrderID) error {
+func (s *Storage) Return(orderID uint64) error {
+	return s.returnOrder(pvz.OrderID(orderID))
+}
+
+func (s *Storage) process(userID pvz.UserID, act string, orderIDs []pvz.OrderID) error {
+	orders, ok := s.store[userID]
+	if !ok {
+		return storageErrors.ORDER_NOT_FOUND
+	}
+
 	for _, orderID := range orderIDs {
-		order, ok := s.store[pvz.UserID(userID)][orderID]
+		order, ok := orders[orderID]
 		if !ok {
-			fmt.Println(fmt.Errorf("order %d not found: %v", orderID, storage_errors.ORDER_NOT_FOUND))
+			return storageErrors.ORDER_NOT_FOUND
 		}
 
 		switch act {
 		case "issue":
 			if order.IsExpired(time.Now().UTC()) {
-				fmt.Printf("order %d storage time has expired: %v\n", orderID, storage_errors.STORAGE_EXPIRED)
+				return fmt.Errorf("order %d storage has expired: %w", orderID, storageErrors.STORAGE_EXPIRED)
 			}
 			order.Status = 2
-			s.history = append(s.history, OrderHistoryEvent{OrderID: orderID, Status: order.Status, Data: time.Now()})
+			order.StatusChanged = true
+
 		case "return":
-			if order.IsExpiredForReturn(time.Now()) {
-				fmt.Printf("order %d storage time has expired: %v\n", orderID, storage_errors.STORAGE_EXPIRED)
+			if order.IsExpiredForReturn(time.Now().UTC()) {
+				return fmt.Errorf("order %d storage time has expired: %w", orderID, storageErrors.STORAGE_EXPIRED)
 			}
 			order.Status = 3
-			s.history = append(s.history, OrderHistoryEvent{OrderID: orderID, Status: order.Status, Data: time.Now()})
+			order.StatusChanged = true
 
 		default:
-			fmt.Printf("invalid action: %v", storage_errors.VALIDATION_FAILED)
+			return storageErrors.VALIDATION_FAILED
 		}
 	}
-	return nil
+	return s.writeDataToFile()
+}
+
+func (s *Storage) Process(userID uint64, act string, orderIDs []pvz.OrderID) error {
+	pvzOrderIDs := make([]pvz.OrderID, len(orderIDs))
+	for i, id := range orderIDs {
+		pvzOrderIDs[i] = pvz.OrderID(id)
+	}
+	return s.process(pvz.UserID(userID), act, pvzOrderIDs)
 }
 
 func (s *Storage) ListOrders(options pvz.ListOrdersOptions) ([]*pvz.OrderInfo, error) {
@@ -169,7 +182,7 @@ func (s *Storage) ListOrders(options pvz.ListOrdersOptions) ([]*pvz.OrderInfo, e
 }
 
 func (s *Storage) ListReturns(options pvz.ListOrdersOptions) ([]*pvz.OrderInfo, error) {
-	var returned []*pvz.OrderInfo
+	returned := make([]*pvz.OrderInfo, 0)
 
 	for _, userOrders := range s.store {
 		for _, order := range userOrders {
@@ -195,8 +208,17 @@ func (s *Storage) ListReturns(options pvz.ListOrdersOptions) ([]*pvz.OrderInfo, 
 	return returned, nil
 }
 
-func (s *Storage) OrderHistory() ([]OrderHistoryEvent, error) {
-	return s.history, nil
+func (s *Storage) OrderHistory() ([]*pvz.OrderInfo, error) {
+	changedOrders := make([]*pvz.OrderInfo, 0)
+
+	for _, userOrders := range s.store {
+		for _, order := range userOrders {
+			if order.StatusChanged {
+				changedOrders = append(changedOrders, order)
+			}
+		}
+	}
+	return changedOrders, nil
 }
 
 func (s *Storage) ImportOrders(filePath string) (int, error) {
@@ -208,14 +230,14 @@ func (s *Storage) ImportOrders(filePath string) (int, error) {
 	temp := make(map[string]map[string]*pvz.OrderInfo)
 
 	if err := json.Unmarshal(data, &temp); err != nil {
-		return 0, fmt.Errorf("invalid JSON: %w", err)
+		return 0, fmt.Errorf("invalid JSON: %v", storageErrors.VALIDATION_FAILED)
 	}
 
 	count := 0
 	for userStr, ordersMap := range temp {
 		uid, err := strconv.ParseUint(userStr, 10, 64)
 		if err != nil {
-			return 0, fmt.Errorf("invalid user id key: %s", userStr)
+			return 0, fmt.Errorf("invalid user id key: %v", storageErrors.VALIDATION_FAILED)
 		}
 		userID := pvz.UserID(uid)
 
@@ -226,7 +248,7 @@ func (s *Storage) ImportOrders(filePath string) (int, error) {
 		for orderStr, order := range ordersMap {
 			oid, err := strconv.ParseUint(orderStr, 10, 64)
 			if err != nil {
-				return 0, fmt.Errorf("invalid order id key: %s", orderStr)
+				return 0, fmt.Errorf("invalid order id key: %v", storageErrors.VALIDATION_FAILED)
 			}
 			orderID := pvz.OrderID(oid)
 			s.store[userID][orderID] = order
@@ -234,7 +256,7 @@ func (s *Storage) ImportOrders(filePath string) (int, error) {
 		}
 	}
 	if err := s.writeDataToFile(); err != nil {
-		return 0, fmt.Errorf("write error: %w", err)
+		return 0, storageErrors.INTERNAL_ERROR
 	}
 
 	return count, nil
@@ -243,7 +265,7 @@ func (s *Storage) ImportOrders(filePath string) (int, error) {
 func (s *Storage) ScrollOrders(userID uint64, limit uint, lastID *pvz.OrderID) ([]*pvz.OrderInfo, *pvz.OrderID, error) {
 	ordersMap, ok := s.store[pvz.UserID(userID)]
 	if !ok || len(ordersMap) == 0 {
-		return nil, nil, storage_errors.ORDER_NOT_FOUND
+		return nil, nil, storageErrors.ORDER_NOT_FOUND
 	}
 
 	scrollListOrders := make([]*pvz.OrderInfo, 0, len(ordersMap))
@@ -252,14 +274,14 @@ func (s *Storage) ScrollOrders(userID uint64, limit uint, lastID *pvz.OrderID) (
 	}
 
 	sort.Slice(scrollListOrders, func(i, j int) bool {
-		return scrollListOrders[i].ORDERID < scrollListOrders[j].ORDERID
+		return scrollListOrders[i].Orderid < scrollListOrders[j].Orderid
 	})
 
 	startIndex := 0
 	if lastID != nil {
 		found := false
 		for i, order := range scrollListOrders {
-			if order.ORDERID == *lastID {
+			if order.Orderid == *lastID {
 				startIndex = i + 1
 				found = true
 				break
@@ -278,20 +300,32 @@ func (s *Storage) ScrollOrders(userID uint64, limit uint, lastID *pvz.OrderID) (
 
 	var nextLastID *pvz.OrderID
 	if endIndex < len(scrollListOrders) {
-		nextLastID = &result[len(result)-1].ORDERID
+		nextLastID = &result[len(result)-1].Orderid
 	}
 
 	return result, nextLastID, nil
 }
 
-func (s *Storage) readDataFromFile(file *os.File) (err error) {
-	decoder := json.NewDecoder(file)
-
-	err = decoder.Decode(&s.store)
+func (s *Storage) readDataFromFile(file *os.File) error {
+	info, err := file.Stat()
 	if err != nil {
-		return fmt.Errorf("cannot unmarshal json: %s, %w", s.path, err)
+		return err
 	}
 
+	if info.Size() == 0 {
+		s.store = make(map[pvz.UserID]map[pvz.OrderID]*pvz.OrderInfo)
+		return nil
+	}
+
+	decoder := json.NewDecoder(file)
+	err = decoder.Decode(&s.store)
+	if err != nil {
+		if err == io.EOF {
+			s.store = make(map[pvz.UserID]map[pvz.OrderID]*pvz.OrderInfo)
+			return nil
+		}
+		return storageErrors.VALIDATION_FAILED
+	}
 	return nil
 }
 
@@ -312,7 +346,7 @@ func (s *Storage) writeDataToFile() (err error) {
 
 	err = encoder.Encode(s.store)
 	if err != nil {
-		return fmt.Errorf("cannot write file: %s, %w", s.path, err)
+		return storageErrors.VALIDATION_FAILED
 	}
 
 	return nil

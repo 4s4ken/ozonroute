@@ -24,10 +24,10 @@ func (s *StorageService) ScrollOrders(cmd *cobra.Command, args []string) error {
 	reader := bufio.NewReader(os.Stdin)
 
 	for {
-		orders, nextLastID, err := s.Store.ScrollOrders(userID, limit, lastID)
-		if err != nil {
+		orders, nextLastID, err2 := s.Store.ScrollOrders(userID, limit, lastID)
+		if err2 != nil {
 
-			return err
+			return err2
 		}
 		if len(orders) == 0 {
 			fmt.Println("No more orders.")
@@ -35,23 +35,26 @@ func (s *StorageService) ScrollOrders(cmd *cobra.Command, args []string) error {
 		}
 
 		for _, order := range orders {
-			fmt.Printf("ORDER: %d %d %s %s\n", order.ORDERID, order.USERID, order.Status.String(), order.Expires.Format("2006.01.02"))
+			fmt.Printf("ORDER: %d %d %s %s\n", order.Orderid, order.Userid, order.Status.String(), order.Time.Format("2006.01.02"))
 		}
 
 		if nextLastID != nil {
 			fmt.Printf("NEXT: %d\n", *nextLastID)
 		} else {
-			fmt.Println("End of orders.")
+			fmt.Println("End of orders. Quitting from scrolling orders.")
 			break
 		}
-
+		fmt.Println("Type 'next' to continue scroll or 'exit' to quit.")
 		line, _ := reader.ReadString('\n')
 		line = strings.TrimSpace(line)
-		fmt.Println("Type 'next' to continue scroll or 'exit' to quit")
-		if line == "exit" {
-			break
+		switch line {
+		case "next":
+			lastID = nextLastID
+		case "exit":
+			return nil
+		default:
+			fmt.Println("Unknown command. Use 'next' or 'exit'.")
 		}
-		lastID = nextLastID
 	}
 
 	return nil

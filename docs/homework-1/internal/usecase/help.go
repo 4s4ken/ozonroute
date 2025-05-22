@@ -14,7 +14,7 @@ func HelpCommand(cmd *cobra.Command, args []string) error {
 	list-returns    Получить список возвратов
 	order-history   Получить историю заказов
 	import-orders   Импорт заказов из файла
-	scroll-orders
+	scroll-orders	Получить список заказов по принципу бесконечной прокрутки
 	`)
 	return nil
 }

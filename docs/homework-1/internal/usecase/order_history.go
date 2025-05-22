@@ -13,7 +13,7 @@ func (s *StorageService) OrdersHistoryCommand(cmd *cobra.Command, args []string)
 
 	for _, ord := range history {
 		fmt.Printf(
-			"HISTORY: %d %s %s\n", ord.OrderID, ord.Status.String(), ord.Data.Format("2006.01.02"))
+			"HISTORY: %d %s %s\n", ord.Orderid, ord.Status.String(), ord.Time.Format("2006.01.02"))
 	}
 
 	return nil

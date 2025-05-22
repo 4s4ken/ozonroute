@@ -5,10 +5,10 @@ import (
 )
 
 type (
-	OrderID     uint64
-	UserID      uint64
-	Date        time.Time
-	OrderStatus int
+	OrderID            uint64
+	UserID             uint64
+	OrderStatus        int
+	OrderStatusChanges bool
 )
 
 const (
@@ -43,18 +43,19 @@ type ListOrdersOptions struct {
 }
 
 type OrderInfo struct {
-	ORDERID    OrderID     `json:"order_id,"`
-	USERID     UserID      `json:"user_id"`
-	Expires    time.Time   `json:"expires_at"`
-	Status     OrderStatus `json:"status"`
-	ReturnedAt *time.Time  `json:"returned_at"`
+	Orderid       OrderID            `json:"order_id,"`
+	Userid        UserID             `json:"user_id"`
+	Time          time.Time          `json:"Date"`
+	Status        OrderStatus        `json:"status"`
+	ReturnedAt    *time.Time         `json:"returned_at,omitempty"`
+	StatusChanged OrderStatusChanges `json:"status_changes"`
 }
 
 func (o *OrderInfo) IsExpired(now time.Time) bool {
-	return time.Time(o.Expires).Before(now)
+	return time.Time(o.Time).Before(now)
 }
 
 func (o *OrderInfo) IsExpiredForReturn(now time.Time) bool {
-	twoDaysAfterExpiry := o.Expires.Add(-48 * time.Hour)
+	twoDaysAfterExpiry := o.Time.Add(-48 * time.Hour)
 	return now.After(twoDaysAfterExpiry)
 }

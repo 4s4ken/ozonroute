@@ -20,22 +20,28 @@ func (s *StorageService) ListOrdersCommand(cmd *cobra.Command, args []string) er
 	lastPtr := (*uint64)(nil)
 	if cmd.Flags().Changed("last") {
 		last, err1 := cmd.Flags().GetUint64("last")
-
+		if err1 != nil {
+			return fmt.Errorf("%w", err1)
+		}
 		lastPtr = &last
-		return fmt.Errorf("%w", err1)
 	}
 	pagePtr := (*uint64)(nil)
+
 	if cmd.Flags().Changed("page") {
 		page, err2 := cmd.Flags().GetUint64("page")
+		if err2 != nil {
+			return fmt.Errorf("%w", err2)
+		}
 		pagePtr = &page
-		return fmt.Errorf("%w", err2)
 	}
 
 	limitPtr := (*uint64)(nil)
 	if cmd.Flags().Changed("limit") {
 		limit, err3 := cmd.Flags().GetUint64("limit")
+		if err3 != nil {
+			return fmt.Errorf("%w", err3)
+		}
 		limitPtr = &limit
-		return fmt.Errorf("%w", err3)
 	}
 
 	options := pvz.ListOrdersOptions{
@@ -52,12 +58,12 @@ func (s *StorageService) ListOrdersCommand(cmd *cobra.Command, args []string) er
 	}
 
 	for _, order := range orders {
-		fmt.Printf("ORDER: %d  %s %s\n", order.ORDERID, order.Expires.Format("2006.01.02"), order.Status.String())
+		fmt.Printf("ORDER: %d  %s %s\n", order.Orderid, order.Time.Format("2006.01.02"), order.Status.String())
 	}
 	fmt.Printf("TOTAL: %d\n", len(orders))
 	cmd.Flags().VisitAll(func(f *pflag.Flag) {
-		err := f.Value.Set(f.DefValue)
-		if err != nil {
+		err2 := f.Value.Set(f.DefValue)
+		if err2 != nil {
 			return
 		}
 		f.Changed = false

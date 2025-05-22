@@ -1,7 +1,6 @@
 package usecase
 
 import (
-	"gitlab.ozon.dev/gleb_evseev/homework/homework-1/internal/storage/json_store"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -18,7 +17,7 @@ type Storage interface {
 	Process(userID uint64, act string, orderIDs []pvz.OrderID) error
 	ListOrders(typeOfList pvz.ListOrdersOptions) ([]*pvz.OrderInfo, error)
 	ListReturns(typeOfList pvz.ListOrdersOptions) ([]*pvz.OrderInfo, error)
-	OrderHistory() ([]json_store.OrderHistoryEvent, error)
+	OrderHistory() ([]*pvz.OrderInfo, error)
 	ImportOrders(orders string) (int, error)
 	ScrollOrders(userID uint64, limit uint, lastID *pvz.OrderID) ([]*pvz.OrderInfo, *pvz.OrderID, error)
 }

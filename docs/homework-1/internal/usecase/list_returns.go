@@ -30,7 +30,7 @@ func (s *StorageService) ListReturnsCommand(cmd *cobra.Command, args []string) e
 	}
 
 	for _, order := range orders {
-		fmt.Printf("RETURN: %d %d %s\n", order.ORDERID, order.USERID, order.ReturnedAt.Format("2006.01.02"))
+		fmt.Printf("RETURN: %d %d %s\n", order.Orderid, order.Userid, order.ReturnedAt.Format("2006.01.02"))
 	}
 
 	if pagePtr != nil && limitPtr != nil {

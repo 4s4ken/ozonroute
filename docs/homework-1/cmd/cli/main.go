@@ -13,7 +13,7 @@ import (
 func main() {
 	js, err := json_store.NewJsonStorage("db.json")
 	if err != nil {
-		log.Fatalf("cannot init json storage: %s", err)
+		log.Fatalf("Failed to initialize storage: %v", err)
 	}
 
 	st := usecase.StorageService{
@@ -37,7 +37,7 @@ func main() {
 		rootCmd.SetArgs(parts)
 
 		if err := rootCmd.Execute(); err != nil {
-			fmt.Fprintf(os.Stderr, "Command failed, Input Error: %s\n", err)
+			_, _ = fmt.Fprintf(os.Stderr, "Command failed, Input Error: %s\n", err)
 		}
 	}
 	if err := scanner.Err(); err != nil {

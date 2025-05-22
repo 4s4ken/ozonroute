@@ -51,9 +51,9 @@ func (s *Storage) accept(orderID pvz.OrderID, userID pvz.UserID, expires time.Ti
 	}
 	fmt.Println("ORDER_ACCEPTED:", orderID)
 	s.store[userID][orderID] = &pvz.OrderInfo{
-		ORDERID: orderID,
-		USERID:  userID,
-		Expires: expires,
+		Orderid: orderID,
+		Userid:  userID,
+		Time:    expires,
 		Status:  pvz.StatusAccepted,
 	}
 	s.orderList[userID] = append(s.orderList[userID], orderID)
@@ -252,6 +252,5 @@ func (s *Storage) ImportOrdersFromFile(filePath string) (int, error) {
 			count++
 		}
 	}
-
 	return count, nil
 }
