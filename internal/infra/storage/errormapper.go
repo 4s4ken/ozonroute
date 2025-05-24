@@ -1,4 +1,4 @@
-package json_store
+package storage
 
 import (
 	"errors"

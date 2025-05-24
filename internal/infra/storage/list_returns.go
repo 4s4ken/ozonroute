@@ -1,4 +1,4 @@
-package json_store
+package storage
 
 import (
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
