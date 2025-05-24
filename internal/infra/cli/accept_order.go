@@ -14,6 +14,9 @@ func (h *FileHandler) AcceptOrderCommand(cmd *cobra.Command, args []string) erro
 	exp, err := time.Parse("2006.01.02", expiresStr)
 
 	err = h.commandsHandler.Accept(orderID, userID, exp) // здесь можешь преобразовать в доменные типы
+	if err != nil {
+		return mapError(err)
+	}
 
 	return nil
 }
