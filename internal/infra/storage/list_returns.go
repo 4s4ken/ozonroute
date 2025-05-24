@@ -1,10 +1,11 @@
 package storage
 
 import (
+	"context"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 )
 
-func (s *Storage) ListReturns(options pvz.ListOrdersOptions) ([]*pvz.OrderInfo, error) {
+func (s *Storage) ListReturns(ctx context.Context, options pvz.ListOrdersOptions) ([]*pvz.OrderInfo, error) {
 
 	returnedOrders := make([]*pvz.OrderInfo, 0)
 	for _, userOrders := range s.store {

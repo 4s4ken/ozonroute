@@ -1,13 +1,14 @@
 package storage
 
 import (
+	"context"
 	"fmt"
 	storageErrors "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/businesserror"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 	"time"
 )
 
-func (s *Storage) process(userID pvz.UserID, act string, orderIDs []pvz.OrderID) error {
+func (s *Storage) process(ctx context.Context, userID pvz.UserID, act string, orderIDs []pvz.OrderID) error {
 	orders, ok := s.store[userID]
 	if !ok {
 		return storageErrors.EntityNotFoundError("User", fmt.Sprint(orders))
@@ -42,10 +43,10 @@ func (s *Storage) process(userID pvz.UserID, act string, orderIDs []pvz.OrderID)
 	return s.writeDataToFile()
 }
 
-func (s *Storage) Process(userID uint64, act string, orderIDs []pvz.OrderID) error {
+func (s *Storage) Process(ctx context.Context, userID pvz.UserID, act string, orderIDs []pvz.OrderID) error {
 	pvzOrderIDs := make([]pvz.OrderID, len(orderIDs))
 	for i, id := range orderIDs {
 		pvzOrderIDs[i] = id
 	}
-	return s.process(pvz.UserID(userID), act, pvzOrderIDs)
+	return s.process(ctx, userID, act, pvzOrderIDs)
 }

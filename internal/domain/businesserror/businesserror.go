@@ -7,11 +7,11 @@ import (
 type ErrorCode int64
 
 const (
-	ErrorCodeNotFound      ErrorCode = 1
-	ErrorCodeAlreadyExists ErrorCode = 2
-	ErrorCodeExpires       ErrorCode = 3
-	ErrorCodeValidation    ErrorCode = 4
-	ErrorCodeInternal      ErrorCode = 5
+	ErrorCodeNotFound ErrorCode = iota + 1
+	ErrorCodeAlreadyExists
+	ErrorCodeExpires
+	ErrorCodeValidation
+	ErrorCodeInternal
 )
 
 type Error struct {

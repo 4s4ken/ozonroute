@@ -29,9 +29,6 @@ func NewJsonStorage(path string) (*Storage, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer func(f *os.File) {
-		_ = f.Close()
-	}(f)
 
 	s := &Storage{
 		path:  path,
@@ -39,9 +36,6 @@ func NewJsonStorage(path string) (*Storage, error) {
 		file:  f,
 	}
 	err = s.readDataFromFile(f)
-	if err != nil {
-		return nil, err
-	}
 
 	return s, nil
 }

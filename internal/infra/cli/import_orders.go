@@ -5,15 +5,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (s *CommandService) ImportOrdersCommand(cmd *cobra.Command, args []string) error {
+func (h *FileHandler) ImportOrdersCommand(cmd *cobra.Command, _ []string) error {
 	filePath, err := cmd.Flags().GetString("file")
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}
 
-	imported, err := s.CommandsHandler.ImportOrders(filePath)
+	imported, err := h.commandsHandler.ImportOrders(nil, filePath)
 	if err != nil {
-		return fmt.Errorf("CommandsHandler.ImportOrders: %w", err)
+		return mapError(err)
 	}
 
 	fmt.Printf("IMPORTED: %d\n", imported)

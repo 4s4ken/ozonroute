@@ -5,10 +5,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (s *CommandService) OrdersHistoryCommand(cmd *cobra.Command, args []string) error {
-	history, err := s.CommandsHandler.OrderHistory()
+func (h *FileHandler) OrdersHistoryCommand(cmd *cobra.Command, _ []string) error {
+	history, err := h.commandsHandler.OrderHistory()
 	if err != nil {
-		return fmt.Errorf("CommandsHandler.OrderHistory: %w", err)
+		return mapError(err)
 	}
 
 	for _, ord := range history {

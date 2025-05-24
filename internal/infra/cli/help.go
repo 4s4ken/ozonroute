@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func HelpCommand(cmd *cobra.Command, args []string) error {
+func HelpCommand(cmd *cobra.Command, _ []string) error {
 	fmt.Println(`
 	help
 	accept-order    Принять заказ от курьера

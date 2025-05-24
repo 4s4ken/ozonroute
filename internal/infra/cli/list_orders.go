@@ -1,12 +1,14 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"github.com/spf13/cobra"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 )
 
-func (s *CommandService) ListOrdersCommand(cmd *cobra.Command, args []string) error {
+func (h *FileHandler) ListOrdersCommand(cmd *cobra.Command, _ []string) error {
+	ctx := context.Background()
 	userID, err := cmd.Flags().GetUint64("user-id")
 	if err != nil {
 		return fmt.Errorf("ERROR: %w", err)
@@ -52,9 +54,9 @@ func (s *CommandService) ListOrdersCommand(cmd *cobra.Command, args []string) er
 		Limit:  limitPtr,
 	}
 
-	orders, err := s.CommandsHandler.ListOrders(options)
+	orders, err := h.commandsHandler.ListOrders(ctx, options)
 	if err != nil {
-		return fmt.Errorf("CommandsHandler.ListOrder: %w", err)
+		return mapError(err)
 	}
 
 	for _, order := range orders {

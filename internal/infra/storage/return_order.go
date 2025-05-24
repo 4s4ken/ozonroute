@@ -1,13 +1,14 @@
 package storage
 
 import (
+	"context"
 	"fmt"
 	storageErrors "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/businesserror"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 	"time"
 )
 
-func (s *Storage) returnOrder(orderID pvz.OrderID) error {
+func (s *Storage) returnOrder(ctx context.Context, orderID pvz.OrderID) error {
 	for _, orders := range s.store {
 		if order, ok := orders[orderID]; ok {
 			if order.Status == 2 {
@@ -28,6 +29,6 @@ func (s *Storage) returnOrder(orderID pvz.OrderID) error {
 	return storageErrors.EntityNotFoundError("Order", fmt.Sprint(orderID))
 }
 
-func (s *Storage) Return(orderID uint64) error {
-	return s.returnOrder(pvz.OrderID(orderID))
+func (s *Storage) Return(ctx context.Context, orderID pvz.OrderID) error {
+	return s.returnOrder(ctx, orderID)
 }

@@ -6,7 +6,7 @@ import (
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 )
 
-func (s *CommandService) ListReturnsCommand(cmd *cobra.Command, args []string) error {
+func (h *FileHandler) ListReturnsCommand(cmd *cobra.Command, args []string) error {
 	pagePtr := (*uint64)(nil)
 	if cmd.Flags().Changed("page") {
 		page, err := cmd.Flags().GetUint64("page")
@@ -30,9 +30,9 @@ func (s *CommandService) ListReturnsCommand(cmd *cobra.Command, args []string) e
 		Limit: limitPtr,
 	}
 
-	orders, err := s.CommandsHandler.ListReturns(options)
+	orders, err := h.commandsHandler.ListReturns(nil, options)
 	if err != nil {
-		return fmt.Errorf("CommandsHandler.LisReturns: %w", err)
+		return mapError(err)
 	}
 
 	for _, order := range orders {

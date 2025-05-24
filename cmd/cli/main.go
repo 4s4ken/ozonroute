@@ -1,18 +1,16 @@
 package main
 
 import (
-	"bufio"
-	"fmt"
+	"context"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/infra/cli"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/infra/storage"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/usecase"
 	"log"
-	"os"
-	"strings"
 )
 
 func main() {
-	js, err := storage.NewJsonStorage("db.json")
+	ctx := context.Background()
+	js, err := storage.NewJsonStorage("some path")
 	if err != nil {
 		log.Fatalf("Failed to initialize storage: %v", err)
 	}
@@ -20,7 +18,8 @@ func main() {
 	handler := usecase.New(js)
 
 	fileHandler := cli.NewFileHandler(handler)
-	err := fileHandler.Run()
+
+	err = fileHandler.Run(ctx)
 	if err != nil {
 		log.Fatalf("")
 	}

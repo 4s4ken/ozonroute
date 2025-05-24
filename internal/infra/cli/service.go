@@ -2,6 +2,7 @@ package cli
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"github.com/spf13/cobra"
@@ -13,14 +14,14 @@ import (
 )
 
 type commandsHandler interface {
-	Accept(orderID uint64, userID uint64, exp time.Time) error
-	Return(orderID uint64) error
-	Process(userID uint64, act string, orderIDs []pvz.OrderID) error
-	ListOrders(typeOfList pvz.ListOrdersOptions) ([]*pvz.OrderInfo, error)
-	ListReturns(typeOfList pvz.ListOrdersOptions) ([]*pvz.OrderInfo, error)
+	Accept(ctx context.Context, orderID pvz.OrderID, userID pvz.UserID, exp time.Time) error
+	Return(ctx context.Context, orderID pvz.OrderID) error
+	Process(ctx context.Context, userID pvz.UserID, act string, orderIDs []pvz.OrderID) error
+	ListOrders(ctx context.Context, typeOfList pvz.ListOrdersOptions) ([]*pvz.OrderInfo, error)
+	ListReturns(ctx context.Context, typeOfList pvz.ListOrdersOptions) ([]*pvz.OrderInfo, error)
 	OrderHistory() ([]*pvz.OrderInfo, error)
-	ImportOrders(orders string) (int, error)
-	ScrollOrders(userID uint64, limit uint, lastID *pvz.OrderID) ([]*pvz.OrderInfo, *pvz.OrderID, error)
+	ImportOrders(ctx context.Context, orders string) (int, error)
+	ScrollOrders(ctx context.Context, userID pvz.UserID, limit uint, lastID *pvz.OrderID) ([]*pvz.OrderInfo, *pvz.OrderID, error)
 }
 
 type FileHandler struct {
@@ -31,30 +32,19 @@ type FileHandler struct {
 
 func NewFileHandler(commandsHandler commandsHandler) *FileHandler {
 	h := &FileHandler{
-		scanner: bufio.NewScanner(os.Stdin),
+		commandsHandler: commandsHandler,
+		scanner:         bufio.NewScanner(os.Stdin),
 	}
 
 	h.commandController = InitCommands(h)
-	h.commandController.AddCommand(
-		&cobra.Command{
-			Use:   "help",
-			Short: "h",
-			RunE:  HelpCommand,
-		},
-		&cobra.Command{
-			Use:   "accept-order",
-			Short: "ao",
-			RunE:  h.AcceptOrderCommand,
-		},
-		// и тд
-	)
 
-	addFlags(h.commandController)
+	//addFlags(h.commandController)
 
 	return h
 }
 
-func (h *FileHandler) Run() error {
+func (h *FileHandler) Run(ctx context.Context) error {
+
 	for {
 		fmt.Print(">")
 		if !h.scanner.Scan() {
@@ -67,8 +57,8 @@ func (h *FileHandler) Run() error {
 		parts := strings.Fields(line)
 		h.commandController.SetArgs(parts)
 
-		if err := h.commandController.Execute(); err != nil { // лучше по всему стеку всегда передавать контекст, в го часто это единственный способ передавать метаданные по коды (например, авторизационные данные, которые могут понадобиться где-нибудь в глубине приложени)
-			_, _ = fmt.Fprintf(os.Stderr, "Command failed, Input Error: %s\n", mapError(err)) // здесь маппим бизнесовые ошибки на error-коды, фильтруем что можем показать юзерам, а что нет
+		if err := h.commandController.Execute(); err != nil {
+			_, _ = fmt.Fprintf(os.Stderr, "Command failed, Input Error: %s\n", mapError(err))
 		}
 	}
 	if err := h.scanner.Err(); err != nil {
@@ -78,27 +68,40 @@ func (h *FileHandler) Run() error {
 }
 
 func mapError(err error) error {
-	if businessError := new(businesserror.Error); errors.As(err, businessError) {
-		switch businessError.Code {
+	var be *businesserror.Error
+	if errors.As(err, &be) {
+		switch be.Code {
 		case businesserror.ErrorCodeNotFound:
-			// businessError не будет уже содержать весь стек вызовов,
-			// она будет содержать только исходную ошибку
-			return NotFoundErrorError(businessError)
-			// ...
-			// и остальные case
+			return notFoundError(be)
+		case businesserror.ErrorCodeAlreadyExists:
+			return alreadyExistsError(be)
+		case businesserror.ErrorCodeExpires:
+			return expiredError(be)
+		case businesserror.ErrorCodeValidation:
+			return validationError(be)
 		default:
-			return InternalError(businessError)
+			return internalError(be)
 		}
-	} else {
-		return InternalError(err)
 	}
+	return internalError(err)
 }
 
-func NotFoundErrorError(err error) error {
-	return fmt.Errorf("NOT_FOUND_ERROR: %w", err) // здесь можешь использовать свои коды ответов, а не хардкодить строку
-	// так же здесь можно реализовать какую нибудь логику которая "спрячет" реализацию и стек вызовов от пользователя
+func notFoundError(err error) error {
+	return fmt.Errorf("NOT_FOUND: %w", err)
 }
 
-func InternalError(err error) error {
-	return fmt.Errorf("INTERNAL_ERROR: %w", err) // здесь можешь использовать свои коды ответов, а не хардкодить строку
+func alreadyExistsError(err error) error {
+	return fmt.Errorf("ALREADY_EXISTS: %w", err)
+}
+
+func expiredError(err error) error {
+	return fmt.Errorf("EXPIRED: %w", err)
+}
+
+func validationError(err error) error {
+	return fmt.Errorf("VALIDATION_FAILED: %w", err)
+}
+
+func internalError(err error) error {
+	return fmt.Errorf("INTERNAL_ERROR: %w", err)
 }

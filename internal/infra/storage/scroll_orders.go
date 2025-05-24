@@ -1,13 +1,14 @@
 package storage
 
 import (
+	"context"
 	"fmt"
 	storageErrors "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/businesserror"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 	"sort"
 )
 
-func (s *Storage) ScrollOrders(userID uint64, limit uint, lastID *pvz.OrderID) ([]*pvz.OrderInfo, *pvz.OrderID, error) {
+func (s *Storage) ScrollOrders(ctx context.Context, userID pvz.UserID, limit uint, lastID *pvz.OrderID) ([]*pvz.OrderInfo, *pvz.OrderID, error) {
 	ordersMap, ok := s.store[pvz.UserID(userID)]
 	if !ok || len(ordersMap) == 0 {
 		return nil, nil, storageErrors.EntityNotFoundError("Order", fmt.Sprint(ordersMap))

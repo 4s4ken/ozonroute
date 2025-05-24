@@ -1,13 +1,14 @@
 package storage
 
 import (
+	"context"
 	storageerrors "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/businesserror"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 	"strconv"
 	"time"
 )
 
-func (s *Storage) accept(orderID pvz.OrderID, userID pvz.UserID, expires time.Time) (err error) {
+func (s *Storage) accept(ctx context.Context, orderID pvz.OrderID, userID pvz.UserID, expires time.Time) (err error) {
 	if expires.Before(time.Now().UTC()) {
 		return storageerrors.EntityValidationError("Order", strconv.FormatUint(uint64(orderID), 10))
 	}
@@ -29,6 +30,6 @@ func (s *Storage) accept(orderID pvz.OrderID, userID pvz.UserID, expires time.Ti
 	return s.writeDataToFile()
 }
 
-func (s *Storage) Accept(orderID uint64, userID uint64, expires time.Time) error {
-	return s.accept(pvz.OrderID(orderID), pvz.UserID(userID), expires)
+func (s *Storage) Accept(ctx context.Context, orderID pvz.OrderID, userID pvz.UserID, exp time.Time) error {
+	return s.accept(ctx, orderID, userID, exp)
 }

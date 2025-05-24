@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -10,7 +11,7 @@ import (
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 )
 
-func (s *Storage) ImportOrders(filePath string) (int, error) {
+func (s *Storage) ImportOrders(ctx context.Context, filePath string) (int, error) {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return 0, fmt.Errorf("cannot read file %q: %w", filePath, err)

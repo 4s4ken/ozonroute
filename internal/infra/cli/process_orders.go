@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"github.com/spf13/cobra"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
@@ -8,7 +9,8 @@ import (
 	"strings"
 )
 
-func (s *CommandService) ProcessOrdersCommand(cmd *cobra.Command, args []string) error {
+func (h *FileHandler) ProcessOrdersCommand(cmd *cobra.Command, _ []string) error {
+	ctx := context.Background()
 	userID, err := cmd.Flags().GetUint64("user-id")
 	if err != nil {
 		return err
@@ -32,9 +34,9 @@ func (s *CommandService) ProcessOrdersCommand(cmd *cobra.Command, args []string)
 		orderIDs = append(orderIDs, pvz.OrderID(id))
 	}
 
-	err = s.CommandsHandler.Process(userID, action, orderIDs)
+	err = h.commandsHandler.Process(ctx, pvz.UserID(userID), action, orderIDs)
 	if err != nil {
-		return fmt.Errorf("ERROR: %w", err)
+		return mapError(err)
 	}
 
 	for _, id := range orderIDs {

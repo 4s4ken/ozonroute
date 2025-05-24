@@ -1,8 +1,11 @@
 package storage
 
-import "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
+import (
+	"context"
+	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
+)
 
-func (s *Storage) ListOrders(options pvz.ListOrdersOptions) ([]*pvz.OrderInfo, error) {
+func (s *Storage) ListOrders(ctx context.Context, options pvz.ListOrdersOptions) ([]*pvz.OrderInfo, error) {
 	ordersMap, ok := s.store[pvz.UserID(options.UserID)]
 	if !ok || len(ordersMap) == 0 {
 		return nil, nil

@@ -2,6 +2,7 @@ package cli
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"github.com/spf13/cobra"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
@@ -9,7 +10,8 @@ import (
 	"strings"
 )
 
-func (s *CommandService) ScrollOrders(cmd *cobra.Command, args []string) error {
+func (h *FileHandler) ScrollOrders(cmd *cobra.Command, _ []string) error {
+	ctx := context.Background()
 	userID, err := cmd.Flags().GetUint64("user-id")
 	if err != nil {
 		return fmt.Errorf("%w", err)
@@ -24,9 +26,9 @@ func (s *CommandService) ScrollOrders(cmd *cobra.Command, args []string) error {
 	reader := bufio.NewReader(os.Stdin)
 
 	for {
-		orders, nextLastID, err := s.CommandsHandler.ScrollOrders(userID, limit, lastID)
+		orders, nextLastID, err := h.commandsHandler.ScrollOrders(ctx, pvz.UserID(userID), limit, lastID)
 		if err != nil {
-			return fmt.Errorf("CommandsHandler.ScrollOrders: %w", err)
+			return mapError(err)
 		}
 		if len(orders) == 0 {
 			fmt.Println("No more orders.")

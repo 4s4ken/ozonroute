@@ -3,15 +3,16 @@ package cli
 import (
 	"fmt"
 	"github.com/spf13/cobra"
+	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 )
 
-func (s *CommandService) ReturnOrderCommand(cmd *cobra.Command, args []string) error {
+func (h *FileHandler) ReturnOrderCommand(cmd *cobra.Command, _ []string) error {
 	orderID, err := cmd.Flags().GetUint64("order-id")
 	if err != nil {
-		return fmt.Errorf("CommandsHandler.Return: %w", err)
+		return mapError(err)
 	}
 
-	err = s.CommandsHandler.Return(orderID)
+	err = h.commandsHandler.Return(nil, pvz.OrderID(orderID))
 	if err != nil {
 		return fmt.Errorf("%w", err)
 
