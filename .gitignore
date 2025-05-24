@@ -19,4 +19,4 @@
 vendor
 
 #temp db
-.json
+*.json
