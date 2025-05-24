@@ -1,4 +1,4 @@
-package infra
+package cli
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 )
 
-func (s *StorageService) ListOrdersCommand(cmd *cobra.Command, args []string) error {
+func (s *CommandService) ListOrdersCommand(cmd *cobra.Command, args []string) error {
 	userID, err := cmd.Flags().GetUint64("user-id")
 	if err != nil {
 		return fmt.Errorf("ERROR: %w", err)
@@ -52,9 +52,9 @@ func (s *StorageService) ListOrdersCommand(cmd *cobra.Command, args []string) er
 		Limit:  limitPtr,
 	}
 
-	orders, err := s.Store.ListOrders(options)
+	orders, err := s.CommandsHandler.ListOrders(options)
 	if err != nil {
-		return fmt.Errorf("Store.ListOrder: %w", err)
+		return fmt.Errorf("CommandsHandler.ListOrder: %w", err)
 	}
 
 	for _, order := range orders {

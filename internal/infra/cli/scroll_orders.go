@@ -1,4 +1,4 @@
-package infra
+package cli
 
 import (
 	"bufio"
@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func (s *StorageService) ScrollOrders(cmd *cobra.Command, args []string) error {
+func (s *CommandService) ScrollOrders(cmd *cobra.Command, args []string) error {
 	userID, err := cmd.Flags().GetUint64("user-id")
 	if err != nil {
 		return fmt.Errorf("%w", err)
@@ -24,9 +24,9 @@ func (s *StorageService) ScrollOrders(cmd *cobra.Command, args []string) error {
 	reader := bufio.NewReader(os.Stdin)
 
 	for {
-		orders, nextLastID, err := s.Store.ScrollOrders(userID, limit, lastID)
+		orders, nextLastID, err := s.CommandsHandler.ScrollOrders(userID, limit, lastID)
 		if err != nil {
-			return fmt.Errorf("Store.ScrollOrders: %w", err)
+			return fmt.Errorf("CommandsHandler.ScrollOrders: %w", err)
 		}
 		if len(orders) == 0 {
 			fmt.Println("No more orders.")

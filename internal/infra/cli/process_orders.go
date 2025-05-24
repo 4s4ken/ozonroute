@@ -1,4 +1,4 @@
-package infra
+package cli
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func (s *StorageService) ProcessOrdersCommand(cmd *cobra.Command, args []string) error {
+func (s *CommandService) ProcessOrdersCommand(cmd *cobra.Command, args []string) error {
 	userID, err := cmd.Flags().GetUint64("user-id")
 	if err != nil {
 		return err
@@ -32,7 +32,7 @@ func (s *StorageService) ProcessOrdersCommand(cmd *cobra.Command, args []string)
 		orderIDs = append(orderIDs, pvz.OrderID(id))
 	}
 
-	err = s.Store.Process(userID, action, orderIDs)
+	err = s.CommandsHandler.Process(userID, action, orderIDs)
 	if err != nil {
 		return fmt.Errorf("ERROR: %w", err)
 	}

@@ -1,14 +1,14 @@
-package infra
+package cli
 
 import (
 	"fmt"
 	"github.com/spf13/cobra"
 )
 
-func (s *StorageService) OrdersHistoryCommand(cmd *cobra.Command, args []string) error {
-	history, err := s.Store.OrderHistory()
+func (s *CommandService) OrdersHistoryCommand(cmd *cobra.Command, args []string) error {
+	history, err := s.CommandsHandler.OrderHistory()
 	if err != nil {
-		return fmt.Errorf("Store.OrderHistory: %w", err)
+		return fmt.Errorf("CommandsHandler.OrderHistory: %w", err)
 	}
 
 	for _, ord := range history {

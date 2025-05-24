@@ -1,28 +1,10 @@
-package infra
+package cli
 
 import (
-	"time"
-
 	"github.com/spf13/cobra"
-	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 )
 
-type StorageService struct {
-	Store Storage
-}
-
-type Storage interface {
-	Accept(orderID uint64, userID uint64, exp time.Time) error
-	Return(orderID uint64) error
-	Process(userID uint64, act string, orderIDs []pvz.OrderID) error
-	ListOrders(typeOfList pvz.ListOrdersOptions) ([]*pvz.OrderInfo, error)
-	ListReturns(typeOfList pvz.ListOrdersOptions) ([]*pvz.OrderInfo, error)
-	OrderHistory() ([]*pvz.OrderInfo, error)
-	ImportOrders(orders string) (int, error)
-	ScrollOrders(userID uint64, limit uint, lastID *pvz.OrderID) ([]*pvz.OrderInfo, *pvz.OrderID, error)
-}
-
-func InitCommands(st *StorageService) *cobra.Command {
+func InitCommands(st *FileHandler) *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use: "pvz",
 		Run: func(cmd *cobra.Command, args []string) {},

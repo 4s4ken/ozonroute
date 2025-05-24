@@ -1,4 +1,4 @@
-package infra
+package cli
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 )
 
-func (s *StorageService) ListReturnsCommand(cmd *cobra.Command, args []string) error {
+func (s *CommandService) ListReturnsCommand(cmd *cobra.Command, args []string) error {
 	pagePtr := (*uint64)(nil)
 	if cmd.Flags().Changed("page") {
 		page, err := cmd.Flags().GetUint64("page")
@@ -30,9 +30,9 @@ func (s *StorageService) ListReturnsCommand(cmd *cobra.Command, args []string) e
 		Limit: limitPtr,
 	}
 
-	orders, err := s.Store.ListReturns(options)
+	orders, err := s.CommandsHandler.ListReturns(options)
 	if err != nil {
-		return fmt.Errorf("Store.LisReturns: %w", err)
+		return fmt.Errorf("CommandsHandler.LisReturns: %w", err)
 	}
 
 	for _, order := range orders {
