@@ -1,4 +1,4 @@
-package usecase
+package infra
 
 import (
 	"time"
@@ -92,7 +92,7 @@ func addFlags(root *cobra.Command) {
 		case "process-orders":
 			cmd.Flags().Uint64("user-id", 0, "User ID")
 			cmd.Flags().String("action", "", "Actions: issue, return")
-			cmd.Flags().StringSlice("order-ids", []string{}, "Orders ID")
+			cmd.Flags().String("order-ids", "", "Orders ID")
 		case "list-orders":
 			cmd.Flags().Uint64("user-id", 0, "User ID")
 			cmd.Flags().Bool("in-pvz", false, "In PVZ")

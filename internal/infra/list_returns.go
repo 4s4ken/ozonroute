@@ -1,4 +1,4 @@
-package usecase
+package infra
 
 import (
 	"fmt"
@@ -9,13 +9,19 @@ import (
 func (s *StorageService) ListReturnsCommand(cmd *cobra.Command, args []string) error {
 	pagePtr := (*uint64)(nil)
 	if cmd.Flags().Changed("page") {
-		page, _ := cmd.Flags().GetUint64("page")
+		page, err := cmd.Flags().GetUint64("page")
+		if err != nil {
+			return err
+		}
 		pagePtr = &page
 	}
 
 	limitPtr := (*uint64)(nil)
 	if cmd.Flags().Changed("limit") {
-		limit, _ := cmd.Flags().GetUint64("limit")
+		limit, err := cmd.Flags().GetUint64("limit")
+		if err != nil {
+			return err
+		}
 		limitPtr = &limit
 	}
 
@@ -26,11 +32,11 @@ func (s *StorageService) ListReturnsCommand(cmd *cobra.Command, args []string) e
 
 	orders, err := s.Store.ListReturns(options)
 	if err != nil {
-		return fmt.Errorf("%w", err)
+		return fmt.Errorf("Store.LisReturns: %w", err)
 	}
 
 	for _, order := range orders {
-		fmt.Printf("RETURN: %d %d %s\n", order.Orderid, order.Userid, order.ReturnedAt.Format("2006.01.02"))
+		fmt.Printf("RETURN: %d %d %s\n", order.Orderid, order.Userid, order.ReturnedAt.Format("2006-01-02"))
 	}
 
 	if pagePtr != nil && limitPtr != nil {

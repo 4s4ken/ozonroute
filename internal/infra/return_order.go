@@ -1,4 +1,4 @@
-package usecase
+package infra
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 func (s *StorageService) ReturnOrderCommand(cmd *cobra.Command, args []string) error {
 	orderID, err := cmd.Flags().GetUint64("order-id")
 	if err != nil {
-		return err
+		return fmt.Errorf("Store.Return: %w", err)
 	}
 
 	err = s.Store.Return(orderID)

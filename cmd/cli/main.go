@@ -3,8 +3,8 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"gitlab.ozon.dev/gleb_evseev/homework/internal/infra"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/storage/json_store"
-	"gitlab.ozon.dev/gleb_evseev/homework/internal/usecase"
 	"log"
 	"os"
 	"strings"
@@ -16,10 +16,10 @@ func main() {
 		log.Fatalf("Failed to initialize storage: %v", err)
 	}
 
-	st := usecase.StorageService{
+	st := infra.StorageService{
 		Store: js,
 	}
-	rootCmd := usecase.InitCommands(&st)
+	rootCmd := infra.InitCommands(&st)
 
 	fmt.Println("Welcome to the order pick-up point(PVZ) simulation. To view all available commands, type 'help'.")
 
@@ -37,10 +37,11 @@ func main() {
 		rootCmd.SetArgs(parts)
 
 		if err := rootCmd.Execute(); err != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "Command failed, Input Error: %s\n", err)
+			mapped := json_store.MapError(err)
+			_, _ = fmt.Fprintf(os.Stderr, "Command failed: %s\n", mapped)
 		}
 	}
 	if err := scanner.Err(); err != nil {
-		log.Fatalf("Error: %s", err)
+		log.Fatalf("Input error: %s", err)
 	}
 }

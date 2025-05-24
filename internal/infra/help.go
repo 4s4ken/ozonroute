@@ -1,4 +1,4 @@
-package usecase
+package infra
 
 import (
 	"fmt"
@@ -7,6 +7,7 @@ import (
 
 func HelpCommand(cmd *cobra.Command, args []string) error {
 	fmt.Println(`
+	help
 	accept-order    Принять заказ от курьера
 	return-order    Вернуть заказ
 	process-orders  Выдать или принять возврат
@@ -14,7 +15,6 @@ func HelpCommand(cmd *cobra.Command, args []string) error {
 	list-returns    Получить список возвратов
 	order-history   Получить историю заказов
 	import-orders   Импорт заказов из файла
-	scroll-orders	Получить список заказов по принципу бесконечной прокрутки
 	`)
 	return nil
 }

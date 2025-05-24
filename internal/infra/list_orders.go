@@ -1,9 +1,8 @@
-package usecase
+package infra
 
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 )
 
@@ -12,6 +11,7 @@ func (s *StorageService) ListOrdersCommand(cmd *cobra.Command, args []string) er
 	if err != nil {
 		return fmt.Errorf("ERROR: %w", err)
 	}
+
 	inPvz := false
 	if cmd.Flags().Changed("in-pvz") {
 		inPvz, _ = cmd.Flags().GetBool("in-pvz")
@@ -54,20 +54,13 @@ func (s *StorageService) ListOrdersCommand(cmd *cobra.Command, args []string) er
 
 	orders, err := s.Store.ListOrders(options)
 	if err != nil {
-		return err
+		return fmt.Errorf("Store.ListOrder: %w", err)
 	}
 
 	for _, order := range orders {
-		fmt.Printf("ORDER: %d  %s %s\n", order.Orderid, order.Time.Format("2006.01.02"), order.Status.String())
+		fmt.Printf("ORDER: %d %s %s %d\n", order.Orderid, order.Time.Format("2006-01-02"), order.Status.String(), order.Userid)
 	}
 	fmt.Printf("TOTAL: %d\n", len(orders))
-	cmd.Flags().VisitAll(func(f *pflag.Flag) {
-		err2 := f.Value.Set(f.DefValue)
-		if err2 != nil {
-			return
-		}
-		f.Changed = false
-	})
 
 	return nil
 }

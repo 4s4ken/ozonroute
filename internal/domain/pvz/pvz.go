@@ -45,9 +45,9 @@ type ListOrdersOptions struct {
 type OrderInfo struct {
 	Orderid       OrderID            `json:"order_id,"`
 	Userid        UserID             `json:"user_id"`
-	Time          time.Time          `json:"Date"`
+	Time          time.Time          `json:"date"`
 	Status        OrderStatus        `json:"status"`
-	ReturnedAt    *time.Time         `json:"returned_at,omitempty"`
+	ReturnedAt    time.Time          `json:"returned_at,omitempty"`
 	StatusChanged OrderStatusChanges `json:"status_changes"`
 }
 
@@ -56,6 +56,6 @@ func (o *OrderInfo) IsExpired(now time.Time) bool {
 }
 
 func (o *OrderInfo) IsExpiredForReturn(now time.Time) bool {
-	twoDaysAfterExpiry := o.Time.Add(-48 * time.Hour)
+	twoDaysAfterExpiry := o.Time.Add(48 * time.Hour)
 	return now.After(twoDaysAfterExpiry)
 }

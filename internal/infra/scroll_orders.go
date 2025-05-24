@@ -1,4 +1,4 @@
-package usecase
+package infra
 
 import (
 	"bufio"
@@ -24,10 +24,9 @@ func (s *StorageService) ScrollOrders(cmd *cobra.Command, args []string) error {
 	reader := bufio.NewReader(os.Stdin)
 
 	for {
-		orders, nextLastID, err2 := s.Store.ScrollOrders(userID, limit, lastID)
-		if err2 != nil {
-
-			return err2
+		orders, nextLastID, err := s.Store.ScrollOrders(userID, limit, lastID)
+		if err != nil {
+			return fmt.Errorf("Store.ScrollOrders: %w", err)
 		}
 		if len(orders) == 0 {
 			fmt.Println("No more orders.")
@@ -35,7 +34,7 @@ func (s *StorageService) ScrollOrders(cmd *cobra.Command, args []string) error {
 		}
 
 		for _, order := range orders {
-			fmt.Printf("ORDER: %d %d %s %s\n", order.Orderid, order.Userid, order.Status.String(), order.Time.Format("2006.01.02"))
+			fmt.Printf("ORDER: %d %d %s %s\n", order.Orderid, order.Userid, order.Status.String(), order.Time.Format("2006-01-02"))
 		}
 
 		if nextLastID != nil {

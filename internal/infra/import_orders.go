@@ -1,4 +1,4 @@
-package usecase
+package infra
 
 import (
 	"fmt"
@@ -13,7 +13,7 @@ func (s *StorageService) ImportOrdersCommand(cmd *cobra.Command, args []string) 
 
 	imported, err := s.Store.ImportOrders(filePath)
 	if err != nil {
-		return fmt.Errorf("ERROR: %w", err)
+		return fmt.Errorf("Store.ImportOrders: %w", err)
 	}
 
 	fmt.Printf("IMPORTED: %d\n", imported)

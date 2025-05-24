@@ -1,0 +1,34 @@
+package json_store
+
+import (
+	storageErrors "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/businesserror"
+	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
+	"strconv"
+	"time"
+)
+
+func (s *Storage) accept(orderID pvz.OrderID, userID pvz.UserID, expires time.Time) (err error) {
+	if expires.Before(time.Now().UTC()) {
+		return storageErrors.EntityValidationError("Order", strconv.FormatUint(uint64(orderID), 10))
+	}
+	if _, ok := s.store[userID]; !ok {
+		s.store[userID] = make(map[pvz.OrderID]*pvz.OrderInfo)
+	}
+
+	if _, exists := s.store[userID][orderID]; exists {
+		return storageErrors.EntityAlreadyExistsError("Order", strconv.FormatUint(uint64(orderID), 10))
+	}
+
+	s.store[userID][orderID] = &pvz.OrderInfo{
+		Userid:        userID,
+		Orderid:       orderID,
+		Time:          expires,
+		Status:        1,
+		StatusChanged: true,
+	}
+	return s.writeDataToFile()
+}
+
+func (s *Storage) Accept(orderID uint64, userID uint64, expires time.Time) error {
+	return s.accept(pvz.OrderID(orderID), pvz.UserID(userID), expires)
+}
