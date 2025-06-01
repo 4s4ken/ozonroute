@@ -36,7 +36,15 @@ func (h *FileHandler) ScrollOrders(cmd *cobra.Command, _ []string) error {
 		}
 
 		for _, order := range orders {
-			fmt.Printf("ORDER: %d %d %s %s\n", order.Orderid, order.Userid, order.Status.String(), order.Time.Format(datetimeFormat))
+			fmt.Printf("ORDER: %d %d %s %s %s %f %s\n",
+				order.Orderid,
+				order.Userid,
+				order.Status.String(),
+				order.Time.Format(datetimeFormat),
+				order.Package,
+				order.Weight,
+				order.Price.String(),
+			)
 		}
 
 		if nextLastID != nil {

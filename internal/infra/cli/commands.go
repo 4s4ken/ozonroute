@@ -69,6 +69,9 @@ func addFlags(root *cobra.Command) {
 			cmd.Flags().Uint64("order-id", 0, "Order ID")
 			cmd.Flags().Uint64("user-id", 0, "User ID")
 			cmd.Flags().String("expires", "", "Date of expiration")
+			cmd.Flags().Float64("weight", 0, "Weight of order")
+			cmd.Flags().String("price", "0", "Price of order")
+			cmd.Flags().String("package", "", "Type of order package")
 		case "return-order":
 			cmd.Flags().Uint64("order-id", 0, "Order ID")
 		case "process-orders":

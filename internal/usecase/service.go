@@ -8,7 +8,7 @@ import (
 )
 
 type storage interface {
-	Accept(ctx context.Context, orderID pvz.OrderID, userID pvz.UserID, exp time.Time) error
+	Accept(ctx context.Context, orderID pvz.OrderID, userID pvz.UserID, exp time.Time, weight pvz.OrderWeight, price pvz.OrderPrice, packageType pvz.PackageType) (pvz.OrderPrice, error)
 	Return(ctx context.Context, orderID pvz.OrderID) error
 	Process(ctx context.Context, userID pvz.UserID, act string, orderIDs []pvz.OrderID) error
 	ListOrders(ctx context.Context, typeOfList pvz.ListOrdersOptions) ([]*pvz.OrderInfo, error)
@@ -28,14 +28,14 @@ func New(storage storage) *Service {
 	}
 }
 
-func (s *Service) Accept(ctx context.Context, orderID pvz.OrderID, userID pvz.UserID, exp time.Time) error {
+func (s *Service) Accept(ctx context.Context, orderID pvz.OrderID, userID pvz.UserID, exp time.Time, weight pvz.OrderWeight, price pvz.OrderPrice, packageType pvz.PackageType) (pvz.OrderPrice, error) {
 
-	err := s.storage.Accept(ctx, orderID, userID, exp)
+	totalPrice, err := s.storage.Accept(ctx, orderID, userID, exp, weight, price, packageType)
 	if err != nil {
-		return fmt.Errorf("storage.Accept: %w", err)
+		return price, fmt.Errorf("storage.Accept: %w", err)
 	}
 
-	return nil
+	return totalPrice, nil
 }
 
 func (s *Service) Return(ctx context.Context, orderID pvz.OrderID) error {

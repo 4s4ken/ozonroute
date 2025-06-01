@@ -60,7 +60,15 @@ func (h *FileHandler) ListOrdersCommand(cmd *cobra.Command, _ []string) error {
 	}
 
 	for _, order := range orders {
-		fmt.Printf("ORDER: %d %s %s %d\n", order.Orderid, order.Time.Format(datetimeFormat), order.Status.String(), order.Userid)
+		fmt.Printf("ORDER: %d %d %s %s %s %f %s\n",
+			order.Orderid,
+			order.Userid,
+			order.Status.String(),
+			order.Time.Format(datetimeFormat),
+			order.Package,
+			order.Weight,
+			order.Price.String(),
+		)
 	}
 	fmt.Printf("TOTAL: %d\n", len(orders))
 

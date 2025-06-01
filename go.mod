@@ -8,4 +8,7 @@ require (
 	go.uber.org/multierr v1.11.0
 )
 
-require github.com/inconshreveable/mousetrap v1.1.0 // indirect
+require (
+	github.com/inconshreveable/mousetrap v1.1.0 // indirect
+	github.com/shopspring/decimal v1.4.0 // indirect
+)

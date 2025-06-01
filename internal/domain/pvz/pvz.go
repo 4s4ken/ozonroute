@@ -1,6 +1,7 @@
 package pvz
 
 import (
+	"github.com/shopspring/decimal"
 	"time"
 )
 
@@ -9,6 +10,18 @@ type (
 	UserID             uint64
 	OrderStatus        int
 	OrderStatusChanges bool
+	OrderWeight        float64
+	OrderPrice         = decimal.Decimal
+	PackageType        string
+)
+
+const (
+	NoPackaging PackageType = ""
+	Bag                     = "bag"
+	Box                     = "box"
+	Film                    = "film"
+	BagAndFilm              = "bag+film"
+	BoxAndFilm              = "box+film"
 )
 
 const (
@@ -29,7 +42,7 @@ func (s OrderStatus) String() string {
 	case StatusExpired:
 		return "expired"
 	default:
-		return "unknown"
+		return ""
 	}
 }
 
@@ -48,6 +61,9 @@ type OrderInfo struct {
 	Status        OrderStatus        `json:"status"`
 	ReturnedAt    time.Time          `json:"returned_at,omitempty"`
 	StatusChanged OrderStatusChanges `json:"status_changes"`
+	Weight        OrderWeight        `json:"weight"`
+	Price         decimal.Decimal    `json:"price"`
+	Package       *PackageType       `json:"package_type,omitempty"`
 }
 
 func (o *OrderInfo) IsExpired(now time.Time) bool {

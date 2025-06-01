@@ -16,7 +16,7 @@ import (
 const datetimeFormat = "2006-01-02"
 
 type commandsHandler interface {
-	Accept(ctx context.Context, orderID pvz.OrderID, userID pvz.UserID, exp time.Time) error
+	Accept(ctx context.Context, orderID pvz.OrderID, userID pvz.UserID, exp time.Time, weight pvz.OrderWeight, price pvz.OrderPrice, packageType pvz.PackageType) (pvz.OrderPrice, error)
 	Return(ctx context.Context, orderID pvz.OrderID) error
 	Process(ctx context.Context, userID pvz.UserID, act string, orderIDs []pvz.OrderID) error
 	ListOrders(ctx context.Context, typeOfList pvz.ListOrdersOptions) ([]*pvz.OrderInfo, error)
@@ -94,6 +94,10 @@ func mapError(err error) error {
 			return expiredError(be)
 		case businesserror.ErrorCodeValidation:
 			return validationError(be)
+		case businesserror.ErrorCodePackage:
+			return invalidPackageError(be)
+		case businesserror.ErrorCodeWeight:
+			return weightTooHeavyError(be)
 		default:
 			return internalError(be)
 		}
@@ -119,4 +123,11 @@ func validationError(err error) error {
 
 func internalError(err error) error {
 	return fmt.Errorf("INTERNAL_ERROR: %w", err)
+}
+
+func invalidPackageError(err error) error {
+	return fmt.Errorf("INVALID_PACKAGE: %w", err)
+}
+func weightTooHeavyError(err error) error {
+	return fmt.Errorf("WEIGHT_TOO_HEAVY: %w", err)
 }
