@@ -6,7 +6,7 @@ import (
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 )
 
-func (h *FileHandler) ListReturnsCommand(cmd *cobra.Command, args []string) error {
+func (h *FileHandler) ListReturnsCommand(cmd *cobra.Command, _ []string) error {
 	pagePtr := (*uint64)(nil)
 	if cmd.Flags().Changed("page") {
 		page, err := cmd.Flags().GetUint64("page")
@@ -36,7 +36,7 @@ func (h *FileHandler) ListReturnsCommand(cmd *cobra.Command, args []string) erro
 	}
 
 	for _, order := range orders {
-		fmt.Printf("RETURN: %d %d %s\n", order.Orderid, order.Userid, order.ReturnedAt.Format("2006-01-02"))
+		fmt.Printf("RETURN: %d %d %s\n", order.Orderid, order.Userid, order.ReturnedAt.Format(datetimeFormat))
 	}
 
 	if pagePtr != nil && limitPtr != nil {

@@ -10,7 +10,7 @@ func (s *Storage) ListReturns(ctx context.Context, options pvz.ListOrdersOptions
 	returnedOrders := make([]*pvz.OrderInfo, 0)
 	for _, userOrders := range s.store {
 		for _, order := range userOrders {
-			if order.Status == 3 {
+			if order.Status == pvz.StatusReturned {
 				returnedOrders = append(returnedOrders, order)
 			}
 		}

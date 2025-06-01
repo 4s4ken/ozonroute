@@ -16,6 +16,7 @@ type Storage struct {
 	store     map[pvz.UserID]map[pvz.OrderID]*pvz.OrderInfo
 	history   []OrderHistoryEvent
 	orderList map[pvz.UserID]*pvz.OrderInfo
+	nowFn     func() time.Time
 }
 
 type OrderHistoryEvent struct {
@@ -24,7 +25,7 @@ type OrderHistoryEvent struct {
 	Data    time.Time
 }
 
-func NewJsonStorage(path string) (*Storage, error) {
+func NewJsonStorage(path string, nowFn func() time.Time) (*Storage, error) {
 	f, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, 0o666)
 	if err != nil {
 		return nil, err
@@ -34,9 +35,12 @@ func NewJsonStorage(path string) (*Storage, error) {
 		path:  path,
 		store: make(map[pvz.UserID]map[pvz.OrderID]*pvz.OrderInfo),
 		file:  f,
+		nowFn: nowFn,
 	}
 	err = s.readDataFromFile(f)
-
+	if err != nil {
+		return nil, storageErrors.EntityInternalError("Json file", "fail to open json storage")
+	}
 	return s, nil
 }
 
@@ -77,7 +81,7 @@ func (s *Storage) writeDataToFile() (err error) {
 
 	err = encoder.Encode(s.store)
 	if err != nil {
-		return storageErrors.EntityValidationError("JSON file", "fail writing")
+		return storageErrors.EntityInternalError("JSON file", "fail writing")
 	}
 
 	return nil

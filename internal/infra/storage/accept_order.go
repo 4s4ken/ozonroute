@@ -9,7 +9,7 @@ import (
 )
 
 func (s *Storage) accept(ctx context.Context, orderID pvz.OrderID, userID pvz.UserID, expires time.Time) (err error) {
-	if expires.Before(time.Now().UTC()) {
+	if expires.Before(s.nowFn().UTC()) {
 		return storageerrors.EntityValidationError("Order", strconv.FormatUint(uint64(orderID), 10))
 	}
 	if _, ok := s.store[userID]; !ok {
@@ -24,7 +24,7 @@ func (s *Storage) accept(ctx context.Context, orderID pvz.OrderID, userID pvz.Us
 		Userid:        userID,
 		Orderid:       orderID,
 		Time:          expires,
-		Status:        1,
+		Status:        pvz.StatusAccepted,
 		StatusChanged: true,
 	}
 	return s.writeDataToFile()

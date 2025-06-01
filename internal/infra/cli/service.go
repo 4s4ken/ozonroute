@@ -13,6 +13,8 @@ import (
 	"time"
 )
 
+const datetimeFormat = "2006-01-02"
+
 type commandsHandler interface {
 	Accept(ctx context.Context, orderID pvz.OrderID, userID pvz.UserID, exp time.Time) error
 	Return(ctx context.Context, orderID pvz.OrderID) error
@@ -38,8 +40,6 @@ func NewFileHandler(commandsHandler commandsHandler) *FileHandler {
 
 	h.commandController = InitCommands(h)
 
-	//addFlags(h.commandController)
-
 	return h
 }
 
@@ -58,13 +58,28 @@ func (h *FileHandler) Run(ctx context.Context) error {
 		h.commandController.SetArgs(parts)
 
 		if err := h.commandController.Execute(); err != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "Command failed, Input Error: %s\n", mapError(err))
+			if isFlagParsingError(err) {
+				_, _ = fmt.Fprintf(os.Stderr, "Command failed, Input Error: %s\n", validationError(err))
+			} else {
+				_, _ = fmt.Fprintf(os.Stderr, "Command failed, Input Error: %s\n", mapError(err))
+			}
 		}
+
 	}
 	if err := h.scanner.Err(); err != nil {
 		return fmt.Errorf("scanner.Err: %s", err)
 	}
 	return nil
+}
+func isFlagParsingError(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := err.Error()
+	return strings.Contains(msg, "invalid argument") ||
+		strings.Contains(msg, "unknown flag") ||
+		strings.Contains(msg, "flag needs an argument") ||
+		strings.Contains(msg, "expected value")
 }
 
 func mapError(err error) error {

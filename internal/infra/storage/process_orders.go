@@ -5,7 +5,6 @@ import (
 	"fmt"
 	storageErrors "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/businesserror"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
-	"time"
 )
 
 func (s *Storage) process(ctx context.Context, userID pvz.UserID, act string, orderIDs []pvz.OrderID) error {
@@ -22,19 +21,19 @@ func (s *Storage) process(ctx context.Context, userID pvz.UserID, act string, or
 
 		switch act {
 		case "issue":
-			if order.IsExpired(time.Now().UTC()) {
+			if order.IsExpired(s.nowFn().UTC()) {
 				return storageErrors.EntityExpiredError("Order", fmt.Sprint(orderID))
 			}
-			order.Status = 2
+			order.Status = pvz.StatusAccepted
 			order.StatusChanged = true
 
 		case "return":
-			if order.IsExpiredForReturn(time.Now().UTC()) {
+			if order.IsExpiredForReturn(s.nowFn().UTC()) {
 				return storageErrors.EntityExpiredError("Order", fmt.Sprint(orderID))
 			}
-			order.Status = 3
+			order.Status = pvz.StatusIssued
 			order.StatusChanged = true
-			order.ReturnedAt = time.Now()
+			order.ReturnedAt = s.nowFn()
 		default:
 			return storageErrors.EntityValidationError("Order", fmt.Sprint(orderID))
 		}

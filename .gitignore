@@ -19,4 +19,8 @@
 vendor
 
 #temp db
+
 *.json
+
+/bin/
+tutor_makefile.mk

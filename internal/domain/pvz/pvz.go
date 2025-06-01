@@ -12,8 +12,7 @@ type (
 )
 
 const (
-	StatusUnknown OrderStatus = iota
-	StatusAccepted
+	StatusAccepted OrderStatus = iota
 	StatusIssued
 	StatusReturned
 	StatusExpired

@@ -9,17 +9,17 @@ import (
 
 func (h *FileHandler) AcceptOrderCommand(cmd *cobra.Command, _ []string) error {
 	orderID, err := cmd.Flags().GetUint64("order-id")
-	if err != nil {
-		return err
+	if err != nil || orderID == 0 {
+		return validationError(err)
 	}
 	userID, err := cmd.Flags().GetUint64("user-id")
-	if err != nil {
-		return err
+	if err != nil || userID == 0 {
+		return validationError(err)
 	}
 	expiresStr, _ := cmd.Flags().GetString("expires")
-	exp, err := time.Parse("2006-01-02", expiresStr)
+	exp, err := time.Parse(datetimeFormat, expiresStr)
 	if err != nil {
-		return err
+		return validationError(err)
 	}
 
 	err = h.commandsHandler.Accept(nil, pvz.OrderID(orderID), pvz.UserID(userID), exp)

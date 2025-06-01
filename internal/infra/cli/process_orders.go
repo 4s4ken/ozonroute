@@ -13,15 +13,19 @@ func (h *FileHandler) ProcessOrdersCommand(cmd *cobra.Command, _ []string) error
 	ctx := context.Background()
 	userID, err := cmd.Flags().GetUint64("user-id")
 	if err != nil {
-		return err
+		return validationError(fmt.Errorf("некорректное значение --user-id: %w", err))
 	}
+	if userID == 0 {
+		return validationError(fmt.Errorf("значение --user-id не может быть 0"))
+	}
+
 	action, err := cmd.Flags().GetString("action")
 	if err != nil {
-		return err
+		return validationError(fmt.Errorf("некорректное значение --action: %w", err))
 	}
 	orderIDsStr, err := cmd.Flags().GetString("order-ids")
 	if err != nil {
-		return err
+		return validationError(fmt.Errorf("некорректное значение --order-ids: %w", err))
 	}
 
 	ids := strings.Split(orderIDsStr, ",")
