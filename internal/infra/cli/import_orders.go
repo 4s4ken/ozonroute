@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// ImportOrdersCommand функция для выполнения команды import-orders
 func (h *FileHandler) ImportOrdersCommand(cmd *cobra.Command, _ []string) error {
 	filePath, err := cmd.Flags().GetString("file")
 	if err != nil {

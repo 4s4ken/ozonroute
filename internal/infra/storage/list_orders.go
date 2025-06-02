@@ -5,6 +5,7 @@ import (
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 )
 
+// ListOrders внутренняя логика вывода списка заказов.
 func (s *Storage) ListOrders(ctx context.Context, options pvz.ListOrdersOptions) ([]*pvz.OrderInfo, error) {
 	ordersMap, ok := s.store[pvz.UserID(options.UserID)]
 	if !ok || len(ordersMap) == 0 {

@@ -9,6 +9,7 @@ import (
 	"time"
 )
 
+// Accept внутренняя логика добавления заказа с проверками.
 func (s *Storage) accept(ctx context.Context, orderID pvz.OrderID, userID pvz.UserID, expires time.Time, weight pvz.OrderWeight, price pvz.OrderPrice, packageType pvz.PackageType) (pvz.OrderPrice, error) {
 	if expires.Before(s.nowFn().UTC()) {
 		return price, storageerrors.EntityValidationError("Order", strconv.FormatUint(uint64(orderID), 10))

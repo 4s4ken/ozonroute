@@ -15,6 +15,7 @@ type (
 	PackageType        string
 )
 
+// Возможные значения типа упаковки.
 const (
 	NoPackaging PackageType = ""
 	Bag                     = "bag"
@@ -24,6 +25,7 @@ const (
 	BoxAndFilm              = "box+film"
 )
 
+// Возможные статусы заказа.
 const (
 	StatusAccepted OrderStatus = iota
 	StatusIssued
@@ -46,6 +48,7 @@ func (s OrderStatus) String() string {
 	}
 }
 
+// ListOrdersOptions задаёт параметры для списка заказов.
 type ListOrdersOptions struct {
 	UserID uint64
 	InPvz  bool
@@ -54,6 +57,7 @@ type ListOrdersOptions struct {
 	Limit  *uint64
 }
 
+// OrderInfo представляет информацию о заказе.
 type OrderInfo struct {
 	Orderid       OrderID            `json:"order_id,"`
 	Userid        UserID             `json:"user_id"`
@@ -66,11 +70,17 @@ type OrderInfo struct {
 	Package       *PackageType       `json:"package_type,omitempty"`
 }
 
+// IsExpired проверяет, истёк ли срок хранения заказа.
 func (o *OrderInfo) IsExpired(now time.Time) bool {
 	return time.Time(o.Time).Before(now)
 }
 
+// IsExpiredForReturn проверяет, истёк ли срок возврата заказа.
 func (o *OrderInfo) IsExpiredForReturn(now time.Time) bool {
 	twoDaysAfterExpiry := o.Time.Add(48 * time.Hour)
 	return now.After(twoDaysAfterExpiry)
+}
+
+func (p PackageType) String() string {
+	return string(p)
 }

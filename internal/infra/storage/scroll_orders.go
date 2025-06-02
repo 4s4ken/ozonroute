@@ -8,6 +8,7 @@ import (
 	"sort"
 )
 
+// ScrollOrders внутренняя логика просмотра списка заказов с использованием "бесконечной" прокрутки.
 func (s *Storage) ScrollOrders(ctx context.Context, userID pvz.UserID, limit uint, lastID *pvz.OrderID) ([]*pvz.OrderInfo, *pvz.OrderID, error) {
 	ordersMap, ok := s.store[pvz.UserID(userID)]
 	if !ok || len(ordersMap) == 0 {

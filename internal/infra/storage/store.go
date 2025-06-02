@@ -10,21 +10,22 @@ import (
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 )
 
+// Storage представляет хранилище заказов, сохраняемое в JSON-файле.
 type Storage struct {
-	file      *os.File
-	path      string
-	store     map[pvz.UserID]map[pvz.OrderID]*pvz.OrderInfo
-	history   []OrderHistoryEvent
-	orderList map[pvz.UserID]*pvz.OrderInfo
-	nowFn     func() time.Time
+	file  *os.File
+	path  string
+	store map[pvz.UserID]map[pvz.OrderID]*pvz.OrderInfo
+	nowFn func() time.Time
 }
 
+// OrderHistoryEvent описывает событие изменения статуса заказа.
 type OrderHistoryEvent struct {
 	OrderID pvz.OrderID
 	Status  pvz.OrderStatus
 	Data    time.Time
 }
 
+// NewJsonStorage создаёт новое хранилище заказов, связанное с указанным JSON-файлом.
 func NewJsonStorage(path string, nowFn func() time.Time) (*Storage, error) {
 	f, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, 0o666)
 	if err != nil {
@@ -44,6 +45,7 @@ func NewJsonStorage(path string, nowFn func() time.Time) (*Storage, error) {
 	return s, nil
 }
 
+// readDataFromFile загружает данные из JSON-файла в память.
 func (s *Storage) readDataFromFile(file *os.File) error {
 	info, err := file.Stat()
 	if err != nil {
@@ -67,6 +69,7 @@ func (s *Storage) readDataFromFile(file *os.File) error {
 	return nil
 }
 
+// writeDataToFile сериализует текущее состояние in-memory хранилища (s.store)
 func (s *Storage) writeDataToFile() (err error) {
 	var file *os.File
 	file, err = os.OpenFile(s.path, os.O_RDWR|os.O_TRUNC, 0o666)

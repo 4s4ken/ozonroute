@@ -7,6 +7,7 @@ import (
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 )
 
+// ListOrdersCommand функция для выполнения команды list-orders
 func (h *FileHandler) ListOrdersCommand(cmd *cobra.Command, _ []string) error {
 	ctx := context.Background()
 	userID, err := cmd.Flags().GetUint64("user-id")

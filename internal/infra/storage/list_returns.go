@@ -5,8 +5,8 @@ import (
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 )
 
+// ListReturns внутренняя логика вывода списка возвратов заказов.
 func (s *Storage) ListReturns(ctx context.Context, options pvz.ListOrdersOptions) ([]*pvz.OrderInfo, error) {
-
 	returnedOrders := make([]*pvz.OrderInfo, 0)
 	for _, userOrders := range s.store {
 		for _, order := range userOrders {

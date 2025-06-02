@@ -10,6 +10,7 @@ import (
 	"strings"
 )
 
+// ScrollOrders функция для выполнения команды scroll-orders
 func (h *FileHandler) ScrollOrders(cmd *cobra.Command, _ []string) error {
 	ctx := context.Background()
 	userID, err := cmd.Flags().GetUint64("user-id")

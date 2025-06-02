@@ -11,6 +11,7 @@ import (
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 )
 
+// ImportOrders внутренняя логика импорта файла с заказами.
 func (s *Storage) ImportOrders(ctx context.Context, filePath string) (int, error) {
 	data, err := os.ReadFile(filePath)
 	if err != nil {

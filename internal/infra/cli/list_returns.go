@@ -6,6 +6,7 @@ import (
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 )
 
+// ListReturnsCommand функция для выполнения команды list-returns
 func (h *FileHandler) ListReturnsCommand(cmd *cobra.Command, _ []string) error {
 	pagePtr := (*uint64)(nil)
 	if cmd.Flags().Changed("page") {

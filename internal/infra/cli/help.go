@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// HelpCommand выводит список доступных команд.
 func HelpCommand(_ *cobra.Command, _ []string) error {
 	fmt.Println(`
 	help

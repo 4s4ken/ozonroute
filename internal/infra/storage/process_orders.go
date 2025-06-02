@@ -7,6 +7,7 @@ import (
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 )
 
+// Process внутренняя логика выдачи/возврата заказа клиенту.
 func (s *Storage) process(ctx context.Context, userID pvz.UserID, act string, orderIDs []pvz.OrderID) error {
 	orders, ok := s.store[userID]
 	if !ok {
@@ -38,7 +39,6 @@ func (s *Storage) process(ctx context.Context, userID pvz.UserID, act string, or
 			return storageErrors.EntityValidationError("Order", fmt.Sprint(orderID))
 		}
 	}
-	orders = nil
 	return s.writeDataToFile()
 }
 

@@ -7,6 +7,7 @@ import (
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 )
 
+// returnOrder внутренняя логика возврата заказа курьеру.
 func (s *Storage) returnOrder(ctx context.Context, orderID pvz.OrderID) error {
 	for _, orders := range s.store {
 		if order, ok := orders[orderID]; ok {

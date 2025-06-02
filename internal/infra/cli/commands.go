@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// InitCommands инициализирует все доступные команды CLI.
 func InitCommands(st *FileHandler) *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use: "pvz",
@@ -62,6 +63,7 @@ func InitCommands(st *FileHandler) *cobra.Command {
 	return rootCmd
 }
 
+// addFlags добавляет флаги к каждой команде в CLI.
 func addFlags(root *cobra.Command) {
 	for _, cmd := range root.Commands() {
 		switch cmd.Use {

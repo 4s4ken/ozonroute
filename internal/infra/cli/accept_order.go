@@ -49,7 +49,7 @@ func (h *FileHandler) AcceptOrderCommand(cmd *cobra.Command, _ []string) error {
 		case string(pvz.NoPackaging), string(pvz.Bag), string(pvz.Box), string(pvz.Film), string(pvz.BagAndFilm), string(pvz.BoxAndFilm):
 			pkg = pvz.PackageType(pkgStr)
 		default:
-			return invalidPackageError(fmt.Errorf("неизвестный тип упаковки: %s", pkgStr))
+			return invalidPackageError(fmt.Errorf("invalid package type: %s", pkgStr))
 		}
 	}
 

@@ -1,0 +1,22 @@
+version: "2"
+
+linters:
+  enable:
+    - errcheck
+    - ineffassign
+    - unused
+    - goconst
+    - gocyclo
+    - gocognit
+
+  settings:
+    lll:
+      line-length: 100
+
+    staticcheck:
+      checks:
+       - "-S1038"
+
+  exclusions:
+    paths-except:
+      - cmd/main/main.go

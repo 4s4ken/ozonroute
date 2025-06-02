@@ -9,6 +9,7 @@ import (
 	"strings"
 )
 
+// ProcessOrdersCommand функция для выполнения команды process-orders
 func (h *FileHandler) ProcessOrdersCommand(cmd *cobra.Command, _ []string) error {
 	ctx := context.Background()
 	userID, err := cmd.Flags().GetUint64("user-id")

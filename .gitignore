@@ -19,7 +19,7 @@
 vendor
 
 #temp db
-
+/homework
 *.json
 
 /bin/

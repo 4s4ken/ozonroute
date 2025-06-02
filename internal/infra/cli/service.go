@@ -15,6 +15,7 @@ import (
 
 const datetimeFormat = "2006-01-02"
 
+// commandsHandler определяет интерфейс бизнес-логики, которую вызывает CLI
 type commandsHandler interface {
 	Accept(ctx context.Context, orderID pvz.OrderID, userID pvz.UserID, exp time.Time, weight pvz.OrderWeight, price pvz.OrderPrice, packageType pvz.PackageType) (pvz.OrderPrice, error)
 	Return(ctx context.Context, orderID pvz.OrderID) error
@@ -71,6 +72,8 @@ func (h *FileHandler) Run(ctx context.Context) error {
 	}
 	return nil
 }
+
+// isFlagParsingError определяет, является ли ошибка валидации при парсинге флагов.
 func isFlagParsingError(err error) bool {
 	if err == nil {
 		return false
@@ -82,6 +85,7 @@ func isFlagParsingError(err error) bool {
 		strings.Contains(msg, "expected value")
 }
 
+// mapError преобразует бизнес-ошибку в читаемое сообщение об ошибке с кодом
 func mapError(err error) error {
 	var be *businesserror.Error
 	if errors.As(err, &be) {
@@ -105,26 +109,22 @@ func mapError(err error) error {
 	return internalError(err)
 }
 
+// Функции-шаблоны, оборачивающие ошибки с префиксом конкретного кода
 func notFoundError(err error) error {
 	return fmt.Errorf("NOT_FOUND: %w", err)
 }
-
 func alreadyExistsError(err error) error {
 	return fmt.Errorf("ALREADY_EXISTS: %w", err)
 }
-
 func expiredError(err error) error {
 	return fmt.Errorf("EXPIRED: %w", err)
 }
-
 func validationError(err error) error {
 	return fmt.Errorf("VALIDATION_FAILED: %w", err)
 }
-
 func internalError(err error) error {
 	return fmt.Errorf("INTERNAL_ERROR: %w", err)
 }
-
 func invalidPackageError(err error) error {
 	return fmt.Errorf("INVALID_PACKAGE: %w", err)
 }
