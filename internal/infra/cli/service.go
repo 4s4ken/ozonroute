@@ -13,8 +13,6 @@ import (
 	"time"
 )
 
-const datetimeFormat = "2006-01-02"
-
 // commandsHandler определяет интерфейс бизнес-логики, которую вызывает CLI
 type commandsHandler interface {
 	Accept(ctx context.Context, orderID pvz.OrderID, userID pvz.UserID, exp time.Time, weight pvz.OrderWeight, price pvz.OrderPrice, packageType pvz.PackageType) (pvz.OrderPrice, error)

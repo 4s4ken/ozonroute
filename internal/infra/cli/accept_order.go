@@ -4,10 +4,7 @@ import (
 	"fmt"
 	"github.com/shopspring/decimal"
 	"github.com/spf13/cobra"
-	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/businesserror"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
-	"strconv"
-	"time"
 )
 
 func (h *FileHandler) AcceptOrderCommand(cmd *cobra.Command, _ []string) error {
@@ -22,7 +19,7 @@ func (h *FileHandler) AcceptOrderCommand(cmd *cobra.Command, _ []string) error {
 	}
 
 	expiresStr, _ := cmd.Flags().GetString("expires")
-	exp, err := time.Parse(datetimeFormat, expiresStr)
+	exp, err := pvz.MapStringToTime(expiresStr)
 	if err != nil {
 		return validationError(err)
 	}
@@ -41,21 +38,27 @@ func (h *FileHandler) AcceptOrderCommand(cmd *cobra.Command, _ []string) error {
 		return validationError(err)
 	}
 
-	var pkg pvz.PackageType
 	pkgStr, err := cmd.Flags().GetString("package")
 	if err != nil {
 		return validationError(err)
 	}
+
+	var pkg pvz.PackageType
 	if pkgStr != "" {
-		switch pkgStr {
-		case string(pvz.Bag), string(pvz.Box), string(pvz.Film), string(pvz.BagAndFilm), string(pvz.BoxAndFilm):
-			pkg = pvz.PackageType(pkgStr)
-		default:
-			return businesserror.EntityPackageError(pkgStr, strconv.FormatUint(orderID, 10))
+		pkg, err = pvz.MapPackageToDomain(pkgStr)
+		if err != nil {
+			return err
 		}
 	}
 
-	totalPrice, err := h.commandsHandler.Accept(nil, pvz.OrderID(orderID), pvz.UserID(userID), exp, pvz.OrderWeight(ordWeight), pvz.OrderPrice(ordPrice), pkg)
+	totalPrice, err := h.commandsHandler.Accept(nil,
+		pvz.OrderID(orderID),
+		pvz.UserID(userID),
+		exp,
+		pvz.OrderWeight(ordWeight),
+		ordPrice,
+		pkg,
+	)
 	if err != nil {
 		return mapError(err)
 	}

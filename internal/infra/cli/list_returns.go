@@ -32,22 +32,22 @@ func (h *FileHandler) ListReturnsCommand(cmd *cobra.Command, _ []string) error {
 		Limit: limitPtr,
 	}
 
+	if pagePtr != nil && limitPtr != nil {
+		fmt.Printf("PAGE: %d LIMIT: %d\n", *pagePtr, *limitPtr)
+	}
+
 	orders, err := h.commandsHandler.ListReturns(nil, options)
 	if err != nil {
 		return mapError(err)
 	}
 
 	for _, order := range orders {
-		fmt.Printf("RETURN: %d %d %s\n", order.Orderid, order.Userid, order.ReturnedAt.Format(datetimeFormat))
+		fmt.Printf("RETURN: %d %d %s\n", order.Orderid, order.Userid, order.ReturnedAt.Format(pvz.DatetimeFormat))
 	}
 
 	if pagePtr == nil || limitPtr == nil {
 		return businesserror.EntityValidationError("ListReturns", "missing page and/or limit")
 	}
-
-	if pagePtr != nil && limitPtr != nil {
-		fmt.Printf("PAGE: %d LIMIT: %d\n", *pagePtr, *limitPtr)
-	}
-
+	
 	return nil
 }

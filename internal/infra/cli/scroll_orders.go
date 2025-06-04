@@ -41,8 +41,8 @@ func (h *FileHandler) ScrollOrders(cmd *cobra.Command, _ []string) error {
 				order.Orderid,
 				order.Userid,
 				order.Status.String(),
-				order.Time.Format(datetimeFormat),
-				order.Package,
+				pvz.MapTimeToString(order.Time),
+				pvz.MapPackageFromDomain(*order.Package),
 				order.Weight,
 				order.Price.String(),
 			)
