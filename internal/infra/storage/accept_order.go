@@ -23,6 +23,7 @@ func (s *Storage) accept(ctx context.Context, orderID pvz.OrderID, userID pvz.Us
 	}
 
 	switch packageType {
+	case "":
 	case pvz.Bag:
 		if weight >= 10 {
 			return price, storageerrors.EntityWeightError("Bag", strconv.FormatUint(uint64(orderID), 10))

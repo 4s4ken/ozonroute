@@ -2,11 +2,10 @@ package cli
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 )
 
 // HelpCommand выводит список доступных команд.
-func HelpCommand(_ *cobra.Command, _ []string) error {
+func HelpCommand() error {
 	fmt.Println(`
 	help
 	accept-order    Принять заказ от курьера

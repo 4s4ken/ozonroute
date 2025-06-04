@@ -25,14 +25,14 @@ func (s *Storage) process(ctx context.Context, userID pvz.UserID, act string, or
 			if order.IsExpired(s.nowFn().UTC()) {
 				return storageErrors.EntityExpiredError("Order", fmt.Sprint(orderID))
 			}
-			order.Status = pvz.StatusAccepted
+			order.Status = pvz.StatusIssued
 			order.StatusChanged = true
 
 		case "return":
 			if order.IsExpiredForReturn(s.nowFn().UTC()) {
 				return storageErrors.EntityExpiredError("Order", fmt.Sprint(orderID))
 			}
-			order.Status = pvz.StatusIssued
+			order.Status = pvz.StatusReturned
 			order.StatusChanged = true
 			order.ReturnedAt = s.nowFn()
 		default:

@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"github.com/spf13/cobra"
+	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/businesserror"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 )
 
@@ -38,6 +39,10 @@ func (h *FileHandler) ListReturnsCommand(cmd *cobra.Command, _ []string) error {
 
 	for _, order := range orders {
 		fmt.Printf("RETURN: %d %d %s\n", order.Orderid, order.Userid, order.ReturnedAt.Format(datetimeFormat))
+	}
+
+	if pagePtr == nil || limitPtr == nil {
+		return businesserror.EntityValidationError("ListReturns", "missing page and/or limit")
 	}
 
 	if pagePtr != nil && limitPtr != nil {

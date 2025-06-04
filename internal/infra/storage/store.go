@@ -2,9 +2,11 @@ package storage
 
 import (
 	"encoding/json"
+	"fmt"
 	storageErrors "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/businesserror"
 	"io"
 	"os"
+	"path/filepath"
 	"time"
 
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
@@ -27,6 +29,12 @@ type OrderHistoryEvent struct {
 
 // NewJsonStorage создаёт новое хранилище заказов, связанное с указанным JSON-файлом.
 func NewJsonStorage(path string, nowFn func() time.Time) (*Storage, error) {
+	
+	err := os.MkdirAll(filepath.Dir(path), os.ModePerm)
+	if err != nil {
+		return nil, fmt.Errorf("create directory for db file: %w", err)
+	}
+
 	f, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, 0o666)
 	if err != nil {
 		return nil, err

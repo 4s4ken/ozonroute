@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"gitlab.ozon.dev/gleb_evseev/homework/internal/config"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/infra/cli"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/infra/storage"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/usecase"
@@ -11,7 +12,7 @@ import (
 
 func main() {
 	ctx := context.Background()
-	js, err := storage.NewJsonStorage("db.json", func() time.Time { return time.Now().UTC() })
+	js, err := storage.NewJsonStorage(config.DBPath, func() time.Time { return time.Now().UTC() })
 	if err != nil {
 		log.Fatalf("Failed to initialize storage: %v", err)
 	}
@@ -22,6 +23,6 @@ func main() {
 
 	err = fileHandler.Run(ctx)
 	if err != nil {
-		log.Fatalf("")
+		log.Fatalf("Error: Failed to run command: %v", err)
 	}
 }

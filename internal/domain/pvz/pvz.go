@@ -17,12 +17,11 @@ type (
 
 // Возможные значения типа упаковки.
 const (
-	NoPackaging PackageType = ""
-	Bag                     = "bag"
-	Box                     = "box"
-	Film                    = "film"
-	BagAndFilm              = "bag+film"
-	BoxAndFilm              = "box+film"
+	Bag        PackageType = "bag"
+	Box        PackageType = "box"
+	Film       PackageType = "film"
+	BagAndFilm PackageType = "bag+film"
+	BoxAndFilm PackageType = "box+film"
 )
 
 // Возможные статусы заказа.

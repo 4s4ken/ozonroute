@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"github.com/shopspring/decimal"
 	"github.com/spf13/cobra"
+	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/businesserror"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
+	"strconv"
 	"time"
 )
 
@@ -39,17 +41,17 @@ func (h *FileHandler) AcceptOrderCommand(cmd *cobra.Command, _ []string) error {
 		return validationError(err)
 	}
 
-	pkg := pvz.NoPackaging
-	if cmd.Flags().Changed("package") {
-		pkgStr, err := cmd.Flags().GetString("package")
-		if err != nil {
-			return validationError(err)
-		}
+	var pkg pvz.PackageType
+	pkgStr, err := cmd.Flags().GetString("package")
+	if err != nil {
+		return validationError(err)
+	}
+	if pkgStr != "" {
 		switch pkgStr {
-		case string(pvz.NoPackaging), string(pvz.Bag), string(pvz.Box), string(pvz.Film), string(pvz.BagAndFilm), string(pvz.BoxAndFilm):
+		case string(pvz.Bag), string(pvz.Box), string(pvz.Film), string(pvz.BagAndFilm), string(pvz.BoxAndFilm):
 			pkg = pvz.PackageType(pkgStr)
 		default:
-			return invalidPackageError(fmt.Errorf("invalid package type: %s", pkgStr))
+			return businesserror.EntityPackageError(pkgStr, strconv.FormatUint(orderID, 10))
 		}
 	}
 

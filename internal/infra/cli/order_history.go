@@ -2,11 +2,10 @@ package cli
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 )
 
 // OrdersHistoryCommand функция для выполнения команды orders-history
-func (h *FileHandler) OrdersHistoryCommand(_ *cobra.Command, _ []string) error {
+func (h *FileHandler) OrdersHistoryCommand() error {
 	history, err := h.commandsHandler.OrderHistory()
 	if err != nil {
 		return mapError(err)

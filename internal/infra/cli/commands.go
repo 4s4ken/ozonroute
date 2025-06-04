@@ -15,7 +15,9 @@ func InitCommands(st *FileHandler) *cobra.Command {
 		&cobra.Command{
 			Use:   "help",
 			Short: "h",
-			RunE:  HelpCommand,
+			RunE: func(cmd *cobra.Command, args []string) error {
+				return HelpCommand()
+			},
 		},
 		&cobra.Command{
 			Use:   "accept-order",
@@ -45,7 +47,9 @@ func InitCommands(st *FileHandler) *cobra.Command {
 		&cobra.Command{
 			Use:   "order-history",
 			Short: "oh",
-			RunE:  st.OrdersHistoryCommand,
+			RunE: func(cmd *cobra.Command, args []string) error {
+				return st.OrdersHistoryCommand()
+			},
 		},
 		&cobra.Command{
 			Use:   "import-orders",
