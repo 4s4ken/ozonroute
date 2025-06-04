@@ -19,12 +19,8 @@
 vendor
 
 #temp db
-<<<<<<< .gitignore
-/homework
-=======
->>>>>>> .gitignore
 *.json
-
-/bin/
 .exe
+/db
+/bin/
 tutor_makefile.mk

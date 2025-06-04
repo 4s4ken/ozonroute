@@ -4,7 +4,7 @@ endif
 # пожалуйста, не удаляйте и не перемещайте этот импорт, он помогает вашему верному тьютору быстрее смотреть ваше дз
 # вы можете описать ваш собственный makefile ниже
 
-BINARY_NAME=homework
+BINARY_NAME=./bin/homework
 
 .PHONY: update linter build start run
 
