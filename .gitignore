@@ -16,11 +16,15 @@
 .DS_Store
 .vscode
 
+/vendor.protogen
 vendor
 
 #temp db
 *.json
 .exe
-/db
 /bin/
 tutor_makefile.mk
+
+#cli app
+/cli/
+/cmd/grpc/pvz-gw/

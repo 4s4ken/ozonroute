@@ -1,0 +1,198 @@
+syntax = "proto3";
+
+package pvz;
+
+import "google/protobuf/timestamp.proto";
+import "validate/validate.proto";
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+option go_package = "gitlab.ozon.dev/gleb_evseev/homework/pkg/pvz";
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  info: {
+    title: "PVZ API";
+    version: "1.0";
+    description: "API для пунктов выдачи заказов";
+  };
+  schemes: HTTP;
+  consumes: "application/json";
+  produces: "application/json";
+};
+
+message GetOrderResponse{
+  Order order = 1;
+}
+
+service OrdersService {
+  rpc AcceptOrder (AcceptOrderRequest) returns (OrderResponse) {
+    option (google.api.http) = {
+      post: "/v1/orders/accept"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Принять заказ";
+      description: "Обработка команды принятия заказа";
+    };
+  }
+  rpc ReturnOrder (OrderIdRequest) returns (OrderResponse){
+    option (google.api.http) = {
+      post: "/v1/orders/return"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Вернуть заказ курьеру";
+      description: "Обработка команды возврата заказа";
+    };
+  }
+  rpc ProcessOrders (ProcessOrdersRequest) returns (ProcessResult){
+    option (google.api.http) = {
+      post: "/v1/orders/process"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Выдоить заказ клиенту или вернуть его в пвз";
+      description: "Обработка команды взаимодействия с заказа клиента";
+    };
+  }
+  rpc ListOrders (ListOrdersRequest) returns (OrdersList) {
+    option (google.api.http) = {
+      get: "/v1/orders"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Список заказов";
+      description: "Получение списка заказов пользователя с пагинацией и фильтрацией";
+    };
+  }
+
+  rpc ListReturns (ListReturnsRequest) returns (ReturnsList) {
+    option (google.api.http) = {
+      get: "/v1/orders/returns"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Список возвратов";
+      description: "Получение списка возвратов";
+    };
+  }
+
+  rpc GetHistory (GetHistoryRequest) returns (OrderHistoryList) {
+    option (google.api.http) = {
+      get: "/v1/orders/history"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "История заказов";
+      description: "Получение истории статусов заказов";
+    };
+  }
+}
+
+message AcceptOrderRequest {
+  uint64 order_id = 1 [(validate.rules).uint64.gt = 0];
+  uint64 user_id = 2 [(validate.rules).uint64.gt = 0];
+  google.protobuf.Timestamp expires_at = 3 [(validate.rules).timestamp.gt = { seconds: 0 }];
+  optional PackageType package = 4;
+  float weight = 5 [(validate.rules).float.gte = 0];
+  float price = 6;
+}
+
+message OrderIdRequest {
+  uint64 order_id = 1 [(validate.rules).uint64.gt = 0];
+}
+
+message ProcessOrdersRequest {
+  uint64 user_id = 1 [(validate.rules).uint64.gt = 0];
+  ActionType action = 2 [(validate.rules).enum.defined_only = true];
+  repeated uint64 order_ids = 3 [(validate.rules).repeated.items.uint64.gt = 0];
+}
+
+enum ActionType {
+  ACTION_TYPE_UNSPECIFIED = 0;
+  ACTION_TYPE_ISSUE = 1;
+  ACTION_TYPE_RETURN = 2;
+}
+
+message ListOrdersRequest {
+  uint64 user_id = 1 [(validate.rules).uint64.gt = 0];
+  bool in_pvz = 2;
+  optional uint32 last_n = 3 [(validate.rules).uint32.gt = 0];
+  Pagination pagination = 4;
+}
+
+message Pagination {
+  uint32 page = 1 [(validate.rules).uint32.gt = 0];
+  uint32 count_on_page = 2 [(validate.rules).uint32.gt = 0];
+}
+
+message ListReturnsRequest {
+  Pagination pagination = 1;
+}
+
+message ImportOrdersRequest {
+  repeated AcceptOrderRequest orders = 1;
+}
+
+message GetHistoryRequest {
+  Pagination pagination = 1;
+}
+
+message OrderResponse {
+  OrderStatus status = 1;
+  uint64 order_id = 2;
+}
+
+message ProcessResult {
+  repeated uint64 processed = 1;
+  repeated uint64 errors = 2;
+}
+
+message OrdersList {
+  repeated Order orders = 1;
+  int32 total = 2 [(validate.rules).int32.gte = 0];
+}
+
+message ReturnsList {
+  repeated Order returns = 1;
+}
+
+message OrderHistoryList {
+  repeated OrderHistory history = 1;
+}
+
+message ImportResult {
+  int32 imported = 1;
+  repeated uint64 errors = 2;
+}
+
+message Order {
+  uint64 order_id = 1;
+  uint64 user_id = 2;
+  OrderStatus status = 3;
+  google.protobuf.Timestamp expires_at = 4;
+  float weight = 5;
+  float total_price = 6;
+  PackageType package = 7;
+}
+
+
+enum PackageType {
+  PACKAGE_TYPE_UNSPECIFIED = 0;
+  PACKAGE_TYPE_BAG = 1;
+  PACKAGE_TYPE_BOX = 2;
+  PACKAGE_TYPE_TAPE = 3;
+  PACKAGE_TYPE_BAG_TAPE = 4;
+  PACKAGE_TYPE_BOX_TAPE = 5;
+}
+
+enum OrderStatus {
+  ORDER_STATUS_UNSPECIFIED = 0;
+  ORDER_STATUS_EXPECTS = 1;
+  ORDER_STATUS_ACCEPTED = 2;
+  ORDER_STATUS_RETURNED = 3;
+  ORDER_STATUS_DELETED = 4;
+}
+
+message OrderHistory {
+  uint64 order_id = 1;
+  OrderStatus status = 2;
+  google.protobuf.Timestamp created_at = 3;
+}

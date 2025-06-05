@@ -19,4 +19,4 @@ linters:
 
   exclusions:
     paths-except:
-      - cmd/main/main.go
+      - cli
