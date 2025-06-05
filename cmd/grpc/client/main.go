@@ -27,7 +27,7 @@ func main() {
 	defer cancel()
 	packageType := pvz.PackageType_PACKAGE_TYPE_BOX
 	acceptResp, err := client.AcceptOrder(ctx, &pvz.AcceptOrderRequest{
-		OrderId:   2,
+		OrderId:   3,
 		UserId:    2,
 		ExpiresAt: timestamppb.New(time.Date(2027, 6, 5, 12, 0, 0, 0, time.UTC)),
 		Weight:    9,
@@ -40,10 +40,10 @@ func main() {
 	log.Printf("AcceptOrder response: %v", acceptResp)
 
 	listOrdersResp, err := client.ListOrders(ctx, &pvz.ListOrdersRequest{
-		UserId: 1,
+		UserId: 2,
 		InPvz:  true,
 		Pagination: &pvz.Pagination{
-			Page:        1,
+			Page:        2,
 			CountOnPage: 10,
 		},
 	})

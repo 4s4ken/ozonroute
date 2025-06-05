@@ -26,7 +26,7 @@ func (s *OrdersService) AcceptOrder(ctx context.Context, req *pvz.AcceptOrderReq
 		return nil, businesserror.EntityPackageError("Order", fmt.Sprintf("%d", req.OrderId))
 	}
 	if !isValidWeight(req.Weight, *req.Package) {
-		return nil, businesserror.EntityWeightError(string(*req.Package), fmt.Sprintf("%d", req.OrderId))
+		return nil, businesserror.EntityWeightError(packageTypeToString(*req.Package), fmt.Sprintf("%d", req.OrderId))
 	}
 	totalPrice := req.Price + float32(finalPrice(*req.Package))
 
@@ -46,10 +46,6 @@ func (s *OrdersService) AcceptOrder(ctx context.Context, req *pvz.AcceptOrderReq
 		Status:  pvz.OrderStatus_ORDER_STATUS_ACCEPTED,
 		OrderId: req.OrderId,
 	}, nil
-}
-
-func uintToStr(id uint64) string {
-	return fmt.Sprintf("%d", id)
 }
 
 func isValidWeight(weight float32, pkg pvz.PackageType) bool {
@@ -82,7 +78,6 @@ func finalPrice(pkg pvz.PackageType) int32 {
 	case pvz.PackageType_PACKAGE_TYPE_BAG_TAPE:
 		return 6
 	case pvz.PackageType_PACKAGE_TYPE_BOX_TAPE:
-
 		return 21
 	default:
 		return 0

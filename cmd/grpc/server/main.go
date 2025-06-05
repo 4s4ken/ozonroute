@@ -1,15 +1,17 @@
 package main
 
 import (
+	"log"
+	"net"
+	"time"
+
 	"github.com/ulule/limiter/v3"
 	"github.com/ulule/limiter/v3/drivers/store/memory"
+	"gitlab.ozon.dev/gleb_evseev/homework/internal/app"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/mw"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/service/pvz"
 	pb "gitlab.ozon.dev/gleb_evseev/homework/pkg/pvz"
 	"google.golang.org/grpc"
-	"log"
-	"net"
-	"time"
 )
 
 const (
@@ -21,6 +23,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
+
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
 			mw.LoggingInterceptor,
@@ -35,7 +38,9 @@ func main() {
 	)
 
 	ordersService := pvz.NewOrdersService()
-	pb.RegisterOrdersServiceServer(grpcServer, ordersService)
+	ordersServer := app.NewOrdersServer(ordersService)
+
+	pb.RegisterOrdersServiceServer(grpcServer, ordersServer)
 
 	log.Println("gRPC server started on :50051")
 	if err := grpcServer.Serve(lis); err != nil {

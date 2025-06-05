@@ -12,7 +12,6 @@ import (
 const DatetimeFormat = "2006-01-02"
 
 type OrdersService struct {
-	pvz.UnimplementedOrdersServiceServer
 	storage map[uint64]*pvz.Order
 }
 
@@ -57,4 +56,22 @@ func MapBusinessErrorToGRPC(err error) error {
 	}
 
 	return status.Errorf(codes.Internal, err.Error())
+}
+func packageTypeToString(pkg pvz.PackageType) string {
+	switch pkg {
+	case pvz.PackageType_PACKAGE_TYPE_UNSPECIFIED:
+		return "UNSPECIFIED"
+	case pvz.PackageType_PACKAGE_TYPE_BAG:
+		return "BAG"
+	case pvz.PackageType_PACKAGE_TYPE_BOX:
+		return "BOX"
+	case pvz.PackageType_PACKAGE_TYPE_TAPE:
+		return "TAPE"
+	case pvz.PackageType_PACKAGE_TYPE_BAG_TAPE:
+		return "BAG_TAPE"
+	case pvz.PackageType_PACKAGE_TYPE_BOX_TAPE:
+		return "BOX_TAPE"
+	default:
+		return "UNKNOWN"
+	}
 }
