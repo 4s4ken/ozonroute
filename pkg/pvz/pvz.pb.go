@@ -4,7 +4,7 @@
 // 	protoc        v6.31.1
 // source: pvz/pvz.proto
 
-package pvz
+package usecase
 
 import (
 	_ "github.com/envoyproxy/protoc-gen-validate/validate"
@@ -315,27 +315,27 @@ func (x *AcceptOrderRequest) GetPrice() float32 {
 	return 0
 }
 
-type OrderIdRequest struct {
+type ReturnOrderRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	OrderId       uint64                 `protobuf:"varint,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *OrderIdRequest) Reset() {
-	*x = OrderIdRequest{}
+func (x *ReturnOrderRequest) Reset() {
+	*x = ReturnOrderRequest{}
 	mi := &file_pvz_pvz_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *OrderIdRequest) String() string {
+func (x *ReturnOrderRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*OrderIdRequest) ProtoMessage() {}
+func (*ReturnOrderRequest) ProtoMessage() {}
 
-func (x *OrderIdRequest) ProtoReflect() protoreflect.Message {
+func (x *ReturnOrderRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_pvz_pvz_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -347,12 +347,12 @@ func (x *OrderIdRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use OrderIdRequest.ProtoReflect.Descriptor instead.
-func (*OrderIdRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ReturnOrderRequest.ProtoReflect.Descriptor instead.
+func (*ReturnOrderRequest) Descriptor() ([]byte, []int) {
 	return file_pvz_pvz_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *OrderIdRequest) GetOrderId() uint64 {
+func (x *ReturnOrderRequest) GetOrderId() uint64 {
 	if x != nil {
 		return x.OrderId
 	}
@@ -629,7 +629,6 @@ func (x *ImportOrdersRequest) GetOrders() []*AcceptOrderRequest {
 
 type GetHistoryRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Pagination    *Pagination            `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -662,13 +661,6 @@ func (x *GetHistoryRequest) ProtoReflect() protoreflect.Message {
 // Deprecated: Use GetHistoryRequest.ProtoReflect.Descriptor instead.
 func (*GetHistoryRequest) Descriptor() ([]byte, []int) {
 	return file_pvz_pvz_proto_rawDescGZIP(), []int{8}
-}
-
-func (x *GetHistoryRequest) GetPagination() *Pagination {
-	if x != nil {
-		return x.Pagination
-	}
-	return nil
 }
 
 type OrderResponse struct {
@@ -1138,8 +1130,8 @@ const file_pvz_pvz_proto_rawDesc = "" +
 	"\x05-\x00\x00\x00\x00R\x06weight\x12\x14\n" +
 	"\x05price\x18\x06 \x01(\x02R\x05priceB\n" +
 	"\n" +
-	"\b_package\"4\n" +
-	"\x0eOrderIdRequest\x12\"\n" +
+	"\b_package\"8\n" +
+	"\x12ReturnOrderRequest\x12\"\n" +
 	"\border_id\x18\x01 \x01(\x04B\a\xfaB\x042\x02 \x00R\aorderId\"\x96\x01\n" +
 	"\x14ProcessOrdersRequest\x12 \n" +
 	"\auser_id\x18\x01 \x01(\x04B\a\xfaB\x042\x02 \x00R\x06userId\x121\n" +
@@ -1162,11 +1154,8 @@ const file_pvz_pvz_proto_rawDesc = "" +
 	"pagination\x18\x01 \x01(\v2\x0f.pvz.PaginationR\n" +
 	"pagination\"F\n" +
 	"\x13ImportOrdersRequest\x12/\n" +
-	"\x06orders\x18\x01 \x03(\v2\x17.pvz.AcceptOrderRequestR\x06orders\"D\n" +
-	"\x11GetHistoryRequest\x12/\n" +
-	"\n" +
-	"pagination\x18\x01 \x01(\v2\x0f.pvz.PaginationR\n" +
-	"pagination\"T\n" +
+	"\x06orders\x18\x01 \x03(\v2\x17.pvz.AcceptOrderRequestR\x06orders\"\x13\n" +
+	"\x11GetHistoryRequest\"T\n" +
 	"\rOrderResponse\x12(\n" +
 	"\x06status\x18\x01 \x01(\x0e2\x10.pvz.OrderStatusR\x06status\x12\x19\n" +
 	"\border_id\x18\x02 \x01(\x04R\aorderId\"E\n" +
@@ -1218,18 +1207,18 @@ const file_pvz_pvz_proto_rawDesc = "" +
 	"\x14ORDER_STATUS_EXPECTS\x10\x01\x12\x19\n" +
 	"\x15ORDER_STATUS_ACCEPTED\x10\x02\x12\x19\n" +
 	"\x15ORDER_STATUS_RETURNED\x10\x03\x12\x18\n" +
-	"\x14ORDER_STATUS_DELETED\x10\x042\xfb\t\n" +
+	"\x14ORDER_STATUS_DELETED\x10\x042\xfd\t\n" +
 	"\rOrdersService\x12\xb7\x01\n" +
-	"\vAcceptOrder\x12\x17.pvz.AcceptOrderRequest\x1a\x12.pvz.OrderResponse\"{\x92A\\\x12\x19Принять заказ\x1a?Обработка команды принятия заказа\x82\xd3\xe4\x93\x02\x16:\x01*\"\x11/v1/orders/accept\x12\xc3\x01\n" +
-	"\vReturnOrder\x12\x13.pvz.OrderIdRequest\x1a\x12.pvz.OrderResponse\"\x8a\x01\x92Ak\x12(Вернуть заказ курьеру\x1a?Обработка команды возврата заказа\x82\xd3\xe4\x93\x02\x16:\x01*\"\x11/v1/orders/return\x12\x92\x02\n" +
-	"\rProcessOrders\x12\x19.pvz.ProcessOrdersRequest\x1a\x12.pvz.ProcessResult\"\xd1\x01\x92A\xb0\x01\x12OВыдоить заказ клиенту или вернуть его в пвз\x1a]Обработка команды взаимодействия с заказа клиента\x82\xd3\xe4\x93\x02\x17:\x01*\"\x12/v1/orders/process\x12\xe6\x01\n" +
+	"\vAcceptOrder\x12\x17.pvz.AcceptOrderRequest\x1a\x12.pvz.OrderResponse\"{\x92A\\\x12\x19Принять заказ\x1a?Обработка команды принятия заказа\x82\xd3\xe4\x93\x02\x16:\x01*\"\x11/v1/orders/accept\x12\xc7\x01\n" +
+	"\vReturnOrder\x12\x17.pvz.ReturnOrderRequest\x1a\x12.pvz.OrderResponse\"\x8a\x01\x92Ak\x12(Вернуть заказ курьеру\x1a?Обработка команды возврата заказа\x82\xd3\xe4\x93\x02\x16:\x01*\"\x11/v1/orders/return\x12\x90\x02\n" +
+	"\rProcessOrders\x12\x19.pvz.ProcessOrdersRequest\x1a\x12.pvz.ProcessResult\"\xcf\x01\x92A\xae\x01\x12MВыдать заказ клиенту или вернуть его в пвз\x1a]Обработка команды взаимодействия с заказа клиента\x82\xd3\xe4\x93\x02\x17:\x01*\"\x12/v1/orders/process\x12\xe6\x01\n" +
 	"\n" +
 	"ListOrders\x12\x16.pvz.ListOrdersRequest\x1a\x0f.pvz.OrdersList\"\xae\x01\x92A\x98\x01\x12\x1bСписок заказов\x1ayПолучение списка заказов пользователя с пагинацией и фильтрацией\x82\xd3\xe4\x93\x02\f\x12\n" +
 	"/v1/orders\x12\xac\x01\n" +
 	"\vListReturns\x12\x17.pvz.ListReturnsRequest\x1a\x10.pvz.ReturnsList\"r\x92AU\x12\x1fСписок возвратов\x1a2Получение списка возвратов\x82\xd3\xe4\x93\x02\x14\x12\x12/v1/orders/returns\x12\xbc\x01\n" +
 	"\n" +
-	"GetHistory\x12\x16.pvz.GetHistoryRequest\x1a\x15.pvz.OrderHistoryList\"\x7f\x92Ab\x12\x1dИстория заказов\x1aAПолучение истории статусов заказов\x82\xd3\xe4\x93\x02\x14\x12\x12/v1/orders/historyB\x9f\x01\x92An\x12E\n" +
-	"\aPVZ API\x125API для пунктов выдачи заказов2\x031.0*\x01\x012\x10application/json:\x10application/jsonZ,gitlab.ozon.dev/gleb_evseev/homework/pkg/pvzb\x06proto3"
+	"GetHistory\x12\x16.pvz.GetHistoryRequest\x1a\x15.pvz.OrderHistoryList\"\x7f\x92Ab\x12\x1dИстория заказов\x1aAПолучение истории статусов заказов\x82\xd3\xe4\x93\x02\x14\x12\x12/v1/orders/historyB\xa3\x01\x92An\x12E\n" +
+	"\aPVZ API\x125API для пунктов выдачи заказов2\x031.0*\x01\x012\x10application/json:\x10application/jsonZ0gitlab.ozon.dev/gleb_evseev/homework/pkg/usecaseb\x06proto3"
 
 var (
 	file_pvz_pvz_proto_rawDescOnce sync.Once
@@ -1251,7 +1240,7 @@ var file_pvz_pvz_proto_goTypes = []any{
 	(OrderStatus)(0),              // 2: pvz.OrderStatus
 	(*GetOrderResponse)(nil),      // 3: pvz.GetOrderResponse
 	(*AcceptOrderRequest)(nil),    // 4: pvz.AcceptOrderRequest
-	(*OrderIdRequest)(nil),        // 5: pvz.OrderIdRequest
+	(*ReturnOrderRequest)(nil),    // 5: pvz.ReturnOrderRequest
 	(*ProcessOrdersRequest)(nil),  // 6: pvz.ProcessOrdersRequest
 	(*ListOrdersRequest)(nil),     // 7: pvz.ListOrdersRequest
 	(*Pagination)(nil),            // 8: pvz.Pagination
@@ -1276,33 +1265,32 @@ var file_pvz_pvz_proto_depIdxs = []int32{
 	8,  // 4: pvz.ListOrdersRequest.pagination:type_name -> pvz.Pagination
 	8,  // 5: pvz.ListReturnsRequest.pagination:type_name -> pvz.Pagination
 	4,  // 6: pvz.ImportOrdersRequest.orders:type_name -> pvz.AcceptOrderRequest
-	8,  // 7: pvz.GetHistoryRequest.pagination:type_name -> pvz.Pagination
-	2,  // 8: pvz.OrderResponse.status:type_name -> pvz.OrderStatus
-	18, // 9: pvz.OrdersList.orders:type_name -> pvz.Order
-	18, // 10: pvz.ReturnsList.returns:type_name -> pvz.Order
-	19, // 11: pvz.OrderHistoryList.history:type_name -> pvz.OrderHistory
-	2,  // 12: pvz.Order.status:type_name -> pvz.OrderStatus
-	20, // 13: pvz.Order.expires_at:type_name -> google.protobuf.Timestamp
-	1,  // 14: pvz.Order.package:type_name -> pvz.PackageType
-	2,  // 15: pvz.OrderHistory.status:type_name -> pvz.OrderStatus
-	20, // 16: pvz.OrderHistory.created_at:type_name -> google.protobuf.Timestamp
-	4,  // 17: pvz.OrdersService.AcceptOrder:input_type -> pvz.AcceptOrderRequest
-	5,  // 18: pvz.OrdersService.ReturnOrder:input_type -> pvz.OrderIdRequest
-	6,  // 19: pvz.OrdersService.ProcessOrders:input_type -> pvz.ProcessOrdersRequest
-	7,  // 20: pvz.OrdersService.ListOrders:input_type -> pvz.ListOrdersRequest
-	9,  // 21: pvz.OrdersService.ListReturns:input_type -> pvz.ListReturnsRequest
-	11, // 22: pvz.OrdersService.GetHistory:input_type -> pvz.GetHistoryRequest
-	12, // 23: pvz.OrdersService.AcceptOrder:output_type -> pvz.OrderResponse
-	12, // 24: pvz.OrdersService.ReturnOrder:output_type -> pvz.OrderResponse
-	13, // 25: pvz.OrdersService.ProcessOrders:output_type -> pvz.ProcessResult
-	14, // 26: pvz.OrdersService.ListOrders:output_type -> pvz.OrdersList
-	15, // 27: pvz.OrdersService.ListReturns:output_type -> pvz.ReturnsList
-	16, // 28: pvz.OrdersService.GetHistory:output_type -> pvz.OrderHistoryList
-	23, // [23:29] is the sub-list for method output_type
-	17, // [17:23] is the sub-list for method input_type
-	17, // [17:17] is the sub-list for extension type_name
-	17, // [17:17] is the sub-list for extension extendee
-	0,  // [0:17] is the sub-list for field type_name
+	2,  // 7: pvz.OrderResponse.status:type_name -> pvz.OrderStatus
+	18, // 8: pvz.OrdersList.orders:type_name -> pvz.Order
+	18, // 9: pvz.ReturnsList.returns:type_name -> pvz.Order
+	19, // 10: pvz.OrderHistoryList.history:type_name -> pvz.OrderHistory
+	2,  // 11: pvz.Order.status:type_name -> pvz.OrderStatus
+	20, // 12: pvz.Order.expires_at:type_name -> google.protobuf.Timestamp
+	1,  // 13: pvz.Order.package:type_name -> pvz.PackageType
+	2,  // 14: pvz.OrderHistory.status:type_name -> pvz.OrderStatus
+	20, // 15: pvz.OrderHistory.created_at:type_name -> google.protobuf.Timestamp
+	4,  // 16: pvz.OrdersService.AcceptOrder:input_type -> pvz.AcceptOrderRequest
+	5,  // 17: pvz.OrdersService.ReturnOrder:input_type -> pvz.ReturnOrderRequest
+	6,  // 18: pvz.OrdersService.ProcessOrders:input_type -> pvz.ProcessOrdersRequest
+	7,  // 19: pvz.OrdersService.ListOrders:input_type -> pvz.ListOrdersRequest
+	9,  // 20: pvz.OrdersService.ListReturns:input_type -> pvz.ListReturnsRequest
+	11, // 21: pvz.OrdersService.GetHistory:input_type -> pvz.GetHistoryRequest
+	12, // 22: pvz.OrdersService.AcceptOrder:output_type -> pvz.OrderResponse
+	12, // 23: pvz.OrdersService.ReturnOrder:output_type -> pvz.OrderResponse
+	13, // 24: pvz.OrdersService.ProcessOrders:output_type -> pvz.ProcessResult
+	14, // 25: pvz.OrdersService.ListOrders:output_type -> pvz.OrdersList
+	15, // 26: pvz.OrdersService.ListReturns:output_type -> pvz.ReturnsList
+	16, // 27: pvz.OrdersService.GetHistory:output_type -> pvz.OrderHistoryList
+	22, // [22:28] is the sub-list for method output_type
+	16, // [16:22] is the sub-list for method input_type
+	16, // [16:16] is the sub-list for extension type_name
+	16, // [16:16] is the sub-list for extension extendee
+	0,  // [0:16] is the sub-list for field type_name
 }
 
 func init() { file_pvz_pvz_proto_init() }

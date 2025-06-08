@@ -1,15 +1,14 @@
 package main
 
 import (
+	hl "gitlab.ozon.dev/gleb_evseev/homework/internal/infra/grpc"
 	"log"
 	"net"
 	"time"
 
 	"github.com/ulule/limiter/v3"
 	"github.com/ulule/limiter/v3/drivers/store/memory"
-	"gitlab.ozon.dev/gleb_evseev/homework/internal/app"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/mw"
-	"gitlab.ozon.dev/gleb_evseev/homework/internal/service/pvz"
 	pb "gitlab.ozon.dev/gleb_evseev/homework/pkg/pvz"
 	"google.golang.org/grpc"
 )
@@ -37,11 +36,10 @@ func main() {
 		),
 	)
 
-	ordersService := pvz.NewOrdersService()
-	ordersServer := app.NewOrdersServer(ordersService)
-
+	ordersService := hl.NewOrdersService()
+	ordersServer := hl.NewOrdersServer(ordersService)
 	pb.RegisterOrdersServiceServer(grpcServer, ordersServer)
-
+	
 	log.Println("gRPC server started on :50051")
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)

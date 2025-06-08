@@ -7,7 +7,7 @@ import "validate/validate.proto";
 import "google/api/annotations.proto";
 import "protoc-gen-openapiv2/options/annotations.proto";
 
-option go_package = "gitlab.ozon.dev/gleb_evseev/homework/pkg/pvz";
+option go_package = "gitlab.ozon.dev/gleb_evseev/homework/pkg/usecase";
 
 option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
   info: {
@@ -35,7 +35,7 @@ service OrdersService {
       description: "Обработка команды принятия заказа";
     };
   }
-  rpc ReturnOrder (OrderIdRequest) returns (OrderResponse){
+  rpc ReturnOrder (ReturnOrderRequest) returns (OrderResponse){
     option (google.api.http) = {
       post: "/v1/orders/return"
       body: "*"
@@ -51,7 +51,7 @@ service OrdersService {
       body: "*"
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      summary: "Выдоить заказ клиенту или вернуть его в пвз";
+      summary: "Выдать заказ клиенту или вернуть его в пвз";
       description: "Обработка команды взаимодействия с заказа клиента";
     };
   }
@@ -95,7 +95,7 @@ message AcceptOrderRequest {
   float price = 6;
 }
 
-message OrderIdRequest {
+message ReturnOrderRequest {
   uint64 order_id = 1 [(validate.rules).uint64.gt = 0];
 }
 
@@ -131,9 +131,7 @@ message ImportOrdersRequest {
   repeated AcceptOrderRequest orders = 1;
 }
 
-message GetHistoryRequest {
-  Pagination pagination = 1;
-}
+message GetHistoryRequest {}
 
 message OrderResponse {
   OrderStatus status = 1;

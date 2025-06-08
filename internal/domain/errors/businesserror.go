@@ -1,4 +1,4 @@
-package businesserror
+package errors
 
 import (
 	"fmt"

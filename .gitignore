@@ -25,6 +25,6 @@ vendor
 /bin/
 tutor_makefile.mk
 
-#cli app
+#cli infra
 /cli/
 /cmd/grpc/pvz-gw/

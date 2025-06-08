@@ -4,7 +4,7 @@
 // - protoc             v6.31.1
 // source: pvz/pvz.proto
 
-package pvz
+package usecase
 
 import (
 	context "context"
@@ -32,7 +32,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type OrdersServiceClient interface {
 	AcceptOrder(ctx context.Context, in *AcceptOrderRequest, opts ...grpc.CallOption) (*OrderResponse, error)
-	ReturnOrder(ctx context.Context, in *OrderIdRequest, opts ...grpc.CallOption) (*OrderResponse, error)
+	ReturnOrder(ctx context.Context, in *ReturnOrderRequest, opts ...grpc.CallOption) (*OrderResponse, error)
 	ProcessOrders(ctx context.Context, in *ProcessOrdersRequest, opts ...grpc.CallOption) (*ProcessResult, error)
 	ListOrders(ctx context.Context, in *ListOrdersRequest, opts ...grpc.CallOption) (*OrdersList, error)
 	ListReturns(ctx context.Context, in *ListReturnsRequest, opts ...grpc.CallOption) (*ReturnsList, error)
@@ -57,7 +57,7 @@ func (c *ordersServiceClient) AcceptOrder(ctx context.Context, in *AcceptOrderRe
 	return out, nil
 }
 
-func (c *ordersServiceClient) ReturnOrder(ctx context.Context, in *OrderIdRequest, opts ...grpc.CallOption) (*OrderResponse, error) {
+func (c *ordersServiceClient) ReturnOrder(ctx context.Context, in *ReturnOrderRequest, opts ...grpc.CallOption) (*OrderResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(OrderResponse)
 	err := c.cc.Invoke(ctx, OrdersService_ReturnOrder_FullMethodName, in, out, cOpts...)
@@ -112,7 +112,7 @@ func (c *ordersServiceClient) GetHistory(ctx context.Context, in *GetHistoryRequ
 // for forward compatibility.
 type OrdersServiceServer interface {
 	AcceptOrder(context.Context, *AcceptOrderRequest) (*OrderResponse, error)
-	ReturnOrder(context.Context, *OrderIdRequest) (*OrderResponse, error)
+	ReturnOrder(context.Context, *ReturnOrderRequest) (*OrderResponse, error)
 	ProcessOrders(context.Context, *ProcessOrdersRequest) (*ProcessResult, error)
 	ListOrders(context.Context, *ListOrdersRequest) (*OrdersList, error)
 	ListReturns(context.Context, *ListReturnsRequest) (*ReturnsList, error)
@@ -130,7 +130,7 @@ type UnimplementedOrdersServiceServer struct{}
 func (UnimplementedOrdersServiceServer) AcceptOrder(context.Context, *AcceptOrderRequest) (*OrderResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AcceptOrder not implemented")
 }
-func (UnimplementedOrdersServiceServer) ReturnOrder(context.Context, *OrderIdRequest) (*OrderResponse, error) {
+func (UnimplementedOrdersServiceServer) ReturnOrder(context.Context, *ReturnOrderRequest) (*OrderResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ReturnOrder not implemented")
 }
 func (UnimplementedOrdersServiceServer) ProcessOrders(context.Context, *ProcessOrdersRequest) (*ProcessResult, error) {
@@ -185,7 +185,7 @@ func _OrdersService_AcceptOrder_Handler(srv interface{}, ctx context.Context, de
 }
 
 func _OrdersService_ReturnOrder_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(OrderIdRequest)
+	in := new(ReturnOrderRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -197,7 +197,7 @@ func _OrdersService_ReturnOrder_Handler(srv interface{}, ctx context.Context, de
 		FullMethod: OrdersService_ReturnOrder_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OrdersServiceServer).ReturnOrder(ctx, req.(*OrderIdRequest))
+		return srv.(OrdersServiceServer).ReturnOrder(ctx, req.(*ReturnOrderRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
