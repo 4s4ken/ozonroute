@@ -1,6 +1,7 @@
 package grpc
 
 import (
+	"gitlab.ozon.dev/gleb_evseev/homework/internal/app"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 	pkg "gitlab.ozon.dev/gleb_evseev/homework/pkg/pvz"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -19,8 +20,6 @@ func FormatTimestamp(ts *timestamppb.Timestamp) string {
 
 func packageTypeToString(pkg pvz.PackageType) string {
 	switch pkg {
-	case pvz.PackageTypeUnspecified:
-		return "UNSPECIFIED"
 	case pvz.PackageTypeBag:
 		return "BAG"
 	case pvz.PackageTypeBox:
@@ -36,14 +35,14 @@ func packageTypeToString(pkg pvz.PackageType) string {
 	}
 }
 
-func mapPackageProtoToDomain(p *pkg.PackageType) pvz.PackageType {
-	if p == nil {
-		return pvz.PackageTypeUnspecified
+func mapPackageProtoToDomain(pac *pkg.PackageType) pvz.PackageType {
+	if pac == nil {
+		return "nil"
 	}
-	return pvz.PackageType(*p)
+	return pvz.PackageType(*pac)
 }
 
-func mapAcceptOrderRequestToInput(req *pkg.AcceptOrderRequest) pvz.AcceptOrderInput {
+func mapAcceptOrderRequestToInput(req *pkg.AcceptOrderRequest) pvz.OrderCreate {
 	var expiresAt time.Time
 	if req.ExpiresAt != nil {
 		expiresAt = req.ExpiresAt.AsTime()
@@ -55,9 +54,9 @@ func mapAcceptOrderRequestToInput(req *pkg.AcceptOrderRequest) pvz.AcceptOrderIn
 		pkgType = &pt
 	}
 
-	return pvz.AcceptOrderInput{
-		OrderID:   req.OrderId,
-		UserID:    req.UserId,
+	return pvz.OrderCreate{
+		OrderID:   pvz.OrderID(req.OrderId),
+		UserID:    pvz.UserID(req.UserId),
 		ExpiresAt: expiresAt,
 		Package:   pkgType,
 		Weight:    req.Weight,
@@ -65,20 +64,20 @@ func mapAcceptOrderRequestToInput(req *pkg.AcceptOrderRequest) pvz.AcceptOrderIn
 	}
 }
 
-func mapReturnOrderRequestToInput(req *pkg.ReturnOrderRequest) pvz.ReturnOrderInput {
-	return pvz.ReturnOrderInput{
+func mapReturnOrderRequestToInput(req *pkg.ReturnOrderRequest) pvz.OrderCreate {
+	return pvz.OrderCreate{
 		OrderID: pvz.OrderID(req.OrderId),
 	}
 }
 
-func mapProcessOrdersRequestToInput(req *pkg.ProcessOrdersRequest) pvz.ProcessOrdersInput {
-	return pvz.ProcessOrdersInput{
-		UserID:   pvz.UserID(req.UserId),
+func mapProcessOrdersRequestToInput(req *pkg.ProcessOrdersRequest) app.ProcessOrdersInput {
+	return app.ProcessOrdersInput{
+		UserID:   req.UserId,
 		Action:   pvz.ActionType(req.Action),
-		OrderIDs: pvz.OrderIDS{},
+		OrderIDs: req.OrderIds,
 	}
 }
-func mapProcessResultToProto(res pvz.ProcessResult) *pkg.ProcessResult {
+func mapProcessResultToProto(res *app.ProcessOrdersOutput) *pkg.ProcessResult {
 	return &pkg.ProcessResult{
 		Processed: res.Processed,
 		Errors:    res.Errors,
@@ -101,7 +100,7 @@ func mapDomainOrdersToProto(domainOrders []pvz.Order) []*pkg.Order {
 	return protoOrders
 }
 
-func mapDomainHistoryToProto(his pvz.OrderHistory) *pkg.OrderHistory {
+func mapDomainHistoryToProto(his app.OrderHistory) *pkg.OrderHistory {
 	return &pkg.OrderHistory{
 		OrderId:   his.OrderID,
 		Status:    pkg.OrderStatus(his.Status),
@@ -109,7 +108,7 @@ func mapDomainHistoryToProto(his pvz.OrderHistory) *pkg.OrderHistory {
 	}
 }
 
-func mapDomainReturnsListToProto(returnList *pvz.ReturnsList) *pkg.ReturnsList {
+func mapDomainReturnsListToProto(returnList *app.ReturnsListOutput) *pkg.ReturnsList {
 	if returnList == nil {
 		return nil
 	}

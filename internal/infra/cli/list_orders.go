@@ -1,22 +1,22 @@
 package cli
 
 import (
-	"context"
 	"fmt"
 	"github.com/spf13/cobra"
+	"gitlab.ozon.dev/gleb_evseev/homework/internal/app"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 )
 
 // ListOrdersCommand функция для выполнения команды list-orders
 func (h *FileHandler) ListOrdersCommand(cmd *cobra.Command, _ []string) error {
-	ctx := context.Background()
+	ctx := cmd.Context()
 
 	userID, err := cmd.Flags().GetUint64("user-id")
 	if err != nil {
 		return fmt.Errorf("ERROR: %w", err)
 	}
 
-	inPvz := false
+	var inPvz bool
 	if cmd.Flags().Changed("in-pvz") {
 		inPvz, _ = cmd.Flags().GetBool("in-pvz")
 	}
@@ -46,24 +46,15 @@ func (h *FileHandler) ListOrdersCommand(cmd *cobra.Command, _ []string) error {
 		limitPtr = &limit
 	}
 
-	var pagination *pvz.PaginationInput
-	if pagePtr != nil || limitPtr != nil {
-		pagination = &pvz.PaginationInput{}
-		if pagePtr != nil {
-			pagination.Page = *pagePtr
-		}
-		if limitPtr != nil {
-			pagination.CountOnPage = *limitPtr
-		}
+	options := app.ListOrdersInput{
+		UserID: userID,
+		InPVZ:  inPvz,
+		LastN:  lastPtr,
+		Pagination: &pvz.Pagination{
+			Page:  pagePtr,
+			Limit: limitPtr,
+		},
 	}
-
-	options := pvz.ListOrdersInput{
-		UserID:     pvz.UserID(userID),
-		InPVZ:      inPvz,
-		LastN:      lastPtr,
-		Pagination: pagination,
-	}
-
 	ordersList, err := h.commandsHandler.ListOrders(ctx, options)
 	if err != nil {
 		return mapError(err)
@@ -71,6 +62,9 @@ func (h *FileHandler) ListOrdersCommand(cmd *cobra.Command, _ []string) error {
 
 	for _, order := range ordersList.Orders {
 		pkgStr := "none"
+		if order.Package != nil {
+			pkgStr = string(*order.Package)
+		}
 		fmt.Printf("ORDER: %d %d %d %s %s %.2f %f\n",
 			order.OrderID,
 			order.UserID,
@@ -78,7 +72,7 @@ func (h *FileHandler) ListOrdersCommand(cmd *cobra.Command, _ []string) error {
 			MapTimeToString(order.ExpiresAt),
 			pkgStr,
 			order.Weight,
-			order.TotalPrice,
+			order.Price,
 		)
 	}
 

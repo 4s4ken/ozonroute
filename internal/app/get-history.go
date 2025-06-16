@@ -3,20 +3,35 @@ package app
 import (
 	"context"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
+	"sort"
+	"time"
 )
 
-func (s *Storage) OrderHistory(ctx context.Context) (*pvz.OrderHistoryList, error) {
-	history := make([]pvz.OrderHistory, 0)
+type OrderHistory struct {
+	OrderID   uint64
+	Status    pvz.OrderStatus
+	CreatedAt time.Time
+}
+type OrderHistoryList struct {
+	History []OrderHistory
+}
+
+func (s *Storage) OrderHistory(ctx context.Context) (*OrderHistoryList, error) {
+	history := make([]OrderHistory, 0)
 
 	for _, userOrders := range s.store {
 		for _, order := range userOrders {
-			history = append(history, pvz.OrderHistory{
+			history = append(history, OrderHistory{
 				OrderID:   uint64(order.OrderID),
 				Status:    order.Status,
-				CreatedAt: order.ExpiresAt,
+				CreatedAt: order.LastUpdate,
 			})
 		}
 	}
 
-	return &pvz.OrderHistoryList{History: history}, nil
+	sort.Slice(history, func(i, j int) bool {
+		return history[i].CreatedAt.After(history[j].CreatedAt)
+	})
+
+	return &OrderHistoryList{History: history}, nil
 }

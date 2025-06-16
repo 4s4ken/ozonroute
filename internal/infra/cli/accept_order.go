@@ -44,21 +44,22 @@ func (h *FileHandler) AcceptOrderCommand(cmd *cobra.Command, _ []string) error {
 		return validationError(err)
 	}
 
-	var pkg pvz.PackageType
+	var pkg *pvz.PackageType
 	if pkgStr != "" {
-		pkg, err = MapPackageToDomain(pkgStr)
+		pkgVal, err := MapPackageToDomain(pkgStr)
 		if err != nil {
 			return err
 		}
+		pkg = &pkgVal
 	}
 
-	order := pvz.AcceptOrderInput{
-		OrderID:   orderID,
-		UserID:    userID,
+	order := pvz.OrderCreate{
+		OrderID:   pvz.OrderID(orderID),
+		UserID:    pvz.UserID(userID),
 		ExpiresAt: exp,
 		Weight:    float32(ordWeight),
 		Price:     float32(ordPrice.InexactFloat64()),
-		Package:   &pkg,
+		Package:   pkg,
 	}
 
 	err = h.commandsHandler.Accept(context.Background(), order)

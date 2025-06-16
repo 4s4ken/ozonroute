@@ -13,7 +13,7 @@ func (h *FileHandler) ReturnOrderCommand(cmd *cobra.Command, _ []string) error {
 		return mapError(err)
 	}
 
-	input := pvz.ReturnOrderInput{
+	input := pvz.OrderCreate{
 		OrderID: pvz.OrderID(orderID),
 	}
 

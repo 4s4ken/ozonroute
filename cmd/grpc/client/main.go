@@ -25,14 +25,14 @@ func main() {
 	client := pkg.NewOrdersServiceClient(conn)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	packageType := pkg.PackageType_PACKAGE_TYPE_BOX
+	//packageType := pkg.PackageType_PACKAGE_TYPE_BOX
 	acceptResp, err := client.AcceptOrder(ctx, &pkg.AcceptOrderRequest{
-		OrderId:   3,
+		OrderId:   14,
 		UserId:    2,
 		ExpiresAt: timestamppb.New(time.Date(2027, 6, 5, 12, 0, 0, 0, time.UTC)),
 		Weight:    9,
 		Price:     100,
-		Package:   &packageType,
+		//Package:   &packageType,
 	})
 	if err != nil {
 		log.Fatalf("AcceptOrder failed: %v", err)
@@ -43,7 +43,7 @@ func main() {
 		UserId: 2,
 		InPvz:  true,
 		Pagination: &pkg.Pagination{
-			Page:        2,
+			Page:        0,
 			CountOnPage: 10,
 		},
 	})
@@ -54,7 +54,7 @@ func main() {
 
 	listReturnsResp, err := client.ListReturns(ctx, &pkg.ListReturnsRequest{
 		Pagination: &pkg.Pagination{
-			Page:        1,
+			Page:        0,
 			CountOnPage: 10,
 		},
 	})

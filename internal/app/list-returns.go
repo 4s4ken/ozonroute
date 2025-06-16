@@ -2,15 +2,22 @@ package app
 
 import (
 	"context"
-	"fmt"
 	"sort"
 
 	storageErrors "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/errors"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 )
 
+type ListReturnsInput struct {
+	Pagination pvz.Pagination
+}
+
+type ReturnsListOutput struct {
+	Returns []pvz.Order
+}
+
 // ListReturns возвращает все возвращённые заказы, отсортированные по убыванию срока хранения.
-func (s *Storage) ListReturns(ctx context.Context, options pvz.ListReturnsInput) (*pvz.ReturnsList, error) {
+func (s *Storage) ListReturns(ctx context.Context, options ListReturnsInput) (*ReturnsListOutput, error) {
 	var rawReturns []*pvz.Order
 
 	for _, userOrders := range s.store {
@@ -25,10 +32,11 @@ func (s *Storage) ListReturns(ctx context.Context, options pvz.ListReturnsInput)
 		return rawReturns[i].ExpiresAt.After(rawReturns[j].ExpiresAt)
 	})
 
-	if options.Pagination != nil {
-		page := options.Pagination.Page
-		limit := options.Pagination.CountOnPage
-		if limit <= 0 {
+	if options.Pagination.Page != nil && options.Pagination.Limit != nil {
+		page := *options.Pagination.Page
+		limit := *options.Pagination.Limit
+
+		if limit == 0 {
 			return nil, storageErrors.EntityValidationError("Limit", "must be > 0")
 		}
 
@@ -36,7 +44,9 @@ func (s *Storage) ListReturns(ctx context.Context, options pvz.ListReturnsInput)
 		end := start + limit
 
 		if start >= uint64(len(rawReturns)) {
-			return nil, storageErrors.EntityValidationError("Pagination", fmt.Sprintf("page %d out of bounds", page))
+			return &ReturnsListOutput{
+				Returns: []pvz.Order{},
+			}, nil
 		}
 		if end > uint64(len(rawReturns)) {
 			end = uint64(len(rawReturns))
@@ -49,7 +59,7 @@ func (s *Storage) ListReturns(ctx context.Context, options pvz.ListReturnsInput)
 		returns = append(returns, *ptr)
 	}
 
-	return &pvz.ReturnsList{
+	return &ReturnsListOutput{
 		Returns: returns,
 	}, nil
 }

@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"github.com/spf13/cobra"
+	"gitlab.ozon.dev/gleb_evseev/homework/internal/app"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/errors"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 )
@@ -27,12 +28,14 @@ func (h *FileHandler) ListReturnsCommand(cmd *cobra.Command, _ []string) error {
 		limitPtr = &limit
 	}
 
-	options := pvz.ListReturnsInput{}
+	options := app.ListReturnsInput{}
 
 	if pagePtr != nil && limitPtr != nil {
-		options.Pagination = &pvz.PaginationInput{
-			Page:        *pagePtr,
-			CountOnPage: *limitPtr,
+		options = app.ListReturnsInput{
+			Pagination: pvz.Pagination{
+				Page:  pagePtr,
+				Limit: limitPtr,
+			},
 		}
 		fmt.Printf("PAGE: %d LIMIT: %d\n", *pagePtr, *limitPtr)
 	}

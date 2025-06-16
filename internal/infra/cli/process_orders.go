@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/spf13/cobra"
-	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
+	"gitlab.ozon.dev/gleb_evseev/homework/internal/app"
 	"strconv"
 	"strings"
 )
@@ -30,17 +30,17 @@ func (h *FileHandler) ProcessOrdersCommand(cmd *cobra.Command, _ []string) error
 	}
 
 	ids := strings.Split(orderIDsStr, ",")
-	var orderIDs []pvz.OrderID
+	var orderIDs []uint64
 	for _, idStr := range ids {
 		id, err3 := strconv.Atoi(strings.TrimSpace(idStr))
 		if err3 != nil {
 			return fmt.Errorf("ERROR: %s is not a valid order ID", idStr)
 		}
-		orderIDs = append(orderIDs, pvz.OrderID(id))
+		orderIDs = append(orderIDs, uint64(id))
 	}
 
-	input := pvz.ProcessOrdersInput{
-		UserID:   pvz.UserID(userID),
+	input := app.ProcessOrdersInput{
+		UserID:   userID,
 		Action:   ActionTypeFromString(action),
 		OrderIDs: orderIDs,
 	}

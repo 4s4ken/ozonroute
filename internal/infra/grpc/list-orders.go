@@ -2,8 +2,9 @@ package grpc
 
 import (
 	"context"
+	"gitlab.ozon.dev/gleb_evseev/homework/internal/app"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
-
+	"gitlab.ozon.dev/gleb_evseev/homework/internal/mw"
 	pkg "gitlab.ozon.dev/gleb_evseev/homework/pkg/pvz"
 )
 
@@ -15,25 +16,28 @@ func (s *OrdersServer) ListOrders(ctx context.Context, req *pkg.ListOrdersReques
 		lastN = &tmp
 	}
 
-	input := pvz.ListOrdersInput{
-		UserID: pvz.UserID(req.UserId),
+	page := uint64(req.Pagination.Page)
+	limit := uint64(req.Pagination.CountOnPage)
+
+	options := app.ListOrdersInput{
+		UserID: req.UserId,
 		InPVZ:  req.InPvz,
 		LastN:  lastN,
-		Pagination: &pvz.PaginationInput{
-			Page:        uint64(req.Pagination.Page),
-			CountOnPage: uint64(req.Pagination.CountOnPage),
+		Pagination: &pvz.Pagination{
+			Page:  &page,
+			Limit: &limit,
 		},
 	}
 
-	resp, err := s.ordersHandler.ListOrders(ctx, input)
+	resp, err := s.ordersHandler.ListOrders(ctx, options)
 	if err != nil {
-		return nil, MapBusinessErrorToGRPC(err)
+		return nil, mw.MapBusinessErrorToGRPC(err)
 	}
 
 	ordersProto := mapDomainOrdersToProto(resp.Orders)
 
 	return &pkg.OrdersList{
 		Orders: ordersProto,
-		Total:  int32(resp.Total),
+		Total:  resp.Total,
 	}, nil
 }

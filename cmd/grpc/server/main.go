@@ -1,6 +1,8 @@
 package main
 
 import (
+	"gitlab.ozon.dev/gleb_evseev/homework/internal/app"
+	"gitlab.ozon.dev/gleb_evseev/homework/internal/config"
 	hl "gitlab.ozon.dev/gleb_evseev/homework/internal/infra/grpc"
 	"log"
 	"net"
@@ -35,11 +37,16 @@ func main() {
 			),
 		),
 	)
+	js, err := app.NewJsonStorage(config.DBPath, time.Now().UTC)
 
-	ordersService := hl.NewOrdersService()
-	ordersServer := hl.NewOrdersServer(ordersService)
+	if err != nil {
+		log.Fatalf("Failed to create json storage: %v", err)
+	}
+
+	handler := app.New(js)
+	ordersServer := hl.NewOrdersServer(handler)
 	pb.RegisterOrdersServiceServer(grpcServer, ordersServer)
-	
+
 	log.Println("gRPC server started on :50051")
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)

@@ -5,7 +5,7 @@ import (
 )
 
 type (
-	PackageType int
+	PackageType string
 	OrderStatus int
 	ActionType  int
 	UserID      uint64
@@ -14,12 +14,12 @@ type (
 )
 
 const (
-	PackageTypeUnspecified PackageType = iota
-	PackageTypeBag
-	PackageTypeBox
-	PackageTypeTape
-	PackageTypeBagTape
-	PackageTypeBoxTape
+	NoPackage          PackageType = ""
+	PackageTypeBag     PackageType = "bag"
+	PackageTypeBox     PackageType = "box"
+	PackageTypeTape    PackageType = "tape"
+	PackageTypeBagTape PackageType = "bag+tape"
+	PackageTypeBoxTape PackageType = "box+tape"
 )
 
 const (
@@ -36,85 +36,30 @@ const (
 	ActionTypeReturn
 )
 
-type AcceptOrderInput struct {
-	OrderID   uint64
-	UserID    uint64
-	ExpiresAt time.Time
-	Package   *PackageType
-	Weight    float32
-	Price     float32
-}
-
-type ReturnOrderInput struct {
-	OrderID OrderID
-}
-
-type ProcessOrdersInput struct {
-	UserID   UserID
-	Action   ActionType
-	OrderIDs []OrderID
-}
-
-type ListOrdersInput struct {
-	UserID     UserID
-	InPVZ      bool
-	LastN      *uint64
-	Pagination *PaginationInput
-}
-
-type PaginationInput struct {
-	Page        uint64
-	CountOnPage uint64
-}
-
-type ListReturnsInput struct {
-	Pagination *PaginationInput
-}
-
-type GetHistoryInput struct {
-	Pagination *PaginationInput
+type OrderCreate struct {
+	OrderID   OrderID      `json:"order_id,"`
+	UserID    UserID       `json:"user_id"`
+	ExpiresAt time.Time    `json:"expires_at"`
+	Weight    float32      `json:"weight"`
+	Price     float32      `json:"price"`
+	Package   *PackageType `json:"package_type,omitempty"`
 }
 
 type Order struct {
-	OrderID    OrderID
-	UserID     UserID
-	Status     OrderStatus
-	ExpiresAt  time.Time
-	Weight     float32
-	TotalPrice float32
-	Package    PackageType
-}
-type ProcessResult struct {
-	Processed []uint64
-	Errors    []uint64
+	OrderCreate
+	Status     OrderStatus `json:"status"`
+	LastUpdate time.Time   `json:"last_update,omitempty"`
 }
 
-type OrdersList struct {
-	Orders []Order
-	Total  int32
+type ListOptions struct {
+	UserID     uint64
+	InPVZ      bool
+	LastN      *uint64
+	Pagination *Pagination
 }
-
-type ReturnsList struct {
-	Returns []Order
-}
-
-type OrderHistory struct {
-	OrderID   uint64
-	Status    OrderStatus
-	CreatedAt time.Time
-}
-
-type OrderHistoryList struct {
-	History []OrderHistory
-}
-
-type ImportOrdersInput struct {
-	Orders []AcceptOrderInput
-}
-
-type ImportResult struct {
-	Imported int32
-	Errors   []uint64
+type Pagination struct {
+	Page  *uint64
+	Limit *uint64
 }
 
 // IsExpired проверяет, истёк ли срок хранения заказа.

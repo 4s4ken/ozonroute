@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/spf13/cobra"
+	"gitlab.ozon.dev/gleb_evseev/homework/internal/app"
 	berrors "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/errors"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 	"os"
@@ -14,12 +15,12 @@ import (
 
 // commandsHandler определяет интерфейс бизнес-логики, которую вызывает CLI
 type commandsHandler interface {
-	Accept(ctx context.Context, order pvz.AcceptOrderInput) error
-	Return(ctx context.Context, orderID pvz.ReturnOrderInput) error
-	Process(ctx context.Context, orders pvz.ProcessOrdersInput) (pvz.ProcessResult, error)
-	ListOrders(ctx context.Context, opts pvz.ListOrdersInput) (*pvz.OrdersList, error)
-	ListReturns(ctx context.Context, opts pvz.ListReturnsInput) (*pvz.ReturnsList, error)
-	OrderHistory(ctx context.Context) (*pvz.OrderHistoryList, error)
+	Accept(ctx context.Context, order pvz.OrderCreate) error
+	Return(ctx context.Context, input pvz.OrderCreate) error
+	Process(ctx context.Context, orders app.ProcessOrdersInput) (*app.ProcessOrdersOutput, error)
+	ListOrders(ctx context.Context, opts app.ListOrdersInput) (*app.OrdersListOutput, error)
+	ListReturns(ctx context.Context, opts app.ListReturnsInput) (*app.ReturnsListOutput, error)
+	OrderHistory(ctx context.Context) (*app.OrderHistoryList, error)
 	//ImportOrders(ctx context.Context, orders string) (pvz.ImportResult, error)
 	//ScrollOrders(ctx context.Context, userID pvz.UserID, limit uint, lastID *pvz.OrderID) ([]*pvz.OrdersList, *pvz.OrderID, error)
 }

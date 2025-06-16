@@ -2,7 +2,7 @@ package grpc
 
 import (
 	"context"
-
+	"gitlab.ozon.dev/gleb_evseev/homework/internal/mw"
 	pkg "gitlab.ozon.dev/gleb_evseev/homework/pkg/pvz"
 )
 
@@ -12,7 +12,7 @@ func (s *OrdersServer) ReturnOrder(ctx context.Context, req *pkg.ReturnOrderRequ
 
 	err := s.ordersHandler.Return(ctx, input)
 	if err != nil {
-		return nil, MapBusinessErrorToGRPC(err)
+		return nil, mw.MapBusinessErrorToGRPC(err)
 	}
 
 	return &pkg.OrderResponse{

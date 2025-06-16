@@ -3,57 +3,74 @@ package app
 import (
 	"context"
 	"fmt"
+
 	storageErrors "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/errors"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 )
 
+type ProcessOrdersInput struct {
+	UserID   uint64
+	Action   pvz.ActionType
+	OrderIDs []uint64
+}
+
+type ProcessOrdersOutput struct {
+	Processed []uint64
+	Errors    []uint64
+}
+
 // ProcessOrders — обработка заказов покупателей (выдача/возврат).
-func (s *Storage) ProcessOrders(ctx context.Context, orders pvz.ProcessOrdersInput) error {
-	ordersByUser, ok := s.store[orders.UserID]
+func (s *Storage) ProcessOrders(ctx context.Context, orders ProcessOrdersInput) (*ProcessOrdersOutput, error) {
+	ordersByUser, ok := s.store[pvz.UserID(orders.UserID)]
 	if !ok {
-		return storageErrors.EntityNotFoundError("User", fmt.Sprint(orders.UserID))
+		return nil, storageErrors.EntityNotFoundError("User", fmt.Sprint(orders.UserID))
 	}
 
+	var processed []uint64
+	var errors []uint64
+
+	now := s.nowFn().UTC()
+
 	for _, orderID := range orders.OrderIDs {
-		order, ok := ordersByUser[orderID]
+		order, ok := ordersByUser[pvz.OrderID(orderID)]
 		if !ok {
-			return storageErrors.EntityNotFoundError("Order", fmt.Sprint(orderID))
+			errors = append(errors, orderID)
+			continue
 		}
 
 		switch orders.Action {
 		case pvz.ActionTypeIssue:
-			if order.IsExpired(s.nowFn().UTC()) {
-				return storageErrors.EntityExpiredError("Order", fmt.Sprint(orderID))
+			if order.IsExpired(now) {
+				errors = append(errors, orderID)
+				continue
 			}
 			order.Status = pvz.OrderStatusIssued
 
 		case pvz.ActionTypeReturn:
-			if order.IsExpiredForReturn(s.nowFn().UTC()) {
-				return storageErrors.EntityExpiredError("Order", fmt.Sprint(orderID))
+			if order.IsExpiredForReturn(now) {
+				errors = append(errors, orderID)
+				continue
 			}
 			order.Status = pvz.OrderStatusReturned
 			order.ExpiresAt = s.nowFn()
 
 		default:
-			return storageErrors.EntityValidationError("Action", fmt.Sprint(orders.Action))
+			return nil, storageErrors.EntityValidationError("Action", fmt.Sprint(orders.Action))
 		}
+
+		processed = append(processed, orderID)
 	}
 
-	return s.writeDataToFile()
+	if err := s.writeDataToFile(); err != nil {
+		return nil, err
+	}
+
+	return &ProcessOrdersOutput{
+		Processed: processed,
+		Errors:    errors,
+	}, nil
 }
 
-func (s *Storage) Process(ctx context.Context, orders pvz.ProcessOrdersInput) (pvz.ProcessResult, error) {
-	err := s.ProcessOrders(ctx, orders)
-	if err != nil {
-		return pvz.ProcessResult{}, err
-	}
-
-	processed := make([]uint64, 0, len(orders.OrderIDs))
-	for _, id := range orders.OrderIDs {
-		processed = append(processed, uint64(id))
-	}
-
-	return pvz.ProcessResult{
-		Processed: processed,
-	}, nil
+func (s *Storage) Process(ctx context.Context, input ProcessOrdersInput) (*ProcessOrdersOutput, error) {
+	return s.ProcessOrders(ctx, input)
 }

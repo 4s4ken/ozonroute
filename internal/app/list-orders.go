@@ -8,8 +8,20 @@ import (
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 )
 
+type ListOrdersInput struct {
+	UserID uint64
+	InPVZ  bool
+	LastN  *uint64
+	*pvz.Pagination
+}
+
+type OrdersListOutput struct {
+	Orders []pvz.Order
+	Total  int32
+}
+
 // ListOrders возвращает заказы пользователя с фильтрами (в ПВЗ, страница, лимит, последние N).
-func (s *Storage) ListOrders(ctx context.Context, options pvz.ListOrdersInput) (*pvz.OrdersList, error) {
+func (s *Storage) ListOrders(ctx context.Context, options ListOrdersInput) (*OrdersListOutput, error) {
 	userID := pvz.UserID(options.UserID)
 	ordersMap, ok := s.store[userID]
 	if !ok {
@@ -34,18 +46,23 @@ func (s *Storage) ListOrders(ctx context.Context, options pvz.ListOrdersInput) (
 		}
 	}
 
-	if options.Pagination != nil {
-		page := int(options.Pagination.Page)
-		limit := int(options.Pagination.CountOnPage)
-		start := page * limit
-		end := start + limit
+	if options.Page != nil && options.Limit != nil {
+		page := int(*options.Page)
+		limit := int(*options.Limit)
+		if page < 0 || limit <= 0 {
+			return nil, storageErrors.EntityValidationError("Pagination", "page must be >= 0 and limit > 0")
+		}
 
+		start := page * limit
 		if start >= len(filtered) {
 			return nil, storageErrors.EntityValidationError("Pagination", "page out of bounds")
 		}
+
+		end := start + limit
 		if end > len(filtered) {
 			end = len(filtered)
 		}
+
 		filtered = filtered[start:end]
 	}
 
@@ -54,7 +71,7 @@ func (s *Storage) ListOrders(ctx context.Context, options pvz.ListOrdersInput) (
 		result = append(result, *o)
 	}
 
-	return &pvz.OrdersList{
+	return &OrdersListOutput{
 		Orders: result,
 		Total:  int32(len(ordersMap)),
 	}, nil
