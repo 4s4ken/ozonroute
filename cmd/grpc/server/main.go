@@ -35,6 +35,7 @@ func main() {
 					limiter.Rate{Period: 10 * time.Second, Limit: 2},
 				),
 			),
+			mw.ErrorMappingInterceptor(),
 		),
 	)
 	js, err := app.NewJsonStorage(config.DBPath, time.Now().UTC)

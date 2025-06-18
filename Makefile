@@ -6,8 +6,18 @@ endif
 
 .PHONY: bin-deps .vendor-proto/validate .vendor-proto/google/api .vendor-proto/protoc-gen-openapiv2/options generate run
 
+BINARY_NAME=./bin/homework
 LOCAL_BIN := $(CURDIR)/bin
 OUT_PATH := $(CURDIR)/pkg
+
+update:
+	go mod tidy
+
+linter:
+	golangci-lint run
+
+start:
+	./$(BINARY_NAME)
 
 bin-deps: export GOBIN := $(LOCAL_BIN)
 bin-deps: export PROTOC_VERSION := protoc-31.1-win64
@@ -65,4 +75,4 @@ generate:
 		api/pvz/pvz.proto
 	go mod tidy
 
-run: bin-deps .vendor-proto/validate .vendor-proto/google/api .vendor-proto/protoc-gen-openapiv2/options run
+run: bin-deps .vendor-proto/validate .vendor-proto/google/api .vendor-proto/protoc-gen-openapiv2/options generate update linter start start

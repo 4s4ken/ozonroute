@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"google.golang.org/grpc/grpclog"
 	"log"
 	"time"
 
@@ -20,19 +21,26 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to connect: %v", err)
 	}
-	defer conn.Close()
+	defer func() {
+		if err != nil {
+			if err := conn.Close(); err != nil {
+				grpclog.Errorf("Failed to close conn to %s: %v", grpcAddress, err)
+			}
+			return
+		}
+	}()
 
 	client := pkg.NewOrdersServiceClient(conn)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	//packageType := pkg.PackageType_PACKAGE_TYPE_BOX
+	packageType := pkg.PackageType_PACKAGE_TYPE_BOX
 	acceptResp, err := client.AcceptOrder(ctx, &pkg.AcceptOrderRequest{
-		OrderId:   14,
+		OrderId:   21,
 		UserId:    2,
 		ExpiresAt: timestamppb.New(time.Date(2027, 6, 5, 12, 0, 0, 0, time.UTC)),
 		Weight:    9,
 		Price:     100,
-		//Package:   &packageType,
+		Package:   &packageType,
 	})
 	if err != nil {
 		log.Fatalf("AcceptOrder failed: %v", err)

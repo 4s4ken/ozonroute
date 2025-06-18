@@ -20,10 +20,10 @@ type ProcessOrdersOutput struct {
 }
 
 // ProcessOrders — обработка заказов покупателей (выдача/возврат).
-func (s *Storage) ProcessOrders(ctx context.Context, orders ProcessOrdersInput) (*ProcessOrdersOutput, error) {
+func (s *Storage) ProcessOrders(ctx context.Context, orders ProcessOrdersInput) (ProcessOrdersOutput, error) {
 	ordersByUser, ok := s.store[pvz.UserID(orders.UserID)]
 	if !ok {
-		return nil, storageErrors.EntityNotFoundError("User", fmt.Sprint(orders.UserID))
+		return ProcessOrdersOutput{}, storageErrors.EntityNotFoundError("User", fmt.Sprint(orders.UserID))
 	}
 
 	var processed []uint64
@@ -55,22 +55,22 @@ func (s *Storage) ProcessOrders(ctx context.Context, orders ProcessOrdersInput) 
 			order.ExpiresAt = s.nowFn()
 
 		default:
-			return nil, storageErrors.EntityValidationError("Action", fmt.Sprint(orders.Action))
+			return ProcessOrdersOutput{}, storageErrors.EntityValidationError("Action", fmt.Sprint(orders.Action))
 		}
 
 		processed = append(processed, orderID)
 	}
 
 	if err := s.writeDataToFile(); err != nil {
-		return nil, err
+		return ProcessOrdersOutput{}, err
 	}
 
-	return &ProcessOrdersOutput{
+	return ProcessOrdersOutput{
 		Processed: processed,
 		Errors:    errors,
 	}, nil
 }
 
-func (s *Storage) Process(ctx context.Context, input ProcessOrdersInput) (*ProcessOrdersOutput, error) {
+func (s *Storage) Process(ctx context.Context, input ProcessOrdersInput) (ProcessOrdersOutput, error) {
 	return s.ProcessOrders(ctx, input)
 }

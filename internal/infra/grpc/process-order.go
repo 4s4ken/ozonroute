@@ -3,7 +3,6 @@ package grpc
 import (
 	"context"
 
-	"gitlab.ozon.dev/gleb_evseev/homework/internal/mw"
 	pkg "gitlab.ozon.dev/gleb_evseev/homework/pkg/pvz"
 )
 
@@ -13,7 +12,7 @@ func (s *OrdersServer) ProcessOrder(ctx context.Context, req *pkg.ProcessOrdersR
 
 	resp, err := s.ordersHandler.Process(ctx, input)
 	if err != nil {
-		return nil, mw.MapBusinessErrorToGRPC(err)
+		return nil, err
 	}
 	return mapProcessResultToProto(resp), nil
 }

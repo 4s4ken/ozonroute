@@ -41,7 +41,10 @@ func main() {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		w.Write(b)
+		if _, err := w.Write(b); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+
 	})
 
 	mux.Handle("/swagger/*", httpSwagger.Handler(

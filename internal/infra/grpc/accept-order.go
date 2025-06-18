@@ -2,7 +2,6 @@ package grpc
 
 import (
 	"context"
-	"gitlab.ozon.dev/gleb_evseev/homework/internal/mw"
 	pkg "gitlab.ozon.dev/gleb_evseev/homework/pkg/pvz"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -13,11 +12,11 @@ func (s *OrdersServer) AcceptOrder(ctx context.Context, req *pkg.AcceptOrderRequ
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "request is nil")
 	}
-	input := mapAcceptOrderRequestToInput(req)
+	input, _ := mapAcceptOrderRequestToInput(req)
 
 	err := s.ordersHandler.Accept(ctx, input)
 	if err != nil {
-		return nil, mw.MapBusinessErrorToGRPC(err)
+		return nil, err
 	}
 
 	return &pkg.OrderResponse{

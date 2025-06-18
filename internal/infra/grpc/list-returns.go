@@ -4,7 +4,6 @@ import (
 	"context"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/app"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
-	"gitlab.ozon.dev/gleb_evseev/homework/internal/mw"
 	pkg "gitlab.ozon.dev/gleb_evseev/homework/pkg/pvz"
 )
 
@@ -23,7 +22,7 @@ func (s *OrdersServer) ListReturns(ctx context.Context, req *pkg.ListReturnsRequ
 
 	resp, err := s.ordersHandler.ListReturns(ctx, options)
 	if err != nil {
-		return nil, mw.MapBusinessErrorToGRPC(err)
+		return nil, err
 	}
 
 	return mapDomainReturnsListToProto(resp), nil

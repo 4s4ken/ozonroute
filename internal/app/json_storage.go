@@ -76,7 +76,12 @@ func (s *Storage) writeDataToFile() error {
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+
+			fmt.Printf("failed to close file: %v\n", err)
+		}
+	}()
 
 	encoder := json.NewEncoder(file)
 	err = encoder.Encode(s.store)

@@ -17,7 +17,7 @@ import (
 type commandsHandler interface {
 	Accept(ctx context.Context, order pvz.OrderCreate) error
 	Return(ctx context.Context, input pvz.OrderCreate) error
-	Process(ctx context.Context, orders app.ProcessOrdersInput) (*app.ProcessOrdersOutput, error)
+	Process(ctx context.Context, orders app.ProcessOrdersInput) (app.ProcessOrdersOutput, error)
 	ListOrders(ctx context.Context, opts app.ListOrdersInput) (*app.OrdersListOutput, error)
 	ListReturns(ctx context.Context, opts app.ListReturnsInput) (*app.ReturnsListOutput, error)
 	OrderHistory(ctx context.Context) (*app.OrderHistoryList, error)

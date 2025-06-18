@@ -9,7 +9,7 @@ import (
 type storage interface {
 	Accept(ctx context.Context, order pvz.OrderCreate) error
 	Return(ctx context.Context, input pvz.OrderCreate) error
-	Process(ctx context.Context, orders ProcessOrdersInput) (*ProcessOrdersOutput, error)
+	Process(ctx context.Context, orders ProcessOrdersInput) (ProcessOrdersOutput, error)
 	ListOrders(ctx context.Context, opts ListOrdersInput) (*OrdersListOutput, error)
 	ListReturns(ctx context.Context, opts ListReturnsInput) (*ReturnsListOutput, error)
 	OrderHistory(ctx context.Context) (*OrderHistoryList, error)
@@ -41,7 +41,7 @@ func (s *Service) Return(ctx context.Context, orderID pvz.OrderCreate) error {
 	return nil
 }
 
-func (s *Service) Process(ctx context.Context, orders ProcessOrdersInput) (*ProcessOrdersOutput, error) {
+func (s *Service) Process(ctx context.Context, orders ProcessOrdersInput) (ProcessOrdersOutput, error) {
 	ordersID, err := s.storage.Process(ctx, orders)
 	if err != nil {
 		return ordersID, fmt.Errorf("storage.Process: %w", err)

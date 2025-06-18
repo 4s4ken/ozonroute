@@ -4,7 +4,6 @@ import (
 	"context"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/app"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
-	"gitlab.ozon.dev/gleb_evseev/homework/internal/mw"
 	pkg "gitlab.ozon.dev/gleb_evseev/homework/pkg/pvz"
 )
 
@@ -31,7 +30,7 @@ func (s *OrdersServer) ListOrders(ctx context.Context, req *pkg.ListOrdersReques
 
 	resp, err := s.ordersHandler.ListOrders(ctx, options)
 	if err != nil {
-		return nil, mw.MapBusinessErrorToGRPC(err)
+		return nil, err
 	}
 
 	ordersProto := mapDomainOrdersToProto(resp.Orders)

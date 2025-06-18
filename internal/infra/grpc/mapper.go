@@ -4,54 +4,45 @@ import (
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/app"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 	pkg "gitlab.ozon.dev/gleb_evseev/homework/pkg/pvz"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"time"
 )
 
-const DatetimeFormat = "2006-01-02"
-
-func FormatTimestamp(ts *timestamppb.Timestamp) string {
-	if ts == nil {
-		return ""
-	}
-	time := ts.AsTime()
-	return time.Format(DatetimeFormat)
-}
-
-func packageTypeToString(pkg pvz.PackageType) string {
-	switch pkg {
-	case pvz.PackageTypeBag:
-		return "BAG"
-	case pvz.PackageTypeBox:
-		return "BOX"
-	case pvz.PackageTypeTape:
-		return "TAPE"
-	case pvz.PackageTypeBagTape:
-		return "BAG_TAPE"
-	case pvz.PackageTypeBoxTape:
-		return "BOX_TAPE"
+func mapProtoPackageType(pt pkg.PackageType) (*pvz.PackageType, error) {
+	switch pt {
+	case pkg.PackageType_PACKAGE_TYPE_UNSPECIFIED:
+		return nil, nil
+	case pkg.PackageType_PACKAGE_TYPE_BAG:
+		t := pvz.PackageTypeBag
+		return &t, nil
+	case pkg.PackageType_PACKAGE_TYPE_BOX:
+		t := pvz.PackageTypeBox
+		return &t, nil
+	case pkg.PackageType_PACKAGE_TYPE_TAPE:
+		t := pvz.PackageTypeTape
+		return &t, nil
+	case pkg.PackageType_PACKAGE_TYPE_BAG_TAPE:
+		t := pvz.PackageTypeBagTape
+		return &t, nil
+	case pkg.PackageType_PACKAGE_TYPE_BOX_TAPE:
+		t := pvz.PackageTypeBoxTape
+		return &t, nil
 	default:
-		return "UNKNOWN"
+		return nil, status.Errorf(codes.InvalidArgument, "Ошибка при выборе упаковки Package Type")
 	}
 }
 
-func mapPackageProtoToDomain(pac *pkg.PackageType) pvz.PackageType {
-	if pac == nil {
-		return "nil"
-	}
-	return pvz.PackageType(*pac)
-}
-
-func mapAcceptOrderRequestToInput(req *pkg.AcceptOrderRequest) pvz.OrderCreate {
+func mapAcceptOrderRequestToInput(req *pkg.AcceptOrderRequest) (pvz.OrderCreate, error) {
 	var expiresAt time.Time
 	if req.ExpiresAt != nil {
 		expiresAt = req.ExpiresAt.AsTime()
 	}
 
-	var pkgType *pvz.PackageType
-	if req.Package != nil {
-		pt := pvz.PackageType(*req.Package)
-		pkgType = &pt
+	pkgType, err := mapProtoPackageType(req.GetPackage())
+	if err != nil {
+		return pvz.OrderCreate{}, err
 	}
 
 	return pvz.OrderCreate{
@@ -61,7 +52,7 @@ func mapAcceptOrderRequestToInput(req *pkg.AcceptOrderRequest) pvz.OrderCreate {
 		Package:   pkgType,
 		Weight:    req.Weight,
 		Price:     req.Price,
-	}
+	}, nil
 }
 
 func mapReturnOrderRequestToInput(req *pkg.ReturnOrderRequest) pvz.OrderCreate {
@@ -77,7 +68,7 @@ func mapProcessOrdersRequestToInput(req *pkg.ProcessOrdersRequest) app.ProcessOr
 		OrderIDs: req.OrderIds,
 	}
 }
-func mapProcessResultToProto(res *app.ProcessOrdersOutput) *pkg.ProcessResult {
+func mapProcessResultToProto(res app.ProcessOrdersOutput) *pkg.ProcessResult {
 	return &pkg.ProcessResult{
 		Processed: res.Processed,
 		Errors:    res.Errors,

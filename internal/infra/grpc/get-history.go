@@ -2,7 +2,6 @@ package grpc
 
 import (
 	"context"
-	"gitlab.ozon.dev/gleb_evseev/homework/internal/mw"
 	pkg "gitlab.ozon.dev/gleb_evseev/homework/pkg/pvz"
 )
 
@@ -10,7 +9,7 @@ import (
 func (s *OrdersServer) GetHistory(ctx context.Context, req *pkg.GetHistoryRequest) (*pkg.OrderHistoryList, error) {
 	domainResp, err := s.ordersHandler.OrderHistory(ctx)
 	if err != nil {
-		return nil, mw.MapBusinessErrorToGRPC(err)
+		return nil, err
 	}
 	protoHistory := make([]*pkg.OrderHistory, len(domainResp.History))
 	for i, his := range domainResp.History {
