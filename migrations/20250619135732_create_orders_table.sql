@@ -2,20 +2,19 @@
 -- +goose StatementBegin
 CREATE TABLE IF NOT EXISTS orders
 (
-    id           BIGINT PRIMARY KEY,
-    order_id     uuid         NOT NULL,
-    user_id      BIGINT         NOT NULL,
-    status       INT            NOT NULL,
-    weight       NUMERIC(10, 2) NOT NULL,
-    price        NUMERIC(10, 2) NOT NULL,
-    package_type INT,
-    expires_at   TIMESTAMP      NOT NULL,
-    created_at   TIMESTAMP      NOT NULL DEFAULT now(),
-    updated_at   TIMESTAMP      NOT NULL DEFAULT now()
+    order_id     BIGSERIAL PRIMARY KEY,                             -- Уникальный идентификатор заказа
+    user_id      BIGINT         NOT NULL,                           -- ID пользователя, оформившего заказ
+    status       INTEGER        NOT NULL DEFAULT 0,                 -- Текущий статус заказа
+    weight       NUMERIC(10, 2) NOT NULL,                           -- Вес заказа
+    price        NUMERIC(10, 2) NOT NULL,                           -- Цена заказа
+    package_type INTEGER,                                           -- Тип упаковки (nullable, enum)
+    expires_at   TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP, -- Дата истечения срока хранения заказа
+    created_at   TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP, -- Время создания записи
+    updated_at   TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP  -- Время последнего обновления
 );
 -- +goose StatementEnd
 
--- +goose Down
+-- +goose Down  
 -- +goose StatementBegin
 DROP TABLE IF EXISTS orders;
 -- +goose StatementEnd
