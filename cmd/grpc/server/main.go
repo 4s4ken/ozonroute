@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"github.com/go-chi/chi/v5"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -14,6 +13,7 @@ import (
 	hl "gitlab.ozon.dev/gleb_evseev/homework/internal/infra/grpc"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/storage/db"
 	"gitlab.ozon.dev/gleb_evseev/homework/pkg/pvz"
+	"gitlab.ozon.dev/gleb_evseev/homework/pkg/storage"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"log"
@@ -33,18 +33,10 @@ const (
 func main() {
 	ctx := context.Background()
 
-	dbConn, err := sql.Open("pgx", config.DBConnString)
-	if err != nil {
-		log.Fatalf("Failed to open database: %v", err)
-	}
-	defer dbConn.Close()
+	database := storage.NewPgxPool(ctx, config.DBConnString)
+	defer database.Close()
 
-	err = dbConn.Ping()
-	if err != nil {
-		log.Fatalf("Failed to ping database: %v", err)
-	}
-	dbStorage := db.New(dbConn)
-
+	dbStorage := db.New(database)
 	handler := app.NewService(dbStorage, func() time.Time { return time.Now().UTC() })
 
 	go func() {

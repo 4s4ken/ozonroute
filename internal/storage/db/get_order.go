@@ -2,13 +2,13 @@ package db
 
 import (
 	"context"
-	"database/sql"
+	"errors"
 	"fmt"
+	"github.com/jackc/pgx/v5"
 	storageErrors "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/errors"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 )
 
-// GetOrder возвращает заказ по orderID.
 func (s *Storage) GetOrder(ctx context.Context, orderID pvz.OrderID) (*pvz.Order, error) {
 	const query = `
 		SELECT order_id, user_id, status, expires_at, weight, price, package_type
@@ -18,9 +18,10 @@ func (s *Storage) GetOrder(ctx context.Context, orderID pvz.OrderID) (*pvz.Order
 
 	var (
 		order   pvz.Order
-		pkgType sql.NullInt32
+		pkgType *int32
 	)
-	err := s.db.QueryRowContext(ctx, query, orderID).Scan(
+
+	err := s.db.QueryRow(ctx, query, orderID).Scan(
 		&order.OrderID,
 		&order.UserID,
 		&order.Status,
@@ -30,14 +31,14 @@ func (s *Storage) GetOrder(ctx context.Context, orderID pvz.OrderID) (*pvz.Order
 		&pkgType,
 	)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, storageErrors.EntityNotFoundError("Order", fmt.Sprint(orderID))
 		}
 		return nil, err
 	}
 
-	if pkgType.Valid {
-		pkg := pvz.PackageType(pkgType.Int32)
+	if pkgType != nil {
+		pkg := pvz.PackageType(*pkgType)
 		order.Package = &pkg
 	}
 

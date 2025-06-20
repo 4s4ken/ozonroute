@@ -2,8 +2,8 @@
 -- +goose StatementBegin
 CREATE TABLE IF NOT EXISTS orders
 (
-    order_id     BIGSERIAL PRIMARY KEY,                             -- Уникальный идентификатор заказа
-    user_id      BIGINT         NOT NULL,                           -- ID пользователя, оформившего заказ
+    order_id     UUID PRIMARY KEY        DEFAULT gen_random_uuid(), -- Уникальный идентификатор заказа
+    user_id      UUID           NOT NULL default gen_random_uuid(), -- ID пользователя, оформившего заказ
     status       INTEGER        NOT NULL DEFAULT 0,                 -- Текущий статус заказа
     weight       NUMERIC(10, 2) NOT NULL,                           -- Вес заказа
     price        NUMERIC(10, 2) NOT NULL,                           -- Цена заказа
@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS orders
 );
 -- +goose StatementEnd
 
--- +goose Down  
+-- +goose Down
 -- +goose StatementBegin
 DROP TABLE IF EXISTS orders;
 -- +goose StatementEnd

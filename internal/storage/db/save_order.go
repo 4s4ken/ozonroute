@@ -6,17 +6,22 @@ import (
 )
 
 func (s *Storage) SaveOrder(ctx context.Context, order *pvz.Order) error {
-	tx, err := s.db.BeginTx(ctx, nil)
+	tx, err := s.db.Begin(ctx)
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err != nil {
+			_ = tx.Rollback(ctx)
+		}
+	}()
 
 	const insertOrder = `
 		INSERT INTO orders (order_id, user_id, status, expires_at, weight, price, package_type)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
 	`
-	_, err = tx.ExecContext(ctx, insertOrder,
+
+	_, err = tx.Exec(ctx, insertOrder,
 		order.OrderID,
 		order.UserID,
 		order.Status,
@@ -33,10 +38,12 @@ func (s *Storage) SaveOrder(ctx context.Context, order *pvz.Order) error {
 		INSERT INTO order_status_history (order_id, status, changed_at)
 		VALUES ($1, $2, NOW())
 	`
-	_, err = tx.ExecContext(ctx, insertHistory, order.OrderID, order.Status)
+
+	_, err = tx.Exec(ctx, insertHistory, order.OrderID, order.Status)
 	if err != nil {
 		return err
 	}
 
-	return tx.Commit()
+	err = tx.Commit(ctx)
+	return err
 }

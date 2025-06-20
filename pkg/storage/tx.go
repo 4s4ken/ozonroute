@@ -62,12 +62,16 @@ func (t *Transaction) WithinTransaction(ctx context.Context, tFunc func(ctx cont
 	err = tFunc(injectTx(ctx, tx))
 	if err != nil {
 		// if error, rollback
-		tx.Rollback(ctx)
-		return err
+		err := tx.Rollback(ctx)
+		if err != nil {
+			return err
+		}
 	}
 
 	// if no error, commit
-	tx.Commit(ctx)
+	if err := tx.Commit(ctx); err != nil {
+		return err
+	}
 	return nil
 }
 

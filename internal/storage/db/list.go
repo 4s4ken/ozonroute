@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	storageErrors "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/errors"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
@@ -31,28 +30,27 @@ func (s *Storage) ListOrders(ctx context.Context, options pvz.ListOptions) ([]*p
 
 	var total int32
 	countQuery := "SELECT COUNT(*) FROM orders " + whereSQL
-	err := s.db.QueryRowContext(ctx, countQuery, args...).Scan(&total)
+	err := s.db.QueryRow(ctx, countQuery, args...).Scan(&total)
 	if err != nil {
 		return nil, 0, err
 	}
 
 	query := fmt.Sprintf(`
-		SELECT order_id, user_id, status, expires_at, weight, price, package_type
-		FROM orders
-		whereSQL
-		ORDER BY order_id
-	`)
+	SELECT order_id, user_id, status, expires_at, weight, price, package_type
+	FROM orders
+	whereSQL
+	ORDER BY order_id
+`)
 
 	if options.Pagination != nil && options.Pagination.Limit != nil {
-		limit := *options.Pagination.Limit
-		query += fmt.Sprintf(" LIMIT %d", limit)
+		query += fmt.Sprintf(" LIMIT %d", *options.Pagination.Limit)
 	}
 	if options.Pagination != nil && options.Pagination.Page != nil && options.Pagination.Limit != nil {
 		offset := (*options.Pagination.Page) * (*options.Pagination.Limit)
 		query += fmt.Sprintf(" OFFSET %d", offset)
 	}
 
-	rows, err := s.db.QueryContext(ctx, query, args...)
+	rows, err := s.db.Query(ctx, query, args...)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -61,7 +59,7 @@ func (s *Storage) ListOrders(ctx context.Context, options pvz.ListOptions) ([]*p
 	var orders []*pvz.Order
 	for rows.Next() {
 		var o pvz.Order
-		var pkgType sql.NullInt32
+		var pkgType *int32
 		if err := rows.Scan(
 			&o.OrderID,
 			&o.UserID,
@@ -73,12 +71,13 @@ func (s *Storage) ListOrders(ctx context.Context, options pvz.ListOptions) ([]*p
 		); err != nil {
 			return nil, 0, err
 		}
-		if pkgType.Valid {
-			pkg := pvz.PackageType(pkgType.Int32)
+		if pkgType != nil {
+			pkg := pvz.PackageType(*pkgType)
 			o.Package = &pkg
 		}
 		orders = append(orders, &o)
 	}
+
 	return orders, total, nil
 }
 
@@ -100,7 +99,7 @@ func (s *Storage) ListReturns(ctx context.Context, pagination *pvz.Pagination) (
 		query += fmt.Sprintf(" OFFSET %d", offset)
 	}
 
-	rows, err := s.db.QueryContext(ctx, query, args...)
+	rows, err := s.db.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +108,7 @@ func (s *Storage) ListReturns(ctx context.Context, pagination *pvz.Pagination) (
 	var returns []*pvz.Order
 	for rows.Next() {
 		var o pvz.Order
-		var pkgType sql.NullInt32
+		var pkgType *int32
 		if err := rows.Scan(
 			&o.OrderID,
 			&o.UserID,
@@ -121,12 +120,13 @@ func (s *Storage) ListReturns(ctx context.Context, pagination *pvz.Pagination) (
 		); err != nil {
 			return nil, err
 		}
-		if pkgType.Valid {
-			pkg := pvz.PackageType(pkgType.Int32)
+		if pkgType != nil {
+			pkg := pvz.PackageType(*pkgType)
 			o.Package = &pkg
 		}
 		returns = append(returns, &o)
 	}
+
 	return returns, nil
 }
 
@@ -137,7 +137,7 @@ func (s *Storage) GetHistory(ctx context.Context) ([]*pvz.StatusChange, error) {
 		ORDER BY changed_at DESC
 	`
 
-	rows, err := s.db.QueryContext(ctx, query)
+	rows, err := s.db.Query(ctx, query)
 	if err != nil {
 		return nil, err
 	}
@@ -151,6 +151,7 @@ func (s *Storage) GetHistory(ctx context.Context) ([]*pvz.StatusChange, error) {
 		}
 		history = append(history, &h)
 	}
+
 	return history, nil
 }
 
@@ -162,7 +163,7 @@ func (s *Storage) GetStatusHistory(ctx context.Context, orderID pvz.OrderID) ([]
 		ORDER BY changed_at DESC
 	`
 
-	rows, err := s.db.QueryContext(ctx, query, orderID)
+	rows, err := s.db.Query(ctx, query, orderID)
 	if err != nil {
 		return nil, err
 	}

@@ -2,92 +2,54 @@ package storage
 
 import (
 	"context"
-	"database/sql"
-	"log"
-	"time"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
-
-type DbManager interface {
-	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
-	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
-	QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row
-}
 
 type Mode int
 
 const (
-	ModeWrite Mode = iota
-	ModeRead
+	ModeRead Mode = iota
+	ModeWrite
 )
 
-func (m Mode) String() string {
-	switch m {
-	case ModeWrite:
-		return "write"
-	case ModeRead:
-		return "read"
-	default:
-		return "unknown"
-	}
+type DbManager interface {
+	Exec(ctx context.Context, query string, args ...any) (pgconn.CommandTag, error)
+	Query(ctx context.Context, query string, args ...any) (pgx.Rows, error)
+	QueryRow(ctx context.Context, query string, args ...any) pgx.Row
 }
 
 type Client struct {
-	write *sql.DB
-	read  *sql.DB
+	write *pgxpool.Pool
+	read  *pgxpool.Pool
 }
 
-func New(writeDB, readDB *sql.DB) *Client {
-	return &Client{write: writeDB, read: readDB}
+func New(write, read *pgxpool.Pool) *Client {
+	return &Client{write: write, read: read}
 }
 
 func (c *Client) Get(mode Mode) DbManager {
-	switch mode {
-	case ModeRead:
-		return &loggingExecutor{inner: c.read}
-	case ModeWrite:
-		fallthrough
-	default:
-		return &loggingExecutor{inner: c.write}
+	if mode == ModeRead {
+		return c.read
 	}
+	return c.write
 }
 
-func (c *Client) Tx(ctx context.Context, fn func(tx DbManager) error) error {
-	tx, err := c.write.BeginTx(ctx, nil)
+func (c *Client) Tx(ctx context.Context, f func(DbManager) error) error {
+	tx, err := c.write.Begin(ctx)
 	if err != nil {
 		return err
 	}
+	defer func() {
+		if err != nil {
+			_ = tx.Rollback(ctx)
+		}
+	}()
 
-	wrappedTx := &loggingExecutor{inner: tx}
-
-	if err := fn(wrappedTx); err != nil {
-		_ = tx.Rollback()
+	if err = f(tx); err != nil {
 		return err
 	}
 
-	return tx.Commit()
-}
-
-type loggingExecutor struct {
-	inner DbManager
-}
-
-func (l *loggingExecutor) ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error) {
-	start := time.Now()
-	res, err := l.inner.ExecContext(ctx, query, args...)
-	log.Printf("Query %s duration %s args %v \n ERROR: %v", query, time.Since(start), args, err)
-	return res, err
-}
-
-func (l *loggingExecutor) QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
-	start := time.Now()
-	rows, err := l.inner.QueryContext(ctx, query, args...)
-	log.Printf("Query %s duration: %s args %v err: %v", query, time.Since(start), args, err)
-	return rows, err
-}
-
-func (l *loggingExecutor) QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row {
-	start := time.Now()
-	row := l.inner.QueryRowContext(ctx, query, args...)
-	log.Printf("Query %s duration: %s args %v", query, time.Since(start), args)
-	return row
+	return tx.Commit(ctx)
 }
