@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"github.com/spf13/cobra"
+	"gitlab.ozon.dev/gleb_evseev/homework/internal/app"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 )
 
@@ -13,7 +14,7 @@ func (h *FileHandler) ReturnOrderCommand(cmd *cobra.Command, _ []string) error {
 		return mapError(err)
 	}
 
-	input := pvz.OrderCreate{
+	input := app.ReturnOrderInput{
 		OrderID: pvz.OrderID(orderID),
 	}
 

@@ -32,7 +32,7 @@ func (h *FileHandler) ListReturnsCommand(cmd *cobra.Command, _ []string) error {
 
 	if pagePtr != nil && limitPtr != nil {
 		options = app.ListReturnsInput{
-			Pagination: pvz.Pagination{
+			Pagination: &pvz.Pagination{
 				Page:  pagePtr,
 				Limit: limitPtr,
 			},

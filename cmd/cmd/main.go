@@ -5,18 +5,19 @@ import (
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/app"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/config"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/infra/cli"
+	"gitlab.ozon.dev/gleb_evseev/homework/internal/storage/json"
 	"log"
 	"time"
 )
 
 func main() {
 	ctx := context.Background()
-	js, err := app.NewJsonStorage(config.DBPath, func() time.Time { return time.Now().UTC() })
+	js, err := json.NewJsonStorage(config.DBPath, func() time.Time { return time.Now().UTC() })
 	if err != nil {
 		log.Fatalf("Failed to initialize storage: %v", err)
 	}
 
-	handler := app.New(js)
+	handler := app.NewService(js, func() time.Time { return time.Now().UTC() })
 
 	fileHandler := cli.NewFileHandler(handler)
 

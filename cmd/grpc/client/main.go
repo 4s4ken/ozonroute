@@ -2,11 +2,11 @@ package main
 
 import (
 	"context"
+	"gitlab.ozon.dev/gleb_evseev/homework/pkg/pvz"
 	"google.golang.org/grpc/grpclog"
 	"log"
 	"time"
 
-	pkg "gitlab.ozon.dev/gleb_evseev/homework/pkg/pvz"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -30,11 +30,11 @@ func main() {
 		}
 	}()
 
-	client := pkg.NewOrdersServiceClient(conn)
+	client := usecase.NewOrdersServiceClient(conn)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	packageType := pkg.PackageType_PACKAGE_TYPE_BOX
-	acceptResp, err := client.AcceptOrder(ctx, &pkg.AcceptOrderRequest{
+	packageType := usecase.PackageType_PACKAGE_TYPE_BOX
+	acceptResp, err := client.AcceptOrder(ctx, &usecase.AcceptOrderRequest{
 		OrderId:   21,
 		UserId:    2,
 		ExpiresAt: timestamppb.New(time.Date(2027, 6, 5, 12, 0, 0, 0, time.UTC)),
@@ -47,10 +47,10 @@ func main() {
 	}
 	log.Printf("AcceptOrder response: %v", acceptResp)
 
-	listOrdersResp, err := client.ListOrders(ctx, &pkg.ListOrdersRequest{
+	listOrdersResp, err := client.ListOrders(ctx, &usecase.ListOrdersRequest{
 		UserId: 2,
 		InPvz:  true,
-		Pagination: &pkg.Pagination{
+		Pagination: &usecase.Pagination{
 			Page:        0,
 			CountOnPage: 10,
 		},
@@ -60,8 +60,8 @@ func main() {
 	}
 	log.Printf("ListOrders response: %v", listOrdersResp)
 
-	listReturnsResp, err := client.ListReturns(ctx, &pkg.ListReturnsRequest{
-		Pagination: &pkg.Pagination{
+	listReturnsResp, err := client.ListReturns(ctx, &usecase.ListReturnsRequest{
+		Pagination: &usecase.Pagination{
 			Page:        0,
 			CountOnPage: 10,
 		},
@@ -71,7 +71,7 @@ func main() {
 	}
 	log.Printf("ListReturns response: %v", listReturnsResp)
 
-	getHistoryResp, err := client.GetHistory(ctx, &pkg.GetHistoryRequest{})
+	getHistoryResp, err := client.GetHistory(ctx, &usecase.GetHistoryRequest{})
 	if err != nil {
 		log.Fatalf("GetHistory failed: %v", err)
 	}

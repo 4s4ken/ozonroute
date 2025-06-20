@@ -8,7 +8,7 @@ endif
 
 BINARY_NAME=./bin/homework
 LOCAL_BIN := $(CURDIR)/bin
-OUT_PATH := $(CURDIR)/pkg
+OUT_PATH := ./pkg
 
 update:
 	go mod tidy
@@ -75,4 +75,29 @@ generate:
 		api/pvz/pvz.proto
 	go mod tidy
 
-run: bin-deps .vendor-proto/validate .vendor-proto/google/api .vendor-proto/protoc-gen-openapiv2/options generate update linter start start
+run: bin-deps .vendor-proto/validate .vendor-proto/google/api .vendor-proto/protoc-gen-openapiv2/options generate
+
+include .env
+
+DATABASE_DSN=postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)?sslmode=disable
+
+up:
+	docker-compose up -d
+
+down:
+	docker-compose down
+
+restart: down up
+
+
+goose-add:
+	goose -dir ./migrations postgres "$(DATABASE_DSN)" create $(NAME) sql
+
+goose-up:
+	goose -dir ./migrations postgres "$(DATABASE_DSN)" up
+
+goose-down:
+	goose -dir ./migrations postgres "$(DATABASE_DSN)" down
+
+goose-status:
+	goose -dir ./migrations postgres "$(DATABASE_DSN)" status

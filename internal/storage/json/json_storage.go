@@ -1,23 +1,23 @@
-package app
+package json
 
 import (
 	"encoding/json"
 	"fmt"
 	storageErrors "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/errors"
+	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 	"io"
 	"os"
 	"path/filepath"
 	"time"
-
-	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 )
 
 // Storage представляет хранилище заказов, сохраняемое в JSON-файле.
 type Storage struct {
-	file  *os.File
-	path  string
-	store map[pvz.UserID]map[pvz.OrderID]*pvz.Order
-	nowFn func() time.Time
+	store   map[pvz.UserID]map[pvz.OrderID]*pvz.Order
+	history []*pvz.StatusChange
+	path    string
+	file    *os.File
+	nowFn   func() time.Time
 }
 
 // NewJsonStorage создаёт новое хранилище заказов, связанное с указанным JSON-файлом.
@@ -36,8 +36,8 @@ func NewJsonStorage(path string, nowFn func() time.Time) (*Storage, error) {
 	s := &Storage{
 		path:  path,
 		store: make(map[pvz.UserID]map[pvz.OrderID]*pvz.Order),
-		file:  f,
 		nowFn: nowFn,
+		file:  f,
 	}
 	err = s.readDataFromFile(f)
 	if err != nil {

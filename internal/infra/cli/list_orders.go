@@ -3,7 +3,6 @@ package cli
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"gitlab.ozon.dev/gleb_evseev/homework/internal/app"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 )
 
@@ -46,7 +45,7 @@ func (h *FileHandler) ListOrdersCommand(cmd *cobra.Command, _ []string) error {
 		limitPtr = &limit
 	}
 
-	options := app.ListOrdersInput{
+	options := pvz.ListOptions{
 		UserID: userID,
 		InPVZ:  inPvz,
 		LastN:  lastPtr,
@@ -65,14 +64,14 @@ func (h *FileHandler) ListOrdersCommand(cmd *cobra.Command, _ []string) error {
 		if order.Package != nil {
 			pkgStr = string(*order.Package)
 		}
-		fmt.Printf("ORDER: %d %d %d %s %s %.2f %f\n",
+		fmt.Printf("ORDER: %d %d %d %s %s %.2f %s\n",
 			order.OrderID,
 			order.UserID,
 			order.Status,
 			MapTimeToString(order.ExpiresAt),
 			pkgStr,
 			order.Weight,
-			order.Price,
+			order.Price.String(),
 		)
 	}
 

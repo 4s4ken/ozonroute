@@ -14,7 +14,7 @@ func (h *FileHandler) OrdersHistoryCommand(cmd *cobra.Command, args []string) er
 
 	for _, ord := range history.History {
 		fmt.Printf(
-			"HISTORY: %d %s %s\n", ord.OrderID, MapStatusToString(ord.Status), MapTimeToString(ord.CreatedAt))
+			"HISTORY: %d %s %s\n", ord.OrderID, MapStatusToString(ord.Status), MapTimeToString(ord.Time))
 	}
 
 	return nil

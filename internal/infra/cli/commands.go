@@ -49,16 +49,6 @@ func InitCommands(st *FileHandler) *cobra.Command {
 			Short: "oh",
 			RunE:  st.OrdersHistoryCommand,
 		},
-		//&cobra.Command{
-		//	Use:   "import-orders",
-		//	Short: "io",
-		//	RunE:  st.ImportOrdersCommand,
-		//},
-		//&cobra.Command{
-		//	Use:   "scroll-orders",
-		//	Short: "so",
-		//	RunE:  st.ScrollOrders,
-		//},
 	)
 
 	addFlags(rootCmd)

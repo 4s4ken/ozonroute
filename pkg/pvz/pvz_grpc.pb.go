@@ -19,12 +19,13 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	OrdersService_AcceptOrder_FullMethodName   = "/pvz.OrdersService/AcceptOrder"
-	OrdersService_ReturnOrder_FullMethodName   = "/pvz.OrdersService/ReturnOrder"
-	OrdersService_ProcessOrders_FullMethodName = "/pvz.OrdersService/ProcessOrders"
-	OrdersService_ListOrders_FullMethodName    = "/pvz.OrdersService/ListOrders"
-	OrdersService_ListReturns_FullMethodName   = "/pvz.OrdersService/ListReturns"
-	OrdersService_GetHistory_FullMethodName    = "/pvz.OrdersService/GetHistory"
+	OrdersService_AcceptOrder_FullMethodName      = "/pvz.OrdersService/AcceptOrder"
+	OrdersService_ReturnOrder_FullMethodName      = "/pvz.OrdersService/ReturnOrder"
+	OrdersService_ProcessOrders_FullMethodName    = "/pvz.OrdersService/ProcessOrders"
+	OrdersService_ListOrders_FullMethodName       = "/pvz.OrdersService/ListOrders"
+	OrdersService_ListReturns_FullMethodName      = "/pvz.OrdersService/ListReturns"
+	OrdersService_GetHistory_FullMethodName       = "/pvz.OrdersService/GetHistory"
+	OrdersService_GetStatusHistory_FullMethodName = "/pvz.OrdersService/GetStatusHistory"
 )
 
 // OrdersServiceClient is the client API for OrdersService service.
@@ -37,6 +38,7 @@ type OrdersServiceClient interface {
 	ListOrders(ctx context.Context, in *ListOrdersRequest, opts ...grpc.CallOption) (*OrdersList, error)
 	ListReturns(ctx context.Context, in *ListReturnsRequest, opts ...grpc.CallOption) (*ReturnsList, error)
 	GetHistory(ctx context.Context, in *GetHistoryRequest, opts ...grpc.CallOption) (*OrderHistoryList, error)
+	GetStatusHistory(ctx context.Context, in *GetStatusHistoryRequest, opts ...grpc.CallOption) (*StatusHistoryList, error)
 }
 
 type ordersServiceClient struct {
@@ -107,6 +109,16 @@ func (c *ordersServiceClient) GetHistory(ctx context.Context, in *GetHistoryRequ
 	return out, nil
 }
 
+func (c *ordersServiceClient) GetStatusHistory(ctx context.Context, in *GetStatusHistoryRequest, opts ...grpc.CallOption) (*StatusHistoryList, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(StatusHistoryList)
+	err := c.cc.Invoke(ctx, OrdersService_GetStatusHistory_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // OrdersServiceServer is the server API for OrdersService service.
 // All implementations must embed UnimplementedOrdersServiceServer
 // for forward compatibility.
@@ -117,6 +129,7 @@ type OrdersServiceServer interface {
 	ListOrders(context.Context, *ListOrdersRequest) (*OrdersList, error)
 	ListReturns(context.Context, *ListReturnsRequest) (*ReturnsList, error)
 	GetHistory(context.Context, *GetHistoryRequest) (*OrderHistoryList, error)
+	GetStatusHistory(context.Context, *GetStatusHistoryRequest) (*StatusHistoryList, error)
 	mustEmbedUnimplementedOrdersServiceServer()
 }
 
@@ -144,6 +157,9 @@ func (UnimplementedOrdersServiceServer) ListReturns(context.Context, *ListReturn
 }
 func (UnimplementedOrdersServiceServer) GetHistory(context.Context, *GetHistoryRequest) (*OrderHistoryList, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetHistory not implemented")
+}
+func (UnimplementedOrdersServiceServer) GetStatusHistory(context.Context, *GetStatusHistoryRequest) (*StatusHistoryList, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetStatusHistory not implemented")
 }
 func (UnimplementedOrdersServiceServer) mustEmbedUnimplementedOrdersServiceServer() {}
 func (UnimplementedOrdersServiceServer) testEmbeddedByValue()                       {}
@@ -274,6 +290,24 @@ func _OrdersService_GetHistory_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _OrdersService_GetStatusHistory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetStatusHistoryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrdersServiceServer).GetStatusHistory(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: OrdersService_GetStatusHistory_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrdersServiceServer).GetStatusHistory(ctx, req.(*GetStatusHistoryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // OrdersService_ServiceDesc is the grpc.ServiceDesc for OrdersService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -304,6 +338,10 @@ var OrdersService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetHistory",
 			Handler:    _OrdersService_GetHistory_Handler,
+		},
+		{
+			MethodName: "GetStatusHistory",
+			Handler:    _OrdersService_GetStatusHistory_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

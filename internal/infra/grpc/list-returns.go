@@ -14,7 +14,7 @@ func (s *OrdersServer) ListReturns(ctx context.Context, req *pkg.ListReturnsRequ
 	limit := uint64(req.Pagination.CountOnPage)
 
 	options := app.ListReturnsInput{
-		Pagination: pvz.Pagination{
+		Pagination: &pvz.Pagination{
 			Page:  &page,
 			Limit: &limit,
 		},

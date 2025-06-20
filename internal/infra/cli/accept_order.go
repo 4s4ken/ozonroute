@@ -52,13 +52,12 @@ func (h *FileHandler) AcceptOrderCommand(cmd *cobra.Command, _ []string) error {
 		}
 		pkg = &pkgVal
 	}
-
 	order := pvz.OrderCreate{
 		OrderID:   pvz.OrderID(orderID),
 		UserID:    pvz.UserID(userID),
 		ExpiresAt: exp,
 		Weight:    float32(ordWeight),
-		Price:     float32(ordPrice.InexactFloat64()),
+		Price:     ordPrice,
 		Package:   pkg,
 	}
 
@@ -67,6 +66,6 @@ func (h *FileHandler) AcceptOrderCommand(cmd *cobra.Command, _ []string) error {
 		return mapError(err)
 	}
 
-	fmt.Printf("ORDER_ACCEPTED: %d\nPACKAGE: %s\nTOTAL_PRICE: %s\n", orderID, pkgStr, ordPrice)
+	fmt.Printf("ORDER: %d\nPACKAGE: %s\nTOTAL_PRICE: %s\n", orderID, pkgStr, ordPrice)
 	return nil
 }

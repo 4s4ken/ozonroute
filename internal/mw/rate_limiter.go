@@ -2,10 +2,9 @@ package mw
 
 import (
 	"context"
-
-	"github.com/ulule/limiter/v3"
 	desc "gitlab.ozon.dev/gleb_evseev/homework/pkg/pvz"
 
+	"github.com/ulule/limiter/v3"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"

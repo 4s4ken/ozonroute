@@ -20,7 +20,7 @@
     "application/json"
   ],
   "paths": {
-    "/v1/orders": {
+    "/v1/list_orders": {
       "get": {
         "summary": "Список заказов",
         "description": "Получение списка заказов пользователя с пагинацией и фильтрацией",
@@ -138,6 +138,46 @@
         ]
       }
     },
+    "/v1/orders/list_returns": {
+      "get": {
+        "summary": "Список возвратов",
+        "description": "Получение списка возвратов",
+        "operationId": "OrdersService_ListReturns",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pvzReturnsList"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "pagination.page",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "pagination.countOnPage",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "OrdersService"
+        ]
+      }
+    },
     "/v1/orders/process": {
       "post": {
         "summary": "Выдать заказ клиенту или вернуть его в пвз",
@@ -206,16 +246,16 @@
         ]
       }
     },
-    "/v1/orders/returns": {
+    "/v1/orders/status_history": {
       "get": {
-        "summary": "Список возвратов",
-        "description": "Получение списка возвратов",
-        "operationId": "OrdersService_ListReturns",
+        "summary": "История заказов",
+        "description": "Получение историю изменения статусов заказов",
+        "operationId": "OrdersService_GetStatusHistory",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/pvzReturnsList"
+              "$ref": "#/definitions/pvzStatusHistoryList"
             }
           },
           "default": {
@@ -227,18 +267,11 @@
         },
         "parameters": [
           {
-            "name": "pagination.page",
+            "name": "orderId",
             "in": "query",
             "required": false,
-            "type": "integer",
-            "format": "int64"
-          },
-          {
-            "name": "pagination.countOnPage",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int64"
+            "type": "string",
+            "format": "uint64"
           }
         ],
         "tags": [
@@ -472,6 +505,34 @@
           "items": {
             "type": "object",
             "$ref": "#/definitions/pvzOrder"
+          }
+        }
+      }
+    },
+    "pvzStatusHistory": {
+      "type": "object",
+      "properties": {
+        "orderId": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "status": {
+          "$ref": "#/definitions/pvzOrderStatus"
+        },
+        "changesAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "pvzStatusHistoryList": {
+      "type": "object",
+      "properties": {
+        "history": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/pvzStatusHistory"
           }
         }
       }

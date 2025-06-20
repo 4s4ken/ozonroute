@@ -1,6 +1,7 @@
 package pvz
 
 import (
+	"github.com/shopspring/decimal"
 	"time"
 )
 
@@ -37,12 +38,12 @@ const (
 )
 
 type OrderCreate struct {
-	OrderID   OrderID      `json:"order_id,"`
-	UserID    UserID       `json:"user_id"`
-	ExpiresAt time.Time    `json:"expires_at"`
-	Weight    float32      `json:"weight"`
-	Price     float32      `json:"price"`
-	Package   *PackageType `json:"package_type,omitempty"`
+	OrderID   OrderID         `json:"order_id,"`
+	UserID    UserID          `json:"user_id"`
+	ExpiresAt time.Time       `json:"expires_at"`
+	Weight    float32         `json:"weight"`
+	Price     decimal.Decimal `json:"price"`
+	Package   *PackageType    `json:"package_type,omitempty"`
 }
 
 type Order struct {
@@ -50,7 +51,11 @@ type Order struct {
 	Status     OrderStatus `json:"status"`
 	LastUpdate time.Time   `json:"last_update,omitempty"`
 }
-
+type StatusChange struct {
+	OrderID OrderID
+	Status  OrderStatus
+	Time    time.Time
+}
 type ListOptions struct {
 	UserID     uint64
 	InPVZ      bool

@@ -57,7 +57,7 @@ service OrdersService {
   }
   rpc ListOrders (ListOrdersRequest) returns (OrdersList) {
     option (google.api.http) = {
-      get: "/v1/orders"
+      get: "/v1/list_orders"
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       summary: "Список заказов";
@@ -67,7 +67,7 @@ service OrdersService {
 
   rpc ListReturns (ListReturnsRequest) returns (ReturnsList) {
     option (google.api.http) = {
-      get: "/v1/orders/returns"
+      get: "/v1/orders/list_returns"
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       summary: "Список возвратов";
@@ -84,6 +84,17 @@ service OrdersService {
       description: "Получение истории статусов заказов";
     };
   }
+
+  rpc GetStatusHistory (GetStatusHistoryRequest) returns (StatusHistoryList) {
+    option (google.api.http) = {
+      get: "/v1/orders/status_history"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "История заказов";
+      description: "Получение историю изменения статусов заказов";
+    };
+  }
+
 }
 
 message AcceptOrderRequest {
@@ -133,6 +144,10 @@ message ImportOrdersRequest {
 
 message GetHistoryRequest {}
 
+message GetStatusHistoryRequest{
+  uint64 order_id = 1;
+}
+
 message OrderResponse {
   OrderStatus status = 1;
   uint64 order_id = 2;
@@ -154,6 +169,10 @@ message ReturnsList {
 
 message OrderHistoryList {
   repeated OrderHistory history = 1;
+}
+
+message StatusHistoryList{
+    repeated StatusHistory history = 1;
 }
 
 message ImportResult {
@@ -193,4 +212,10 @@ message OrderHistory {
   uint64 order_id = 1;
   OrderStatus status = 2;
   google.protobuf.Timestamp created_at = 3;
+}
+
+message StatusHistory{
+  uint64 order_id = 1;
+  OrderStatus status = 2;
+  google.protobuf.Timestamp changes_at = 3;
 }

@@ -16,13 +16,12 @@ import (
 // commandsHandler определяет интерфейс бизнес-логики, которую вызывает CLI
 type commandsHandler interface {
 	Accept(ctx context.Context, order pvz.OrderCreate) error
-	Return(ctx context.Context, input pvz.OrderCreate) error
+	Return(ctx context.Context, input app.ReturnOrderInput) error
 	Process(ctx context.Context, orders app.ProcessOrdersInput) (app.ProcessOrdersOutput, error)
-	ListOrders(ctx context.Context, opts app.ListOrdersInput) (*app.OrdersListOutput, error)
+	ListOrders(ctx context.Context, opts pvz.ListOptions) (*app.OrdersListOutput, error)
 	ListReturns(ctx context.Context, opts app.ListReturnsInput) (*app.ReturnsListOutput, error)
 	OrderHistory(ctx context.Context) (*app.OrderHistoryList, error)
-	//ImportOrders(ctx context.Context, orders string) (pvz.ImportResult, error)
-	//ScrollOrders(ctx context.Context, userID pvz.UserID, limit uint, lastID *pvz.OrderID) ([]*pvz.OrdersList, *pvz.OrderID, error)
+	StatusHistory(ctx context.Context, orderID pvz.OrderID) ([]*pvz.StatusChange, error)
 }
 
 type FileHandler struct {

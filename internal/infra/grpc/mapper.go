@@ -1,6 +1,7 @@
 package grpc
 
 import (
+	"github.com/shopspring/decimal"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/app"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 	pkg "gitlab.ozon.dev/gleb_evseev/homework/pkg/pvz"
@@ -51,14 +52,8 @@ func mapAcceptOrderRequestToInput(req *pkg.AcceptOrderRequest) (pvz.OrderCreate,
 		ExpiresAt: expiresAt,
 		Package:   pkgType,
 		Weight:    req.Weight,
-		Price:     req.Price,
+		Price:     decimal.NewFromFloat(float64(req.Price)),
 	}, nil
-}
-
-func mapReturnOrderRequestToInput(req *pkg.ReturnOrderRequest) pvz.OrderCreate {
-	return pvz.OrderCreate{
-		OrderID: pvz.OrderID(req.OrderId),
-	}
 }
 
 func mapProcessOrdersRequestToInput(req *pkg.ProcessOrdersRequest) app.ProcessOrdersInput {
@@ -95,7 +90,7 @@ func mapDomainHistoryToProto(his app.OrderHistory) *pkg.OrderHistory {
 	return &pkg.OrderHistory{
 		OrderId:   his.OrderID,
 		Status:    pkg.OrderStatus(his.Status),
-		CreatedAt: timestamppb.New(his.CreatedAt),
+		CreatedAt: timestamppb.New(his.Time),
 	}
 }
 

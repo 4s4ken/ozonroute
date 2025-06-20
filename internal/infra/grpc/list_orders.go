@@ -2,7 +2,6 @@ package grpc
 
 import (
 	"context"
-	"gitlab.ozon.dev/gleb_evseev/homework/internal/app"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 	pkg "gitlab.ozon.dev/gleb_evseev/homework/pkg/pvz"
 )
@@ -18,7 +17,7 @@ func (s *OrdersServer) ListOrders(ctx context.Context, req *pkg.ListOrdersReques
 	page := uint64(req.Pagination.Page)
 	limit := uint64(req.Pagination.CountOnPage)
 
-	options := app.ListOrdersInput{
+	options := pvz.ListOptions{
 		UserID: req.UserId,
 		InPVZ:  req.InPvz,
 		LastN:  lastN,

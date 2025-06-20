@@ -2,25 +2,27 @@ package main
 
 import (
 	"context"
-	"log"
-	"net"
-	"net/http"
-	"os"
-	"time"
-
+	"database/sql"
 	"github.com/go-chi/chi/v5"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/swaggo/http-swagger"
 	"github.com/ulule/limiter/v3"
 	"github.com/ulule/limiter/v3/drivers/store/memory"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/app"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/config"
 	hl "gitlab.ozon.dev/gleb_evseev/homework/internal/infra/grpc"
+	"gitlab.ozon.dev/gleb_evseev/homework/internal/storage/db"
+	"gitlab.ozon.dev/gleb_evseev/homework/pkg/pvz"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"log"
+	"net"
+	"net/http"
+	"os"
+	"time"
 
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/mw"
-	pb "gitlab.ozon.dev/gleb_evseev/homework/pkg/pvz"
 )
 
 const (
@@ -31,11 +33,19 @@ const (
 func main() {
 	ctx := context.Background()
 
-	js, err := app.NewJsonStorage(config.DBPath, time.Now().UTC)
+	dbConn, err := sql.Open("pgx", config.DBConnString)
 	if err != nil {
-		log.Fatalf("Failed to create json storage: %v", err)
+		log.Fatalf("Failed to open database: %v", err)
 	}
-	handler := app.New(js)
+	defer dbConn.Close()
+
+	err = dbConn.Ping()
+	if err != nil {
+		log.Fatalf("Failed to ping database: %v", err)
+	}
+	dbStorage := db.New(dbConn)
+
+	handler := app.NewService(dbStorage, func() time.Time { return time.Now().UTC() })
 
 	go func() {
 		lis, err := net.Listen("tcp", grpcAddress)
@@ -57,7 +67,7 @@ func main() {
 			),
 		)
 
-		pb.RegisterOrdersServiceServer(grpcServer, hl.NewOrdersServer(handler))
+		usecase.RegisterOrdersServiceServer(grpcServer, hl.NewOrdersServer(handler))
 
 		log.Println("gRPC server started on", grpcAddress)
 		if err := grpcServer.Serve(lis); err != nil {
@@ -69,7 +79,7 @@ func main() {
 		mux := chi.NewMux()
 
 		gw := runtime.NewServeMux()
-		err := pb.RegisterOrdersServiceHandlerFromEndpoint(
+		err := usecase.RegisterOrdersServiceHandlerFromEndpoint(
 			ctx,
 			gw,
 			grpcAddress,
