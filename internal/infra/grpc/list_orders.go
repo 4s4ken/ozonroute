@@ -16,17 +16,21 @@ func (s *OrdersServer) ListOrders(ctx context.Context, req *pkg.ListOrdersReques
 		lastN = &tmp
 	}
 
-	page := uint64(req.Pagination.Page)
-	limit := uint64(req.Pagination.CountOnPage)
-
-	options := pvz.ListOptions{
-		UserID: req.UserId,
-		InPVZ:  req.InPvz,
-		LastN:  lastN,
-		Pagination: &pvz.Pagination{
+	var pagination *pvz.Pagination
+	if req.Pagination != nil {
+		page := uint64(req.Pagination.Page)
+		limit := uint64(req.Pagination.CountOnPage)
+		pagination = &pvz.Pagination{
 			Page:  &page,
 			Limit: &limit,
-		},
+		}
+	}
+
+	options := pvz.ListOptions{
+		UserID:     req.UserId,
+		InPVZ:      req.InPvz,
+		LastN:      lastN,
+		Pagination: pagination,
 	}
 
 	resp, err := s.ordersHandler.ListOrders(ctx, options)

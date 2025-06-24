@@ -13,20 +13,20 @@ func (s *Storage) ListOrders(ctx context.Context, options pvz.ListOptions) ([]*p
 	var (
 		whereClauses []string
 		args         []interface{}
-		argIdx       = 1
 	)
 
-	whereClauses = append(whereClauses, fmt.Sprintf("user_id = $%d", argIdx))
+	whereClauses = append(whereClauses, fmt.Sprintf("user_id = $%d", len(args)+1))
 	args = append(args, options.UserID)
-	argIdx++
 
 	if options.InPVZ {
-		whereClauses = append(whereClauses, fmt.Sprintf("status = $%d", argIdx))
+		whereClauses = append(whereClauses, fmt.Sprintf("status = $%d", len(args)+1))
 		args = append(args, pvz.OrderStatusAccepted)
-		argIdx++
 	}
 
-	whereSQL := "WHERE " + strings.Join(whereClauses, " AND ")
+	whereSQL := ""
+	if len(whereClauses) > 0 {
+		whereSQL = " WHERE " + strings.Join(whereClauses, " AND ")
+	}
 
 	var total int32
 	countQuery := "SELECT COUNT(*) FROM orders " + whereSQL
@@ -35,19 +35,19 @@ func (s *Storage) ListOrders(ctx context.Context, options pvz.ListOptions) ([]*p
 		return nil, 0, err
 	}
 
-	query := fmt.Sprintf(`
+	query := `
 	SELECT order_id, user_id, status, expires_at, weight, price, package_type
 	FROM orders
-	whereSQL
+` + whereSQL + `
 	ORDER BY order_id
-`)
+`
 
 	if options.Pagination != nil && options.Pagination.Limit != nil {
 		query += fmt.Sprintf(" LIMIT %d", *options.Pagination.Limit)
-	}
-	if options.Pagination != nil && options.Pagination.Page != nil && options.Pagination.Limit != nil {
-		offset := (*options.Pagination.Page) * (*options.Pagination.Limit)
-		query += fmt.Sprintf(" OFFSET %d", offset)
+		if options.Pagination.Page != nil {
+			offset := (*options.Pagination.Page) * (*options.Pagination.Limit)
+			query += fmt.Sprintf(" OFFSET %d", offset)
+		}
 	}
 
 	rows, err := s.db.Query(ctx, query, args...)
