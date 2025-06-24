@@ -8,8 +8,8 @@ CREATE TABLE IF NOT EXISTS orders
     weight       NUMERIC(10, 2) NOT NULL,                           -- Вес заказа
     price        NUMERIC(10, 2) NOT NULL,                           -- Цена заказа
     package_type INTEGER,                                           -- Тип упаковки (nullable, enum)
-    expires_at   TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP, -- Дата истечения срока хранения заказа
-    created_at   TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP, -- Время создания записи
+    expires_at   TIMESTAMPTZ    NOT NULL,                           -- Дата истечения срока хранения заказа
+    created_at   TIMESTAMPTZ    NOT NULL DEFAULT NULL,              -- Время создания записи
     updated_at   TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP  -- Время последнего обновления
 );
 -- +goose StatementEnd

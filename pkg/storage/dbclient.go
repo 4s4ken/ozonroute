@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"fmt"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -36,10 +37,17 @@ func (c *Client) Get(mode Mode) DbManager {
 	return c.write
 }
 
-func (c *Client) Tx(ctx context.Context, f func(DbManager) error) error {
-	tx, err := c.write.Begin(ctx)
-	if err != nil {
-		return err
+func (c *Client) Tx(ctx context.Context, mode Mode, f func(DbManager) error) error {
+	var tx pgx.Tx
+	var err error
+
+	switch mode {
+	case ModeRead:
+		tx, err = c.read.Begin(ctx)
+	case ModeWrite:
+		tx, err = c.write.Begin(ctx)
+	default:
+		return fmt.Errorf("ERROR: %v", mode)
 	}
 	defer func() {
 		if err != nil {

@@ -249,7 +249,7 @@
     "/v1/orders/status_history": {
       "get": {
         "summary": "История заказов",
-        "description": "Получение историю изменения статусов заказов",
+        "description": "Получение истории изменения статусов заказов",
         "operationId": "OrdersService_GetStatusHistory",
         "responses": {
           "200": {

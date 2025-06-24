@@ -2,7 +2,6 @@ package storage
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"github.com/jackc/pgx/v5"
@@ -12,7 +11,7 @@ import (
 
 type Transaction struct {
 	db *pgxpool.Pool
-	tx *sql.Tx
+	tx pgx.Tx
 }
 
 type txKey struct{}
@@ -32,7 +31,7 @@ func extractTx(ctx context.Context) pgx.Tx {
 
 // Commit метод фиксации блока транзакции
 func (t *Transaction) Commit(ctx context.Context) error {
-	err := t.tx.Commit()
+	err := t.tx.Commit(ctx)
 	if err != nil {
 		return fmt.Errorf("transaction.Commit: %w", err)
 	}
@@ -41,7 +40,7 @@ func (t *Transaction) Commit(ctx context.Context) error {
 
 // Rollback метод отката блока транзакции
 func (t *Transaction) Rollback(ctx context.Context) error {
-	err := t.tx.Rollback()
+	err := t.tx.Rollback(ctx)
 	if err != nil && !errors.Is(err, pgx.ErrTxClosed) {
 		return fmt.Errorf("transaction.Rollback: %w", err)
 	}

@@ -91,7 +91,7 @@ service OrdersService {
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       summary: "История заказов";
-      description: "Получение историю изменения статусов заказов";
+      description: "Получение истории изменения статусов заказов";
     };
   }
 

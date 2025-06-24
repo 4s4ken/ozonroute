@@ -35,7 +35,7 @@ func main() {
 	}
 	log.Printf("Orders before: %d", before)
 
-	err = client.Tx(ctx, func(tx storage.DbManager) error {
+	err = client.Tx(ctx, storage.ModeWrite, func(tx storage.DbManager) error {
 		query := `
 			INSERT INTO orders 
 			(order_id, user_id, status, expires_at, weight, price, package_type)
@@ -55,7 +55,7 @@ func main() {
 	if err != nil {
 		log.Fatal("insert error:", err)
 	}
-	
+
 	row = exec.QueryRow(ctx, "SELECT count(*) FROM orders")
 	var after int
 	if err := row.Scan(&after); err != nil {

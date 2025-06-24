@@ -17,7 +17,11 @@ func (s *Service) Accept(ctx context.Context, order pvz.OrderCreate) error {
 	}
 
 	existing, err := s.repo.GetOrder(ctx, order.OrderID)
-	if err == nil && existing != nil {
+	if err != nil {
+		return err
+	}
+
+	if existing != nil {
 		return errors.EntityAlreadyExistsError("Order", strconv.FormatUint(uint64(order.OrderID), 10))
 	}
 

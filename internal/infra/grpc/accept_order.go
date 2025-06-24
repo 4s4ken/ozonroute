@@ -16,7 +16,7 @@ func (s *OrdersServer) AcceptOrder(ctx context.Context, req *pkg.AcceptOrderRequ
 
 	err := s.ordersHandler.Accept(ctx, input)
 	if err != nil {
-		return nil, err
+		return nil, status.Error(codes.Internal, "Internal Server Error")
 	}
 
 	return &pkg.OrderResponse{

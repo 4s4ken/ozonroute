@@ -4,6 +4,8 @@ import (
 	"context"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 	pkg "gitlab.ozon.dev/gleb_evseev/homework/pkg/pvz"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // ListOrders обрабатывает gRPC-запрос на отправку списка заказов.
@@ -29,7 +31,7 @@ func (s *OrdersServer) ListOrders(ctx context.Context, req *pkg.ListOrdersReques
 
 	resp, err := s.ordersHandler.ListOrders(ctx, options)
 	if err != nil {
-		return nil, err
+		return nil, status.Error(codes.Internal, "Internal Server Error")
 	}
 
 	ordersProto := mapDomainOrdersToProto(resp.Orders)
