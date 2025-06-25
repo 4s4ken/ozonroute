@@ -28,7 +28,7 @@ func (s *Storage) SaveOrder(ctx context.Context, order *pvz.Order) error {
 		order.ExpiresAt,
 		order.Weight,
 		order.Price,
-		order.Package,
+		toDBPackageType(order.Package),
 	)
 	if err != nil {
 		return err

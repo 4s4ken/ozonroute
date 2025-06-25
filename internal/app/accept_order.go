@@ -16,10 +16,7 @@ func (s *Service) Accept(ctx context.Context, order pvz.OrderCreate) error {
 		return errors.EntityValidationError("Order", strconv.FormatUint(uint64(order.OrderID), 10))
 	}
 
-	existing, err := s.repo.GetOrder(ctx, order.OrderID)
-	if err != nil {
-		return err
-	}
+	existing, _ := s.repo.GetOrder(ctx, order.OrderID)
 
 	if existing != nil {
 		return errors.EntityAlreadyExistsError("Order", strconv.FormatUint(uint64(order.OrderID), 10))

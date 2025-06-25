@@ -6,7 +6,7 @@ import (
 )
 
 type (
-	PackageType string
+	PackageType int32
 	OrderStatus int
 	ActionType  int
 	UserID      uint64
@@ -15,12 +15,12 @@ type (
 )
 
 const (
-	NoPackage          PackageType = ""
-	PackageTypeBag     PackageType = "bag"
-	PackageTypeBox     PackageType = "box"
-	PackageTypeTape    PackageType = "tape"
-	PackageTypeBagTape PackageType = "bag+tape"
-	PackageTypeBoxTape PackageType = "box+tape"
+	NoPackage          PackageType = 0
+	PackageTypeBag     PackageType = 1
+	PackageTypeBox     PackageType = 2
+	PackageTypeTape    PackageType = 3
+	PackageTypeBagTape PackageType = 4
+	PackageTypeBoxTape PackageType = 5
 )
 
 const (

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	storageErrors "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/errors"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
+	"log"
 	"strings"
 	"time"
 )
@@ -14,7 +15,6 @@ func (s *Storage) ListOrders(ctx context.Context, options pvz.ListOptions) ([]*p
 		whereClauses []string
 		args         []interface{}
 	)
-
 	whereClauses = append(whereClauses, fmt.Sprintf("user_id = $%d", len(args)+1))
 	args = append(args, options.UserID)
 
@@ -23,35 +23,43 @@ func (s *Storage) ListOrders(ctx context.Context, options pvz.ListOptions) ([]*p
 		args = append(args, pvz.OrderStatusAccepted)
 	}
 
-	whereSQL := ""
-	if len(whereClauses) > 0 {
-		whereSQL = " WHERE " + strings.Join(whereClauses, " AND ")
-	}
+	whereSQL := "WHERE " + strings.Join(whereClauses, " AND ")
 
 	var total int32
 	countQuery := "SELECT COUNT(*) FROM orders " + whereSQL
-	err := s.db.QueryRow(ctx, countQuery, args...).Scan(&total)
-	if err != nil {
+	if err := s.db.QueryRow(ctx, countQuery, args...).Scan(&total); err != nil {
+		log.Printf("ListOrders COUNT error: %v, query: %s, args: %v", err, countQuery, args)
 		return nil, 0, err
 	}
 
-	query := `
-	SELECT order_id, user_id, status, expires_at, weight, price, package_type
-	FROM orders
-` + whereSQL + `
-	ORDER BY order_id
-`
+	var limit, offset *uint64
+	if options.Pagination != nil {
+		limit = options.Pagination.Limit
+		if options.Pagination.Page != nil && limit != nil {
+			tmp := (*options.Pagination.Page) * (*limit)
+			offset = &tmp
 
-	if options.Pagination != nil && options.Pagination.Limit != nil {
-		query += fmt.Sprintf(" LIMIT %d", *options.Pagination.Limit)
-		if options.Pagination.Page != nil {
-			offset := (*options.Pagination.Page) * (*options.Pagination.Limit)
-			query += fmt.Sprintf(" OFFSET %d", offset)
+			if int32(*offset) >= total {
+				return []*pvz.Order{}, total, nil
+			}
 		}
+	}
+
+	query := `
+		SELECT order_id, user_id, status, expires_at, weight, price, package_type
+		FROM orders
+	` + whereSQL + " ORDER BY order_id"
+
+	if limit != nil {
+		query += fmt.Sprintf(" LIMIT %d", *limit)
+	}
+	if offset != nil {
+		query += fmt.Sprintf(" OFFSET %d", *offset)
 	}
 
 	rows, err := s.db.Query(ctx, query, args...)
 	if err != nil {
+		log.Printf("ListOrders SELECT error: %v, query: %s, args: %v", err, query, args)
 		return nil, 0, err
 	}
 	defer rows.Close()
@@ -59,7 +67,7 @@ func (s *Storage) ListOrders(ctx context.Context, options pvz.ListOptions) ([]*p
 	var orders []*pvz.Order
 	for rows.Next() {
 		var o pvz.Order
-		var pkgType *int32
+		var pkgType *string
 		if err := rows.Scan(
 			&o.OrderID,
 			&o.UserID,
@@ -71,13 +79,9 @@ func (s *Storage) ListOrders(ctx context.Context, options pvz.ListOptions) ([]*p
 		); err != nil {
 			return nil, 0, err
 		}
-		if pkgType != nil {
-			pkg := pvz.PackageType(*pkgType)
-			o.Package = &pkg
-		}
 		orders = append(orders, &o)
 	}
-
+	
 	return orders, total, nil
 }
 

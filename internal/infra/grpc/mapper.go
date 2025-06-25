@@ -76,14 +76,41 @@ func mapDomainOrdersToProto(domainOrders []pvz.Order) []*pkg.Order {
 	}
 
 	protoOrders := make([]*pkg.Order, 0, len(domainOrders))
-	for _, domainOrder := range domainOrders {
+	for _, o := range domainOrders {
+		
+		pt := pkg.PackageType_PACKAGE_TYPE_UNSPECIFIED
+		if o.Package != nil {
+			pt = mapDomainPackageToProto(*o.Package)
+		}
 		protoOrders = append(protoOrders, &pkg.Order{
-			OrderId: uint64(domainOrder.OrderID),
-			Status:  pkg.OrderStatus(domainOrder.Status),
+			OrderId:    uint64(o.OrderID),
+			UserId:     uint64(o.UserID),
+			Status:     pkg.OrderStatus(o.Status),
+			ExpiresAt:  timestamppb.New(o.ExpiresAt),
+			Weight:     o.Weight,
+			TotalPrice: float32(o.Price.InexactFloat64()),
+			Package:    pt,
 		})
 	}
 
 	return protoOrders
+}
+
+func mapDomainPackageToProto(pt pvz.PackageType) pkg.PackageType {
+	switch pt {
+	case pvz.PackageTypeBag:
+		return pkg.PackageType_PACKAGE_TYPE_BAG
+	case pvz.PackageTypeBox:
+		return pkg.PackageType_PACKAGE_TYPE_BOX
+	case pvz.PackageTypeTape:
+		return pkg.PackageType_PACKAGE_TYPE_TAPE
+	case pvz.PackageTypeBagTape:
+		return pkg.PackageType_PACKAGE_TYPE_BAG_TAPE
+	case pvz.PackageTypeBoxTape:
+		return pkg.PackageType_PACKAGE_TYPE_BOX_TAPE
+	default:
+		return pkg.PackageType_PACKAGE_TYPE_UNSPECIFIED
+	}
 }
 
 func mapDomainHistoryToProto(his app.OrderHistory) *pkg.OrderHistory {
