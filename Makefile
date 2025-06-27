@@ -4,7 +4,9 @@ endif
 # пожалуйста, не удаляйте и не перемещайте этот импорт, он помогает вашему верному тьютору быстрее смотреть ваше дз
 # вы можете описать ваш собственный makefile ниже
 
-.PHONY: bin-deps .vendor-proto/validate .vendor-proto/google/api .vendor-proto/protoc-gen-openapiv2/options generate run
+.PHONY: bin-deps .vendor-proto/validate .vendor-proto/google/api .vendor-proto/protoc-gen-openapiv2/options generate run \
+        update linter start up goose-up\
+        coverage
 
 BINARY_NAME=./bin/homework
 LOCAL_BIN := $(CURDIR)/bin
@@ -89,7 +91,6 @@ down:
 
 restart: down up
 
-
 goose-add:
 	goose -dir ./migrations postgres "$(DATABASE_DSN)" create $(NAME) sql
 
@@ -101,3 +102,20 @@ goose-down:
 
 goose-status:
 	goose -dir ./migrations postgres "$(DATABASE_DSN)" status
+
+test-unit:
+	go test -v -race -count=1 ./internal/app/... ./internal/domain/... -tags=unit
+
+test-integration:
+	go test -v -race -count=1 ./internal/storage/dbsuite -tags=integration
+
+
+test: test-unit test-integration
+
+coverage:
+	go test -coverpkg=gitlab.ozon.dev/gleb_evseev/homework/internal/app,gitlab.ozon.dev/gleb_evseev/homework/internal/storage/db \
+		-coverprofile=coverage.txt \
+		./internal/app \
+		./internal/storage/dbsuite
+	go tool cover -func=coverage.txt
+	go tool cover -html=coverage.txt -o coverage.html

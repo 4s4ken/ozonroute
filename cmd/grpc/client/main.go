@@ -9,7 +9,7 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/protobuf/types/known/timestamppb"
+	//"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 const (
@@ -33,26 +33,13 @@ func main() {
 	client := usecase.NewOrdersServiceClient(conn)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	packageType := usecase.PackageType_PACKAGE_TYPE_BOX
-	acceptResp, err := client.AcceptOrder(ctx, &usecase.AcceptOrderRequest{
-		OrderId:   21,
-		UserId:    2,
-		ExpiresAt: timestamppb.New(time.Date(2027, 6, 5, 12, 0, 0, 0, time.UTC)),
-		Weight:    9,
-		Price:     100,
-		Package:   &packageType,
-	})
-	if err != nil {
-		log.Fatalf("AcceptOrder failed: %v", err)
-	}
-	log.Printf("AcceptOrder response: %v", acceptResp)
 
 	listOrdersResp, err := client.ListOrders(ctx, &usecase.ListOrdersRequest{
-		UserId: 2,
+		UserId: 11,
 		InPvz:  true,
 		Pagination: &usecase.Pagination{
-			Page:        0,
-			CountOnPage: 10,
+			Page:        1,
+			CountOnPage: 5,
 		},
 	})
 	if err != nil {
@@ -62,7 +49,7 @@ func main() {
 
 	listReturnsResp, err := client.ListReturns(ctx, &usecase.ListReturnsRequest{
 		Pagination: &usecase.Pagination{
-			Page:        0,
+			Page:        1,
 			CountOnPage: 10,
 		},
 	})

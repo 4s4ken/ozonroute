@@ -1,0 +1,824 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>app: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">gitlab.ozon.dev/gleb_evseev/homework/internal/app/accept_order.go (57.1%)</option>
+				
+				<option value="file1">gitlab.ozon.dev/gleb_evseev/homework/internal/app/get_history.go (0.0%)</option>
+				
+				<option value="file2">gitlab.ozon.dev/gleb_evseev/homework/internal/app/list_orders.go (100.0%)</option>
+				
+				<option value="file3">gitlab.ozon.dev/gleb_evseev/homework/internal/app/list_returns.go (0.0%)</option>
+				
+				<option value="file4">gitlab.ozon.dev/gleb_evseev/homework/internal/app/process_order.go (96.0%)</option>
+				
+				<option value="file5">gitlab.ozon.dev/gleb_evseev/homework/internal/app/return_order.go (100.0%)</option>
+				
+				<option value="file6">gitlab.ozon.dev/gleb_evseev/homework/internal/app/service.go (100.0%)</option>
+				
+				<option value="file7">gitlab.ozon.dev/gleb_evseev/homework/internal/storage/db/db_storage.go (75.0%)</option>
+				
+				<option value="file8">gitlab.ozon.dev/gleb_evseev/homework/internal/storage/db/get_order.go (72.7%)</option>
+				
+				<option value="file9">gitlab.ozon.dev/gleb_evseev/homework/internal/storage/db/list.go (70.8%)</option>
+				
+				<option value="file10">gitlab.ozon.dev/gleb_evseev/homework/internal/storage/db/save_order.go (75.0%)</option>
+				
+				<option value="file11">gitlab.ozon.dev/gleb_evseev/homework/internal/storage/db/update_order.go (83.3%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package app
+
+import (
+        "context"
+        "strconv"
+
+        "github.com/shopspring/decimal"
+        "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/errors"
+        "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
+)
+
+func (s *Service) Accept(ctx context.Context, order pvz.OrderCreate) error <span class="cov8" title="1">{
+        now := s.nowFn().UTC()
+
+        if order.ExpiresAt.Before(now) </span><span class="cov8" title="1">{
+                return errors.EntityValidationError("Order", strconv.FormatUint(uint64(order.OrderID), 10))
+        }</span>
+
+        <span class="cov8" title="1">existing, err := s.repo.GetOrder(ctx, order.OrderID)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov8" title="1">if existing != nil </span><span class="cov8" title="1">{
+                return errors.EntityAlreadyExistsError("Order", strconv.FormatUint(uint64(order.OrderID), 10))
+        }</span>
+
+        <span class="cov8" title="1">finalPrice := order.Price
+
+        if order.Package != nil </span><span class="cov8" title="1">{
+                switch *order.Package </span>{
+                case pvz.PackageTypeBag:<span class="cov0" title="0">
+                        if order.Weight &gt; 10 </span><span class="cov0" title="0">{
+                                return errors.EntityWeightError("Bag", strconv.FormatUint(uint64(order.OrderID), 10))
+                        }</span>
+                        <span class="cov0" title="0">finalPrice = finalPrice.Add(decimal.NewFromInt(5))</span>
+                case pvz.PackageTypeBox:<span class="cov8" title="1">
+                        if order.Weight &gt; 30 </span><span class="cov0" title="0">{
+                                return errors.EntityWeightError("Box", strconv.FormatUint(uint64(order.OrderID), 10))
+                        }</span>
+                        <span class="cov8" title="1">finalPrice = finalPrice.Add(decimal.NewFromInt(20))</span>
+                case pvz.PackageTypeTape:<span class="cov0" title="0">
+                        finalPrice = finalPrice.Add(decimal.NewFromInt(1))</span>
+                case pvz.PackageTypeBagTape:<span class="cov0" title="0">
+                        if order.Weight &gt; 10 </span><span class="cov0" title="0">{
+                                return errors.EntityWeightError("Bag+Tape", strconv.FormatUint(uint64(order.OrderID), 10))
+                        }</span>
+                        <span class="cov0" title="0">finalPrice = finalPrice.Add(decimal.NewFromInt(6))</span>
+                case pvz.PackageTypeBoxTape:<span class="cov0" title="0">
+                        if order.Weight &gt; 30 </span><span class="cov0" title="0">{
+                                return errors.EntityWeightError("Box+Tape", strconv.FormatUint(uint64(order.OrderID), 10))
+                        }</span>
+                        <span class="cov0" title="0">finalPrice = finalPrice.Add(decimal.NewFromInt(21))</span>
+                default:<span class="cov8" title="1">
+                        return errors.EntityPackageError("Package Type", strconv.FormatUint(uint64(order.OrderID), 10))</span>
+                }
+        }
+
+        <span class="cov8" title="1">newOrder := &amp;pvz.Order{
+                OrderCreate: order,
+                Status:      pvz.OrderStatusAccepted,
+        }
+
+        newOrder.Price = finalPrice
+
+        return s.repo.SaveOrder(ctx, newOrder)</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package app
+
+import (
+        "context"
+        "fmt"
+        "sort"
+        "time"
+
+        "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
+)
+
+type OrderHistory struct {
+        OrderID uint64
+        Status  pvz.OrderStatus
+        Time    time.Time
+}
+
+type OrderHistoryList struct {
+        History []OrderHistory
+}
+
+func (s *Service) OrderHistory(ctx context.Context) (*OrderHistoryList, error) <span class="cov0" title="0">{
+        rawHistory, err := s.repo.GetHistory(ctx)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">result := make([]OrderHistory, 0, len(rawHistory))
+        for _, item := range rawHistory </span><span class="cov0" title="0">{
+                result = append(result, OrderHistory{
+                        OrderID: uint64(item.OrderID),
+                        Status:  item.Status,
+                        Time:    item.Time,
+                })
+        }</span>
+
+        <span class="cov0" title="0">sort.Slice(result, func(i, j int) bool </span><span class="cov0" title="0">{
+                return result[i].Time.After(result[j].Time)
+        }</span>)
+
+        <span class="cov0" title="0">return &amp;OrderHistoryList{History: result}, nil</span>
+}
+
+func (s *Service) StatusHistory(ctx context.Context, orderID pvz.OrderID) ([]*pvz.StatusChange, error) <span class="cov0" title="0">{
+        rawHistory, err := s.repo.GetStatusHistory(ctx, orderID)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">if len(rawHistory) == 0 </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("order %d not found", orderID)
+        }</span>
+
+        <span class="cov0" title="0">return rawHistory, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package app
+
+import (
+        "context"
+        "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
+)
+
+type OrdersListOutput struct {
+        Orders []pvz.Order
+        Total  int32
+}
+
+func (s *Service) ListOrders(ctx context.Context, input pvz.ListOptions) (*OrdersListOutput, error) <span class="cov8" title="1">{
+        orders, total, err := s.repo.ListOrders(ctx, input)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">result := make([]pvz.Order, 0, len(orders))
+        for _, o := range orders </span><span class="cov8" title="1">{
+                result = append(result, *o)
+        }</span>
+
+        <span class="cov8" title="1">return &amp;OrdersListOutput{
+                Orders: result,
+                Total:  total,
+        }, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package app
+
+import (
+        "context"
+        "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
+)
+
+type ListReturnsInput struct {
+        Pagination *pvz.Pagination
+}
+
+type ReturnsListOutput struct {
+        Returns []pvz.Order
+}
+
+// ListReturns — бизнес-логика команды возврата заказов с пагинацией
+func (s *Service) ListReturns(ctx context.Context, input ListReturnsInput) (*ReturnsListOutput, error) <span class="cov0" title="0">{
+        returned, err := s.repo.ListReturns(ctx, input.Pagination)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">returns := make([]pvz.Order, 0, len(returned))
+        for _, o := range returned </span><span class="cov0" title="0">{
+                returns = append(returns, *o)
+        }</span>
+        <span class="cov0" title="0">return &amp;ReturnsListOutput{
+                Returns: returns,
+        }, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package app
+
+import (
+        "context"
+        "fmt"
+        "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/errors"
+        "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
+)
+
+type ProcessOrdersInput struct {
+        UserID   uint64
+        Action   pvz.ActionType
+        OrderIDs []uint64
+}
+
+type ProcessOrdersOutput struct {
+        Processed []uint64
+        Errors    []uint64
+}
+
+func (s *Service) Process(ctx context.Context, input ProcessOrdersInput) (ProcessOrdersOutput, error) <span class="cov8" title="1">{
+        
+        if input.Action != pvz.ActionTypeIssue &amp;&amp; input.Action != pvz.ActionTypeReturn </span><span class="cov8" title="1">{
+                return ProcessOrdersOutput{}, errors.EntityValidationError("Action", "unsupported action")
+        }</span>
+
+        <span class="cov8" title="1">var (
+                processed []uint64
+                failed    []uint64
+                now       = s.nowFn().UTC()
+        )
+
+        for _, id := range input.OrderIDs </span><span class="cov8" title="1">{
+                order, err := s.repo.GetOrder(ctx, pvz.OrderID(id))
+                if err != nil </span><span class="cov8" title="1">{
+                        failed = append(failed, id)
+                        continue</span>
+                }
+
+                <span class="cov8" title="1">switch input.Action </span>{
+                case pvz.ActionTypeIssue:<span class="cov8" title="1">
+                        if order.OrderCreate.ExpiresAt.Before(now) </span><span class="cov8" title="1">{
+                                failed = append(failed, id)
+                                continue</span>
+                        }
+                        <span class="cov8" title="1">order.Status = pvz.OrderStatusIssued</span>
+
+                case pvz.ActionTypeReturn:<span class="cov8" title="1">
+                        if order.IsExpiredForReturn(now) </span><span class="cov8" title="1">{
+                                failed = append(failed, id)
+                                continue</span>
+                        }
+                        <span class="cov8" title="1">order.Status = pvz.OrderStatusReturned
+                        order.OrderCreate.ExpiresAt = now</span>
+
+                default:<span class="cov0" title="0">
+                        return ProcessOrdersOutput{}, errors.EntityValidationError("Action", fmt.Sprint(input.Action))</span>
+                }
+
+                <span class="cov8" title="1">err = s.repo.UpdateOrder(ctx, order)
+                if err != nil </span><span class="cov8" title="1">{
+                        failed = append(failed, id)
+                        continue</span>
+                }
+
+                <span class="cov8" title="1">processed = append(processed, id)</span>
+        }
+
+        <span class="cov8" title="1">return ProcessOrdersOutput{
+                Processed: processed,
+                Errors:    failed,
+        }, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package app
+
+import (
+        "context"
+        "fmt"
+        "strconv"
+
+        "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/errors"
+        "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
+)
+
+type ReturnOrderInput struct {
+        UserID  pvz.UserID
+        OrderID pvz.OrderID
+}
+
+func (s *Service) Return(ctx context.Context, input ReturnOrderInput) error <span class="cov8" title="1">{
+        order, err := s.repo.GetOrder(ctx, input.OrderID)
+        if err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">if order.Status == pvz.OrderStatusReturned </span><span class="cov8" title="1">{
+                return errors.EntityValidationError("Order", strconv.FormatUint(uint64(order.OrderID), 10))
+        }</span>
+
+        <span class="cov8" title="1">if order.Status == pvz.OrderStatusAccepted &amp;&amp; order.ExpiresAt.Before(s.nowFn().UTC()) </span><span class="cov8" title="1">{
+                return errors.EntityExpiredError("Order", strconv.FormatUint(uint64(order.OrderID), 10))
+        }</span>
+
+        <span class="cov8" title="1">order.Status = pvz.OrderStatusReturned
+        order.ExpiresAt = s.nowFn().UTC()
+
+        err = s.repo.UpdateOrder(ctx, order)
+        if err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("update order: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">package app
+
+import (
+        "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/store"
+        "time"
+)
+
+type Service struct {
+        repo  store.OrderRepository
+        nowFn func() time.Time
+}
+
+func NewService(repo store.OrderRepository, nowFn func() time.Time) *Service <span class="cov8" title="1">{
+        return &amp;Service{
+                repo:  repo,
+                nowFn: nowFn,
+        }
+}</span>
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">package db
+
+import (
+        "github.com/jackc/pgx/v5/pgxpool"
+        "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
+)
+
+type Storage struct {
+        db *pgxpool.Pool
+}
+
+func New(db *pgxpool.Pool) *Storage <span class="cov8" title="1">{
+        return &amp;Storage{db: db}
+}</span>
+
+func toDBPackageType(pkg *pvz.PackageType) interface{} <span class="cov8" title="1">{
+        if pkg == nil </span><span class="cov8" title="1">{
+                return nil
+        }</span>
+        <span class="cov0" title="0">return string(*pkg)</span>
+
+}
+</pre>
+		
+		<pre class="file" id="file8" style="display: none">package db
+
+import (
+        "context"
+        "errors"
+        "fmt"
+        "github.com/jackc/pgx/v5"
+        storageErrors "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/errors"
+        "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
+)
+
+func (s *Storage) GetOrder(ctx context.Context, orderID pvz.OrderID) (*pvz.Order, error) <span class="cov8" title="1">{
+        const query = `
+                SELECT order_id, user_id, status, expires_at, weight, price, package_type
+                FROM orders
+                WHERE order_id = $1
+        `
+
+        var (
+                order   pvz.Order
+                pkgType *int32
+        )
+
+        err := s.db.QueryRow(ctx, query, orderID).Scan(
+                &amp;order.OrderID,
+                &amp;order.UserID,
+                &amp;order.Status,
+                &amp;order.ExpiresAt,
+                &amp;order.Weight,
+                &amp;order.Price,
+                &amp;pkgType,
+        )
+        if err != nil </span><span class="cov8" title="1">{
+                if errors.Is(err, pgx.ErrNoRows) </span><span class="cov8" title="1">{
+                        return nil, storageErrors.EntityNotFoundError("Order", fmt.Sprint(orderID))
+                }</span>
+                <span class="cov0" title="0">return nil, err</span>
+        }
+
+        <span class="cov8" title="1">if pkgType != nil </span><span class="cov0" title="0">{
+                pkg := pvz.PackageType(*pkgType)
+                order.Package = &amp;pkg
+        }</span>
+
+        <span class="cov8" title="1">return &amp;order, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file9" style="display: none">package db
+
+import (
+        "context"
+        "fmt"
+        storageErrors "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/errors"
+        "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
+        "log"
+        "strings"
+        "time"
+)
+
+func (s *Storage) ListOrders(ctx context.Context, options pvz.ListOptions) ([]*pvz.Order, int32, error) <span class="cov8" title="1">{
+        var (
+                whereClauses []string
+                args         []interface{}
+        )
+        whereClauses = append(whereClauses, fmt.Sprintf("user_id = $%d", len(args)+1))
+        args = append(args, options.UserID)
+
+        if options.InPVZ </span><span class="cov8" title="1">{
+                whereClauses = append(whereClauses, fmt.Sprintf("status = $%d", len(args)+1))
+                args = append(args, pvz.OrderStatusAccepted)
+        }</span>
+
+        <span class="cov8" title="1">whereSQL := "WHERE " + strings.Join(whereClauses, " AND ")
+
+        var total int32
+        countQuery := "SELECT COUNT(*) FROM orders " + whereSQL
+        if err := s.db.QueryRow(ctx, countQuery, args...).Scan(&amp;total); err != nil </span><span class="cov0" title="0">{
+                log.Printf("ListOrders COUNT error: %v, query: %s, args: %v", err, countQuery, args)
+                return nil, 0, err
+        }</span>
+
+        <span class="cov8" title="1">var limit, offset *uint64
+        if options.Pagination != nil </span><span class="cov0" title="0">{
+                limit = options.Pagination.Limit
+                if options.Pagination.Page != nil &amp;&amp; limit != nil </span><span class="cov0" title="0">{
+                        tmp := (*options.Pagination.Page) * (*limit)
+                        offset = &amp;tmp
+
+                        if int32(*offset) &gt;= total </span><span class="cov0" title="0">{
+                                return []*pvz.Order{}, total, nil
+                        }</span>
+                }
+        }
+
+        <span class="cov8" title="1">query := `
+                SELECT order_id, user_id, status, expires_at, weight, price, package_type
+                FROM orders
+        ` + whereSQL + " ORDER BY order_id"
+
+        if limit != nil </span><span class="cov0" title="0">{
+                query += fmt.Sprintf(" LIMIT %d", *limit)
+        }</span>
+        <span class="cov8" title="1">if offset != nil </span><span class="cov0" title="0">{
+                query += fmt.Sprintf(" OFFSET %d", *offset)
+        }</span>
+
+        <span class="cov8" title="1">rows, err := s.db.Query(ctx, query, args...)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Printf("ListOrders SELECT error: %v, query: %s, args: %v", err, query, args)
+                return nil, 0, err
+        }</span>
+        <span class="cov8" title="1">defer rows.Close()
+
+        var orders []*pvz.Order
+        for rows.Next() </span><span class="cov8" title="1">{
+                var o pvz.Order
+                var pkgType *string
+                if err := rows.Scan(
+                        &amp;o.OrderID,
+                        &amp;o.UserID,
+                        &amp;o.Status,
+                        &amp;o.ExpiresAt,
+                        &amp;o.Weight,
+                        &amp;o.Price,
+                        &amp;pkgType,
+                ); err != nil </span><span class="cov0" title="0">{
+                        return nil, 0, err
+                }</span>
+                <span class="cov8" title="1">orders = append(orders, &amp;o)</span>
+        }
+        
+        <span class="cov8" title="1">return orders, total, nil</span>
+}
+
+func (s *Storage) ListReturns(ctx context.Context, pagination *pvz.Pagination) ([]*pvz.Order, error) <span class="cov8" title="1">{
+        query := `
+                SELECT order_id, user_id, status, expires_at, weight, price, package_type
+                FROM orders
+                WHERE status = $1
+                ORDER BY expires_at DESC
+        `
+
+        args := []interface{}{pvz.OrderStatusReturned}
+
+        if pagination != nil &amp;&amp; pagination.Limit != nil </span><span class="cov0" title="0">{
+                query += fmt.Sprintf(" LIMIT %d", *pagination.Limit)
+        }</span>
+        <span class="cov8" title="1">if pagination != nil &amp;&amp; pagination.Page != nil &amp;&amp; pagination.Limit != nil </span><span class="cov0" title="0">{
+                offset := (*pagination.Page) * (*pagination.Limit)
+                query += fmt.Sprintf(" OFFSET %d", offset)
+        }</span>
+
+        <span class="cov8" title="1">rows, err := s.db.Query(ctx, query, args...)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">defer rows.Close()
+
+        var returns []*pvz.Order
+        for rows.Next() </span><span class="cov8" title="1">{
+                var o pvz.Order
+                var pkgType *int32
+                if err := rows.Scan(
+                        &amp;o.OrderID,
+                        &amp;o.UserID,
+                        &amp;o.Status,
+                        &amp;o.ExpiresAt,
+                        &amp;o.Weight,
+                        &amp;o.Price,
+                        &amp;pkgType,
+                ); err != nil </span><span class="cov0" title="0">{
+                        return nil, err
+                }</span>
+                <span class="cov8" title="1">if pkgType != nil </span><span class="cov0" title="0">{
+                        pkg := pvz.PackageType(*pkgType)
+                        o.Package = &amp;pkg
+                }</span>
+                <span class="cov8" title="1">returns = append(returns, &amp;o)</span>
+        }
+
+        <span class="cov8" title="1">return returns, nil</span>
+}
+
+func (s *Storage) GetHistory(ctx context.Context) ([]*pvz.StatusChange, error) <span class="cov8" title="1">{
+        query := `
+                SELECT order_id, status, changed_at
+                FROM order_status_history
+                ORDER BY changed_at DESC
+        `
+
+        rows, err := s.db.Query(ctx, query)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">defer rows.Close()
+
+        var history []*pvz.StatusChange
+        for rows.Next() </span><span class="cov8" title="1">{
+                var h pvz.StatusChange
+                if err := rows.Scan(&amp;h.OrderID, &amp;h.Status, &amp;h.Time); err != nil </span><span class="cov0" title="0">{
+                        return nil, err
+                }</span>
+                <span class="cov8" title="1">history = append(history, &amp;h)</span>
+        }
+
+        <span class="cov8" title="1">return history, nil</span>
+}
+
+func (s *Storage) GetStatusHistory(ctx context.Context, orderID pvz.OrderID) ([]*pvz.StatusChange, error) <span class="cov8" title="1">{
+        const query = `
+                SELECT status, changed_at
+                FROM order_status_history
+                WHERE order_id = $1
+                ORDER BY changed_at DESC
+        `
+
+        rows, err := s.db.Query(ctx, query, orderID)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">defer rows.Close()
+
+        var history []*pvz.StatusChange
+        for rows.Next() </span><span class="cov8" title="1">{
+                var status int
+                var changedAt time.Time
+                if err := rows.Scan(&amp;status, &amp;changedAt); err != nil </span><span class="cov0" title="0">{
+                        return nil, err
+                }</span>
+                <span class="cov8" title="1">history = append(history, &amp;pvz.StatusChange{
+                        OrderID: orderID,
+                        Status:  pvz.OrderStatus(status),
+                        Time:    changedAt,
+                })</span>
+        }
+
+        <span class="cov8" title="1">if err := rows.Err(); err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">if len(history) == 0 </span><span class="cov0" title="0">{
+                return nil, storageErrors.EntityNotFoundError("Order", fmt.Sprint(orderID))
+        }</span>
+
+        <span class="cov8" title="1">return history, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file10" style="display: none">package db
+
+import (
+        "context"
+        "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
+)
+
+func (s *Storage) SaveOrder(ctx context.Context, order *pvz.Order) error <span class="cov8" title="1">{
+        tx, err := s.db.Begin(ctx)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov8" title="1">defer func() </span><span class="cov8" title="1">{
+                if err != nil </span><span class="cov0" title="0">{
+                        _ = tx.Rollback(ctx)
+                }</span>
+        }()
+
+        <span class="cov8" title="1">const insertOrder = `
+                INSERT INTO orders (order_id, user_id, status, expires_at, weight, price, package_type)
+                VALUES ($1, $2, $3, $4, $5, $6, $7)
+        `
+
+        _, err = tx.Exec(ctx, insertOrder,
+                order.OrderID,
+                order.UserID,
+                order.Status,
+                order.ExpiresAt,
+                order.Weight,
+                order.Price,
+                toDBPackageType(order.Package),
+        )
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">const insertHistory = `
+                INSERT INTO order_status_history (order_id, status, changed_at)
+                VALUES ($1, $2, NOW())
+        `
+
+        _, err = tx.Exec(ctx, insertHistory, order.OrderID, order.Status)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">err = tx.Commit(ctx)
+        return err</span>
+}
+</pre>
+		
+		<pre class="file" id="file11" style="display: none">package db
+
+import (
+        "context"
+        "fmt"
+        storageErrors "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/errors"
+        "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
+)
+
+func (s *Storage) UpdateOrder(ctx context.Context, order *pvz.Order) (err error) <span class="cov8" title="1">{
+        tx, err := s.db.Begin(ctx)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov8" title="1">defer func() </span><span class="cov8" title="1">{
+                if err != nil </span><span class="cov8" title="1">{
+                        _ = tx.Rollback(ctx)
+                }</span>
+        }()
+
+        <span class="cov8" title="1">const updateOrder = `
+                UPDATE orders SET status = $1, expires_at = $2, weight = $3, price = $4, package_type = $5
+                WHERE order_id = $6
+        `
+        commandTag, err := tx.Exec(ctx, updateOrder,
+                order.Status,
+                order.ExpiresAt,
+                order.Weight,
+                order.Price,
+                order.Package,
+                order.OrderID,
+        )
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">if commandTag.RowsAffected() == 0 </span><span class="cov8" title="1">{
+                return storageErrors.EntityNotFoundError("Order", fmt.Sprint(order.OrderID))
+        }</span>
+
+        <span class="cov8" title="1">const insertHistory = `
+                INSERT INTO order_status_history (order_id, status, changed_at)
+                VALUES ($1, $2, NOW())
+        `
+        _, err = tx.Exec(ctx, insertHistory, order.OrderID, order.Status)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">err = tx.Commit(ctx)
+        return err</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>

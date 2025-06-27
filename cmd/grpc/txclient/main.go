@@ -40,7 +40,9 @@ func main() {
 			INSERT INTO orders 
 			(order_id, user_id, status, expires_at, weight, price, package_type)
 			VALUES ($1, $2, $3, $4, $5, $6, $7)
+			
 		`
+
 		_, err := tx.Exec(ctx, query,
 			11,
 			11,
@@ -51,6 +53,7 @@ func main() {
 			2,
 		)
 		return err
+
 	})
 	if err != nil {
 		log.Fatal("insert error:", err)

@@ -7,7 +7,7 @@ import (
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 )
 
-func (s *Storage) UpdateOrder(ctx context.Context, order *pvz.Order) error {
+func (s *Storage) UpdateOrder(ctx context.Context, order *pvz.Order) (err error) {
 	tx, err := s.db.Begin(ctx)
 	if err != nil {
 		return err

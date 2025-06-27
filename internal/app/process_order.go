@@ -19,6 +19,11 @@ type ProcessOrdersOutput struct {
 }
 
 func (s *Service) Process(ctx context.Context, input ProcessOrdersInput) (ProcessOrdersOutput, error) {
+	
+	if input.Action != pvz.ActionTypeIssue && input.Action != pvz.ActionTypeReturn {
+		return ProcessOrdersOutput{}, errors.EntityValidationError("Action", "unsupported action")
+	}
+
 	var (
 		processed []uint64
 		failed    []uint64
@@ -34,7 +39,7 @@ func (s *Service) Process(ctx context.Context, input ProcessOrdersInput) (Proces
 
 		switch input.Action {
 		case pvz.ActionTypeIssue:
-			if order.ExpiresAt.Before(now) {
+			if order.OrderCreate.ExpiresAt.Before(now) {
 				failed = append(failed, id)
 				continue
 			}
@@ -46,7 +51,7 @@ func (s *Service) Process(ctx context.Context, input ProcessOrdersInput) (Proces
 				continue
 			}
 			order.Status = pvz.OrderStatusReturned
-			order.ExpiresAt = now
+			order.OrderCreate.ExpiresAt = now
 
 		default:
 			return ProcessOrdersOutput{}, errors.EntityValidationError("Action", fmt.Sprint(input.Action))
