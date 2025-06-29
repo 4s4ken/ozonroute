@@ -5,7 +5,6 @@ import (
 	pkg "gitlab.ozon.dev/gleb_evseev/homework/pkg/pvz"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"log"
 )
 
 // AcceptOrder обрабатывает gRPC-запрос на приём заказа.
@@ -17,7 +16,6 @@ func (s *OrdersServer) AcceptOrder(ctx context.Context, req *pkg.AcceptOrderRequ
 
 	err := s.ordersHandler.Accept(ctx, input)
 	if err != nil {
-		log.Printf("failed to accept order %s", err)
 		return nil, status.Error(codes.Internal, "Internal Server Error")
 	}
 

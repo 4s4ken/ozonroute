@@ -8,7 +8,6 @@ import (
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/suite"
 
-	domainErrors "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/errors"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 )
 
@@ -49,14 +48,10 @@ func (s *GetOrderSuite) TestGetOrder_Found() {
 func (s *GetOrderSuite) TestGetOrder_NotFound() {
 	ctx := context.Background()
 
-	_, err := s.Repo.GetOrder(ctx, 123123)
-	s.Require().Error(err)
+	order, err := s.Repo.GetOrder(ctx, 123123)
 
-	var er *domainErrors.Error
-	s.Truef(
-		s.ErrorAs(err, &er) && er.Code == domainErrors.ErrorCodeNotFound,
-		"Waiting EntityNotFound error,got ERROR: %v", err,
-	)
+	s.Require().NoError(err)
+	s.Nil(order)
 }
 
 func TestGetOrderSuite(t *testing.T) {

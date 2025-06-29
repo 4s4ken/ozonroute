@@ -23,7 +23,7 @@ func MapPackageToDomain(pkgStr string) (pvz.PackageType, error) {
 	case "box+tape":
 		return pvz.PackageTypeBoxTape, nil
 	default:
-		return "", storageErorrs.EntityValidationError("package", "invalid package type")
+		return 0, storageErorrs.EntityValidationError("package", "invalid package type")
 	}
 }
 

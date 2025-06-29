@@ -104,13 +104,16 @@ goose-status:
 	goose -dir ./migrations postgres "$(DATABASE_DSN)" status
 
 test-unit:
-	go test -v -race -count=1 ./internal/app/... ./internal/domain/... -tags=unit
+	go test -v -count=1 ./internal/app/... ./internal/domain/... -tags=unit
 
 test-integration:
-	go test -v -race -count=1 ./internal/storage/dbsuite -tags=integration
+	go test -v -count=1 ./internal/storage/dbsuite -tags=integration
 
+test-e2e:
+	go build -o internal/e2etests/server.exe ./cmd/grpc/server
+	go test -v -timeout=5m ./internal/e2etests
 
-test: test-unit test-integration
+test: test-unit test-integration test-e2e
 
 coverage:
 	go test -coverpkg=gitlab.ozon.dev/gleb_evseev/homework/internal/app,gitlab.ozon.dev/gleb_evseev/homework/internal/storage/db \

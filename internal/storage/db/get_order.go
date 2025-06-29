@@ -3,9 +3,7 @@ package db
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/jackc/pgx/v5"
-	storageErrors "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/errors"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 )
 
@@ -32,7 +30,7 @@ func (s *Storage) GetOrder(ctx context.Context, orderID pvz.OrderID) (*pvz.Order
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, storageErrors.EntityNotFoundError("Order", fmt.Sprint(orderID))
+			return nil, nil
 		}
 		return nil, err
 	}

@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
+
 	storageErrors "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/errors"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 )
@@ -18,22 +19,14 @@ func (s *Storage) UpdateOrder(ctx context.Context, order *pvz.Order) (err error)
 		}
 	}()
 
-	const updateOrder = `
-		UPDATE orders SET status = $1, expires_at = $2, weight = $3, price = $4, package_type = $5
-		WHERE order_id = $6
+	const deleteOrder = `
+		DELETE FROM orders
+		WHERE order_id = $1
 	`
-	commandTag, err := tx.Exec(ctx, updateOrder,
-		order.Status,
-		order.ExpiresAt,
-		order.Weight,
-		order.Price,
-		order.Package,
-		order.OrderID,
-	)
+	commandTag, err := tx.Exec(ctx, deleteOrder, order.OrderID)
 	if err != nil {
 		return err
 	}
-
 	if commandTag.RowsAffected() == 0 {
 		return storageErrors.EntityNotFoundError("Order", fmt.Sprint(order.OrderID))
 	}
@@ -47,6 +40,5 @@ func (s *Storage) UpdateOrder(ctx context.Context, order *pvz.Order) (err error)
 		return err
 	}
 
-	err = tx.Commit(ctx)
-	return err
+	return tx.Commit(ctx)
 }

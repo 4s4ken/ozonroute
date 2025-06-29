@@ -20,6 +20,10 @@ func (s *Service) Return(ctx context.Context, input ReturnOrderInput) error {
 		return err
 	}
 
+	if order == nil {
+		return errors.EntityNotFoundError("Order", strconv.FormatUint(uint64(input.OrderID), 10))
+	}
+	
 	if order.Status == pvz.OrderStatusReturned {
 		return errors.EntityValidationError("Order", strconv.FormatUint(uint64(order.OrderID), 10))
 	}
