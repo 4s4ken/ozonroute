@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/errors"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
+	"sync"
 )
 
 type ProcessOrdersInput struct {
@@ -19,55 +20,67 @@ type ProcessOrdersOutput struct {
 }
 
 func (s *Service) Process(ctx context.Context, input ProcessOrdersInput) (ProcessOrdersOutput, error) {
-
 	if input.Action != pvz.ActionTypeIssue && input.Action != pvz.ActionTypeReturn {
 		return ProcessOrdersOutput{}, errors.EntityValidationError("Action", "unsupported action")
 	}
 
 	var (
+		mu        sync.Mutex
 		processed []uint64
 		failed    []uint64
 		now       = s.nowFn().UTC()
 	)
 
+	type res struct {
+		id  uint64
+		err error
+	}
+
+	errCh := make(chan res, len(input.OrderIDs))
+
 	for _, id := range input.OrderIDs {
-		order, err := s.repo.GetOrder(ctx, pvz.OrderID(id))
-		if err != nil {
-			failed = append(failed, id)
-			continue
-		}
-		if order == nil {
-			failed = append(failed, id)
-			continue
-		}
-		
-		switch input.Action {
-		case pvz.ActionTypeIssue:
-			if order.OrderCreate.ExpiresAt.Before(now) {
-				failed = append(failed, id)
-				continue
+		s.wp.Submit(func(ctx context.Context) {
+			order, err := s.repo.GetOrder(ctx, pvz.OrderID(id))
+			if err != nil || order == nil {
+				errCh <- res{id: id, err: fmt.Errorf("order not found or error")}
+				return
 			}
-			order.Status = pvz.OrderStatusIssued
 
-		case pvz.ActionTypeReturn:
-			if order.IsExpiredForReturn(now) {
-				failed = append(failed, id)
-				continue
+			switch input.Action {
+			case pvz.ActionTypeIssue:
+				if order.OrderCreate.ExpiresAt.Before(now) {
+					errCh <- res{id: id, err: fmt.Errorf("expired")}
+					return
+				}
+				order.Status = pvz.OrderStatusIssued
+
+			case pvz.ActionTypeReturn:
+				if order.IsExpiredForReturn(now) {
+					errCh <- res{id: id, err: fmt.Errorf("expired for return")}
+					return
+				}
+				order.Status = pvz.OrderStatusReturned
+				order.OrderCreate.ExpiresAt = now
+
+			default:
+				errCh <- res{id: id, err: fmt.Errorf("unsupported action")}
+				return
 			}
-			order.Status = pvz.OrderStatusReturned
-			order.OrderCreate.ExpiresAt = now
 
-		default:
-			return ProcessOrdersOutput{}, errors.EntityValidationError("Action", fmt.Sprint(input.Action))
+			err = s.repo.UpdateOrder(ctx, order)
+			errCh <- res{id: id, err: err}
+		})
+	}
+
+	for i := 0; i < len(input.OrderIDs); i++ {
+		r := <-errCh
+		mu.Lock()
+		if r.err != nil {
+			failed = append(failed, r.id)
+		} else {
+			processed = append(processed, r.id)
 		}
-
-		err = s.repo.UpdateOrder(ctx, order)
-		if err != nil {
-			failed = append(failed, id)
-			continue
-		}
-
-		processed = append(processed, id)
+		mu.Unlock()
 	}
 
 	return ProcessOrdersOutput{

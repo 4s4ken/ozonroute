@@ -8,11 +8,13 @@ import (
 type Service struct {
 	repo  store.OrderRepository
 	nowFn func() time.Time
+	wp    *WorkerPool
 }
 
-func NewService(repo store.OrderRepository, nowFn func() time.Time) *Service {
+func NewService(repo store.OrderRepository, nowFn func() time.Time, wp *WorkerPool) *Service {
 	return &Service{
 		repo:  repo,
 		nowFn: nowFn,
+		wp:    wp,
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"sync"
 
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/errors"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
@@ -15,6 +16,26 @@ type ReturnOrderInput struct {
 }
 
 func (s *Service) Return(ctx context.Context, input ReturnOrderInput) error {
+
+	errCh := make(chan error, 1)
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+
+	s.wp.Submit(func(ctx context.Context) {
+		defer wg.Done()
+		errCh <- s.returnOrder(ctx, input)
+	})
+
+	select {
+	case <-ctx.Done():
+		wg.Wait()
+		return ctx.Err()
+	case err := <-errCh:
+		return err
+	}
+}
+
+func (s *Service) returnOrder(ctx context.Context, input ReturnOrderInput) error {
 	order, err := s.repo.GetOrder(ctx, input.OrderID)
 	if err != nil {
 		return err
@@ -23,7 +44,7 @@ func (s *Service) Return(ctx context.Context, input ReturnOrderInput) error {
 	if order == nil {
 		return errors.EntityNotFoundError("Order", strconv.FormatUint(uint64(input.OrderID), 10))
 	}
-	
+
 	if order.Status == pvz.OrderStatusReturned {
 		return errors.EntityValidationError("Order", strconv.FormatUint(uint64(order.OrderID), 10))
 	}

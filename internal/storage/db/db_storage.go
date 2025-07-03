@@ -18,5 +18,9 @@ func toDBPackageType(pkg *pvz.PackageType) interface{} {
 		return nil
 	}
 	return string(*pkg)
+}
 
+func (s *Storage) Close() error {
+	s.db.Close()
+	return nil
 }

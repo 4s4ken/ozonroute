@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"strconv"
+	"sync"
 
 	"github.com/shopspring/decimal"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/errors"
@@ -10,8 +11,26 @@ import (
 )
 
 func (s *Service) Accept(ctx context.Context, order pvz.OrderCreate) error {
-	now := s.nowFn().UTC()
+	errCh := make(chan error, 1)
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	
+	s.wp.Submit(func(ctx context.Context) {
+		defer wg.Done()
+		errCh <- s.accept(ctx, order)
+	})
 
+	select {
+	case <-ctx.Done():
+		wg.Wait()
+		return ctx.Err()
+	case err := <-errCh:
+		return err
+	}
+}
+
+func (s *Service) accept(ctx context.Context, order pvz.OrderCreate) error {
+	now := s.nowFn().UTC()
 	if order.ExpiresAt.Before(now) {
 		return errors.EntityValidationError("Order", strconv.FormatUint(uint64(order.OrderID), 10))
 	}
@@ -25,7 +44,6 @@ func (s *Service) Accept(ctx context.Context, order pvz.OrderCreate) error {
 	}
 
 	finalPrice := order.Price
-
 	if order.Package != nil {
 		switch *order.Package {
 		case pvz.PackageTypeBag:
@@ -59,7 +77,6 @@ func (s *Service) Accept(ctx context.Context, order pvz.OrderCreate) error {
 		OrderCreate: order,
 		Status:      pvz.OrderStatusAccepted,
 	}
-
 	newOrder.Price = finalPrice
 
 	return s.repo.SaveOrder(ctx, newOrder)
