@@ -35,7 +35,7 @@ func main() {
 	defer cancel()
 
 	listOrdersResp, err := client.ListOrders(ctx, &usecase.ListOrdersRequest{
-		UserId: 11,
+		UserId: 300,
 		InPvz:  true,
 		Pagination: &usecase.Pagination{
 			Page:        1,

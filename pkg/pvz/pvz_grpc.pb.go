@@ -26,6 +26,7 @@ const (
 	OrdersService_ListReturns_FullMethodName      = "/pvz.OrdersService/ListReturns"
 	OrdersService_GetHistory_FullMethodName       = "/pvz.OrdersService/GetHistory"
 	OrdersService_GetStatusHistory_FullMethodName = "/pvz.OrdersService/GetStatusHistory"
+	OrdersService_ResizeWorkerPool_FullMethodName = "/pvz.OrdersService/ResizeWorkerPool"
 )
 
 // OrdersServiceClient is the client API for OrdersService service.
@@ -39,6 +40,7 @@ type OrdersServiceClient interface {
 	ListReturns(ctx context.Context, in *ListReturnsRequest, opts ...grpc.CallOption) (*ReturnsList, error)
 	GetHistory(ctx context.Context, in *GetHistoryRequest, opts ...grpc.CallOption) (*OrderHistoryList, error)
 	GetStatusHistory(ctx context.Context, in *GetStatusHistoryRequest, opts ...grpc.CallOption) (*StatusHistoryList, error)
+	ResizeWorkerPool(ctx context.Context, in *ResizeWorkerPoolRequest, opts ...grpc.CallOption) (*ResizeWorkerPoolResponse, error)
 }
 
 type ordersServiceClient struct {
@@ -119,6 +121,16 @@ func (c *ordersServiceClient) GetStatusHistory(ctx context.Context, in *GetStatu
 	return out, nil
 }
 
+func (c *ordersServiceClient) ResizeWorkerPool(ctx context.Context, in *ResizeWorkerPoolRequest, opts ...grpc.CallOption) (*ResizeWorkerPoolResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ResizeWorkerPoolResponse)
+	err := c.cc.Invoke(ctx, OrdersService_ResizeWorkerPool_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // OrdersServiceServer is the server API for OrdersService service.
 // All implementations must embed UnimplementedOrdersServiceServer
 // for forward compatibility.
@@ -130,6 +142,7 @@ type OrdersServiceServer interface {
 	ListReturns(context.Context, *ListReturnsRequest) (*ReturnsList, error)
 	GetHistory(context.Context, *GetHistoryRequest) (*OrderHistoryList, error)
 	GetStatusHistory(context.Context, *GetStatusHistoryRequest) (*StatusHistoryList, error)
+	ResizeWorkerPool(context.Context, *ResizeWorkerPoolRequest) (*ResizeWorkerPoolResponse, error)
 	mustEmbedUnimplementedOrdersServiceServer()
 }
 
@@ -160,6 +173,9 @@ func (UnimplementedOrdersServiceServer) GetHistory(context.Context, *GetHistoryR
 }
 func (UnimplementedOrdersServiceServer) GetStatusHistory(context.Context, *GetStatusHistoryRequest) (*StatusHistoryList, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetStatusHistory not implemented")
+}
+func (UnimplementedOrdersServiceServer) ResizeWorkerPool(context.Context, *ResizeWorkerPoolRequest) (*ResizeWorkerPoolResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ResizeWorkerPool not implemented")
 }
 func (UnimplementedOrdersServiceServer) mustEmbedUnimplementedOrdersServiceServer() {}
 func (UnimplementedOrdersServiceServer) testEmbeddedByValue()                       {}
@@ -308,6 +324,24 @@ func _OrdersService_GetStatusHistory_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _OrdersService_ResizeWorkerPool_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResizeWorkerPoolRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrdersServiceServer).ResizeWorkerPool(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: OrdersService_ResizeWorkerPool_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrdersServiceServer).ResizeWorkerPool(ctx, req.(*ResizeWorkerPoolRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // OrdersService_ServiceDesc is the grpc.ServiceDesc for OrdersService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -342,6 +376,10 @@ var OrdersService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetStatusHistory",
 			Handler:    _OrdersService_GetStatusHistory_Handler,
+		},
+		{
+			MethodName: "ResizeWorkerPool",
+			Handler:    _OrdersService_ResizeWorkerPool_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

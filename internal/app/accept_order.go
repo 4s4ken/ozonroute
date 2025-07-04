@@ -14,11 +14,14 @@ func (s *Service) Accept(ctx context.Context, order pvz.OrderCreate) error {
 	errCh := make(chan error, 1)
 	wg := sync.WaitGroup{}
 	wg.Add(1)
-	
-	s.wp.Submit(func(ctx context.Context) {
+
+	err := s.wp.Submit(func(ctx context.Context) {
 		defer wg.Done()
 		errCh <- s.accept(ctx, order)
 	})
+	if err != nil {
+		return err
+	}
 
 	select {
 	case <-ctx.Done():

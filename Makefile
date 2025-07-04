@@ -71,7 +71,6 @@ generate:
 	$(LOCAL_BIN)/bin/protoc --proto_path=api --proto_path=vendor.protogen \
 		--go_out=$(OUT_PATH) --go_opt=paths=source_relative --plugin protoc-gen-go="${GOBIN}/protoc-gen-go.exe" \
         --go-grpc_out=$(OUT_PATH) --go-grpc_opt=paths=source_relative --plugin protoc-gen-go-grpc="${GOBIN}/protoc-gen-go-grpc.exe" \
-        --validate_out="lang=go,paths=source_relative:$(OUT_PATH)" --plugin protoc-gen-validate=$(LOCAL_BIN)/protoc-gen-validate.exe \
         --grpc-gateway_out=$(OUT_PATH) --grpc-gateway_opt=paths=source_relative --plugin protoc-gen-grpc-gateway=$(LOCAL_BIN)/protoc-gen-grpc-gateway.exe \
         --openapiv2_out=$(OUT_PATH) --plugin=protoc-gen-openapiv2=$(LOCAL_BIN)/protoc-gen-openapiv2.exe \
 		api/pvz/pvz.proto

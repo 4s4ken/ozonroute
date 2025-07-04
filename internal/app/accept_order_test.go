@@ -120,7 +120,8 @@ func TestService_Accept(t *testing.T) {
 				tt.mockSetup(repo, ctx, tt.input)
 			}
 
-			svc := app.NewService(repo, func() time.Time { return now })
+			wp := app.NewWorkerPool(context.Background(), 1)
+			svc := app.NewService(repo, func() time.Time { return now }, wp)
 			err := svc.Accept(ctx, tt.input)
 
 			if tt.wantErr {

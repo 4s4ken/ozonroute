@@ -21,10 +21,13 @@ func (s *Service) Return(ctx context.Context, input ReturnOrderInput) error {
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 
-	s.wp.Submit(func(ctx context.Context) {
+	err := s.wp.Submit(func(ctx context.Context) {
 		defer wg.Done()
 		errCh <- s.returnOrder(ctx, input)
 	})
+	if err != nil {
+		return err
+	}
 
 	select {
 	case <-ctx.Done():

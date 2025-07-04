@@ -1,7 +1,10 @@
 package cli
 
 import (
+	"context"
+	"fmt"
 	"github.com/spf13/cobra"
+	"strconv"
 )
 
 // InitCommands инициализирует все доступные команды CLI.
@@ -48,6 +51,18 @@ func InitCommands(st *FileHandler) *cobra.Command {
 			Use:   "order-history",
 			Short: "oh",
 			RunE:  st.OrdersHistoryCommand,
+		},
+		&cobra.Command{
+			Use:   "resize-wp",
+			Short: "Изменить количество горутин в worker pool",
+			Args:  cobra.ExactArgs(1),
+			RunE: func(cmd *cobra.Command, args []string) error {
+				n, err := strconv.Atoi(args[0])
+				if err != nil || n <= 0 {
+					return fmt.Errorf("некорректное количество воркеров: %s", args[0])
+				}
+				return st.commandsHandler.ResizeWorkerPool(context.Background(), n)
+			},
 		},
 	)
 

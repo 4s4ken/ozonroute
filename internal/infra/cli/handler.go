@@ -22,17 +22,20 @@ type commandsHandler interface {
 	ListReturns(ctx context.Context, opts app.ListReturnsInput) (*app.ReturnsListOutput, error)
 	OrderHistory(ctx context.Context) (*app.OrderHistoryList, error)
 	StatusHistory(ctx context.Context, orderID pvz.OrderID) ([]*pvz.StatusChange, error)
+	ResizeWorkerPool(ctx context.Context, n int) error
 }
 
 type FileHandler struct {
 	commandsHandler   commandsHandler
+	workerPool        *app.WorkerPool
 	scanner           *bufio.Scanner
 	commandController *cobra.Command
 }
 
-func NewFileHandler(commandsHandler commandsHandler) *FileHandler {
+func NewFileHandler(commandsHandler commandsHandler, wp *app.WorkerPool) *FileHandler {
 	h := &FileHandler{
 		commandsHandler: commandsHandler,
+		workerPool:      wp,
 		scanner:         bufio.NewScanner(os.Stdin),
 	}
 
@@ -40,7 +43,6 @@ func NewFileHandler(commandsHandler commandsHandler) *FileHandler {
 
 	return h
 }
-
 func (h *FileHandler) Run(ctx context.Context) error {
 
 	for {

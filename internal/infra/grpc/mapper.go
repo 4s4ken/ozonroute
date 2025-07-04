@@ -77,7 +77,7 @@ func mapDomainOrdersToProto(domainOrders []pvz.Order) []*pkg.Order {
 
 	protoOrders := make([]*pkg.Order, 0, len(domainOrders))
 	for _, o := range domainOrders {
-		
+
 		pt := pkg.PackageType_PACKAGE_TYPE_UNSPECIFIED
 		if o.Package != nil {
 			pt = mapDomainPackageToProto(*o.Package)

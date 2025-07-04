@@ -96,7 +96,8 @@ func TestService_ListOrders(t *testing.T) {
 				tt.mockSetup(repo, ctx, tt.input)
 			}
 
-			svc := app.NewService(repo, nil)
+			wp := app.NewWorkerPool(context.Background(), 1)
+			svc := app.NewService(repo, nil, wp)
 
 			out, err := svc.ListOrders(ctx, tt.input)
 

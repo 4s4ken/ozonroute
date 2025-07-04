@@ -157,7 +157,8 @@ func TestService_Process(t *testing.T) {
 				tt.mockSetup(repo, ctx, tt.orderIDs)
 			}
 
-			svc := app.NewService(repo, func() time.Time { return now })
+			wp := app.NewWorkerPool(context.Background(), 1)
+			svc := app.NewService(repo, func() time.Time { return now }, wp)
 
 			out, err := svc.Process(ctx, app.ProcessOrdersInput{
 				UserID:   77,

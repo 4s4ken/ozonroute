@@ -16,7 +16,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	pb "gitlab.ozon.dev/gleb_evseev/homework/pkg/pvz"
+	pkg "gitlab.ozon.dev/gleb_evseev/homework/pkg/pvz"
 )
 
 const grpcPort = "50051"
@@ -96,10 +96,10 @@ func TestE2E(t *testing.T) {
 		}
 	}()
 
-	client := pb.NewOrdersServiceClient(conn)
+	client := pkg.NewOrdersServiceClient(conn)
 
 	t.Run("AcceptOrder", func(t *testing.T) {
-		req := &pb.AcceptOrderRequest{
+		req := &pkg.AcceptOrderRequest{
 			OrderId:   123,
 			UserId:    123,
 			ExpiresAt: timestamppb.New(time.Now().Add(24 * time.Hour)),
@@ -116,9 +116,9 @@ func TestE2E(t *testing.T) {
 	})
 
 	t.Run("ProcessOrders_Issue", func(t *testing.T) {
-		req := &pb.ProcessOrdersRequest{
+		req := &pkg.ProcessOrdersRequest{
 			UserId:   123,
-			Action:   pb.ActionType_ACTION_TYPE_ISSUE,
+			Action:   pkg.ActionType_ACTION_TYPE_ISSUE,
 			OrderIds: []uint64{123},
 		}
 		resp, err := client.ProcessOrders(ctx, req)

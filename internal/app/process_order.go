@@ -39,7 +39,7 @@ func (s *Service) Process(ctx context.Context, input ProcessOrdersInput) (Proces
 	errCh := make(chan res, len(input.OrderIDs))
 
 	for _, id := range input.OrderIDs {
-		s.wp.Submit(func(ctx context.Context) {
+		err := s.wp.Submit(func(ctx context.Context) {
 			order, err := s.repo.GetOrder(ctx, pvz.OrderID(id))
 			if err != nil || order == nil {
 				errCh <- res{id: id, err: fmt.Errorf("order not found or error")}
@@ -70,6 +70,9 @@ func (s *Service) Process(ctx context.Context, input ProcessOrdersInput) (Proces
 			err = s.repo.UpdateOrder(ctx, order)
 			errCh <- res{id: id, err: err}
 		})
+		if err != nil {
+			return ProcessOrdersOutput{}, err
+		}
 	}
 
 	for i := 0; i < len(input.OrderIDs); i++ {

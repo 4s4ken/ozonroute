@@ -15,6 +15,7 @@ type OrdersHandler interface {
 	ListReturns(ctx context.Context, opts app.ListReturnsInput) (*app.ReturnsListOutput, error)
 	OrderHistory(ctx context.Context) (*app.OrderHistoryList, error)
 	StatusHistory(ctx context.Context, orderID pvz.OrderID) ([]*pvz.StatusChange, error)
+	ResizeWorkerPool(ctx context.Context, n int) error
 }
 type OrdersServer struct {
 	pkg.UnimplementedOrdersServiceServer

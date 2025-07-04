@@ -95,6 +95,16 @@ service OrdersService {
     };
   }
 
+  rpc ResizeWorkerPool  (ResizeWorkerPoolRequest) returns (ResizeWorkerPoolResponse) {
+    option (google.api.http) = {
+      get: "/v1/orders/resize_workers"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Изменение количества горутин";
+      description: "Динамически позволяет задавать количество горутин";
+    };
+  }
+
 }
 
 message AcceptOrderRequest {
@@ -218,4 +228,13 @@ message StatusHistory{
   uint64 order_id = 1;
   OrderStatus status = 2;
   google.protobuf.Timestamp changes_at = 3;
+}
+
+message ResizeWorkerPoolRequest {
+  int32 workers = 1;
+}
+
+message ResizeWorkerPoolResponse {
+  bool success = 1;
+  string message = 2;
 }

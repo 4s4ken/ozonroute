@@ -212,6 +212,39 @@
         ]
       }
     },
+    "/v1/orders/resize_workers": {
+      "get": {
+        "summary": "Изменение количества горутин",
+        "description": "Динамически позволяет задавать количество горутин",
+        "operationId": "OrdersService_ResizeWorkerPool",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pvzResizeWorkerPoolResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "workers",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "OrdersService"
+        ]
+      }
+    },
     "/v1/orders/return": {
       "post": {
         "summary": "Вернуть заказ курьеру",
@@ -485,6 +518,17 @@
             "type": "string",
             "format": "uint64"
           }
+        }
+      }
+    },
+    "pvzResizeWorkerPoolResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
         }
       }
     },

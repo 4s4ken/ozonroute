@@ -45,7 +45,6 @@ func main() {
 	}()
 
 	wp := app.NewWorkerPool(ctx, 10)
-	defer wp.Shutdown()
 
 	handler := app.NewService(dbStorage, func() time.Time { return time.Now().UTC() }, wp)
 
@@ -61,7 +60,7 @@ func main() {
 			mw.RateLimiterInterceptor(
 				limiter.New(
 					memory.NewStore(),
-					limiter.Rate{Period: 10 * time.Second, Limit: 2},
+					limiter.Rate{Period: 200 * time.Millisecond, Limit: 2},
 				),
 			),
 			mw.ErrorMappingInterceptor(),
@@ -116,14 +115,13 @@ func main() {
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 
 	<-sigCh
-	log.Println("Graceful shutdown")
 
 	cancel()
 	wp.Shutdown()
 
 	grpcServer.GracefulStop()
 
-	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 3*time.Second)
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 300*time.Millisecond)
 	defer shutdownCancel()
 	if err := httpServer.Shutdown(shutdownCtx); err != nil {
 		log.Printf("Ошибка при остановке HTTP сервера: %v", err)
@@ -132,6 +130,5 @@ func main() {
 	if err := dbStorage.Close(); err != nil {
 		log.Printf("Ошибка при закрытии БД: %v", err)
 	}
-	log.Println("Graceful shutdown done")
 
 }

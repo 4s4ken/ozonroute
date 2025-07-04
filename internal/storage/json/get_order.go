@@ -2,8 +2,6 @@ package json
 
 import (
 	"context"
-	"fmt"
-	storageErrors "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/errors"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 )
 
@@ -14,5 +12,5 @@ func (s *Storage) GetOrder(ctx context.Context, orderID pvz.OrderID) (*pvz.Order
 			return order, nil
 		}
 	}
-	return nil, storageErrors.EntityNotFoundError("Order", fmt.Sprint(orderID))
+	return nil, nil
 }
