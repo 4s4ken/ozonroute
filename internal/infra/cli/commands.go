@@ -53,7 +53,7 @@ func InitCommands(st *FileHandler) *cobra.Command {
 			RunE:  st.OrdersHistoryCommand,
 		},
 		&cobra.Command{
-			Use:   "resize-wp",
+			Use:   "resize-mw",
 			Short: "Изменить количество горутин в worker pool",
 			Args:  cobra.ExactArgs(1),
 			RunE: func(cmd *cobra.Command, args []string) error {

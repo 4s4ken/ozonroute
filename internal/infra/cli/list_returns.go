@@ -6,6 +6,7 @@ import (
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/app"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/errors"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
+	"gitlab.ozon.dev/gleb_evseev/homework/pkg/workerpool"
 )
 
 // ListReturnsCommand функция для выполнения команды list-returns
@@ -40,7 +41,8 @@ func (h *FileHandler) ListReturnsCommand(cmd *cobra.Command, _ []string) error {
 		fmt.Printf("PAGE: %d LIMIT: %d\n", *pagePtr, *limitPtr)
 	}
 
-	returnsList, err := h.commandsHandler.ListReturns(nil, options)
+	ctx := workerpool.WorkerPoolValue(cmd.Context(), h.workerPool)
+	returnsList, err := h.commandsHandler.ListReturns(ctx, options)
 	if err != nil {
 		return mapError(err)
 	}

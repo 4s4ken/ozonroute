@@ -2,6 +2,7 @@ package app_test
 
 import (
 	"context"
+	"gitlab.ozon.dev/gleb_evseev/homework/pkg/workerpool"
 	"testing"
 	"time"
 
@@ -148,7 +149,7 @@ func TestService_Process(t *testing.T) {
 			t.Parallel()
 
 			mc := minimock.NewController(t)
-			defer mc.Finish()
+			defer mc.Wait(time.Second)
 
 			ctx := context.Background()
 			repo := mocks.NewOrderRepositoryMock(mc)
@@ -157,7 +158,7 @@ func TestService_Process(t *testing.T) {
 				tt.mockSetup(repo, ctx, tt.orderIDs)
 			}
 
-			wp := app.NewWorkerPool(context.Background(), 1)
+			wp := workerpool.NewWorkerPool(context.Background(), 1)
 			svc := app.NewService(repo, func() time.Time { return now }, wp)
 
 			out, err := svc.Process(ctx, app.ProcessOrdersInput{

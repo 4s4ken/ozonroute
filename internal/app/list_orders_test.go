@@ -3,6 +3,7 @@ package app_test
 import (
 	"context"
 	"errors"
+	"gitlab.ozon.dev/gleb_evseev/homework/pkg/workerpool"
 	"testing"
 	"time"
 
@@ -96,7 +97,7 @@ func TestService_ListOrders(t *testing.T) {
 				tt.mockSetup(repo, ctx, tt.input)
 			}
 
-			wp := app.NewWorkerPool(context.Background(), 1)
+			wp := workerpool.NewWorkerPool(context.Background(), 1)
 			svc := app.NewService(repo, nil, wp)
 
 			out, err := svc.ListOrders(ctx, tt.input)

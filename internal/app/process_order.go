@@ -2,9 +2,11 @@ package app
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/errors"
+	buierr "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/errors"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
+	"gitlab.ozon.dev/gleb_evseev/homework/pkg/workerpool"
 	"sync"
 )
 
@@ -21,7 +23,12 @@ type ProcessOrdersOutput struct {
 
 func (s *Service) Process(ctx context.Context, input ProcessOrdersInput) (ProcessOrdersOutput, error) {
 	if input.Action != pvz.ActionTypeIssue && input.Action != pvz.ActionTypeReturn {
-		return ProcessOrdersOutput{}, errors.EntityValidationError("Action", "unsupported action")
+		return ProcessOrdersOutput{}, buierr.EntityValidationError("Action", "unsupported action")
+	}
+
+	wp, ok := workerpool.WorkerPoolFromContext(ctx)
+	if !ok {
+		return ProcessOrdersOutput{}, errors.New("worker pool not found in context")
 	}
 
 	var (
@@ -39,36 +46,21 @@ func (s *Service) Process(ctx context.Context, input ProcessOrdersInput) (Proces
 	errCh := make(chan res, len(input.OrderIDs))
 
 	for _, id := range input.OrderIDs {
-		err := s.wp.Submit(func(ctx context.Context) {
-			order, err := s.repo.GetOrder(ctx, pvz.OrderID(id))
+		idCopy := id
+		err := wp.Submit(func(ctx context.Context) {
+			order, err := s.repo.GetOrder(ctx, pvz.OrderID(idCopy))
 			if err != nil || order == nil {
-				errCh <- res{id: id, err: fmt.Errorf("order not found or error")}
+				errCh <- res{id: idCopy, err: fmt.Errorf("order not found or error")}
 				return
 			}
 
-			switch input.Action {
-			case pvz.ActionTypeIssue:
-				if order.OrderCreate.ExpiresAt.Before(now) {
-					errCh <- res{id: id, err: fmt.Errorf("expired")}
-					return
-				}
-				order.Status = pvz.OrderStatusIssued
-
-			case pvz.ActionTypeReturn:
-				if order.IsExpiredForReturn(now) {
-					errCh <- res{id: id, err: fmt.Errorf("expired for return")}
-					return
-				}
-				order.Status = pvz.OrderStatusReturned
-				order.OrderCreate.ExpiresAt = now
-
-			default:
-				errCh <- res{id: id, err: fmt.Errorf("unsupported action")}
+			if err := ProcessActionOrder(order, input.Action, now); err != nil {
+				errCh <- res{id: idCopy, err: err}
 				return
 			}
 
 			err = s.repo.UpdateOrder(ctx, order)
-			errCh <- res{id: id, err: err}
+			errCh <- res{id: idCopy, err: err}
 		})
 		if err != nil {
 			return ProcessOrdersOutput{}, err

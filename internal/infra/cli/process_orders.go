@@ -1,17 +1,16 @@
 package cli
 
 import (
-	"context"
 	"fmt"
 	"github.com/spf13/cobra"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/app"
+	"gitlab.ozon.dev/gleb_evseev/homework/pkg/workerpool"
 	"strconv"
 	"strings"
 )
 
 // ProcessOrdersCommand функция для выполнения команды process-orders
 func (h *FileHandler) ProcessOrdersCommand(cmd *cobra.Command, _ []string) error {
-	ctx := context.Background()
 	userID, err := cmd.Flags().GetUint64("user-id")
 	if err != nil {
 		return validationError(fmt.Errorf("invalid value of --user-id: %w", err))
@@ -45,6 +44,7 @@ func (h *FileHandler) ProcessOrdersCommand(cmd *cobra.Command, _ []string) error
 		OrderIDs: orderIDs,
 	}
 
+	ctx := workerpool.WorkerPoolValue(cmd.Context(), h.workerPool)
 	result, err := h.commandsHandler.Process(ctx, input)
 	if err != nil {
 		return mapError(err)

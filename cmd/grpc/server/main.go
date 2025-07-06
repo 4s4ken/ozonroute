@@ -14,6 +14,7 @@ import (
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/storage/db"
 	usecase "gitlab.ozon.dev/gleb_evseev/homework/pkg/pvz"
 	"gitlab.ozon.dev/gleb_evseev/homework/pkg/storage"
+	"gitlab.ozon.dev/gleb_evseev/homework/pkg/workerpool"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"log"
@@ -44,7 +45,7 @@ func main() {
 		}
 	}()
 
-	wp := app.NewWorkerPool(ctx, 10)
+	wp := workerpool.NewWorkerPool(ctx, 10)
 
 	handler := app.NewService(dbStorage, func() time.Time { return time.Now().UTC() }, wp)
 
@@ -64,6 +65,7 @@ func main() {
 				),
 			),
 			mw.ErrorMappingInterceptor(),
+			mw.WorkerPoolInterceptor(wp),
 		),
 	)
 

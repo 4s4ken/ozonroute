@@ -1,4 +1,4 @@
-package app
+package workerpool
 
 import (
 	"context"
@@ -43,7 +43,7 @@ func TestWorkerPool_Resize(t *testing.T) {
 	case <-time.After(time.Second):
 		t.Fatal("task was not executed after resize")
 	}
-	
+
 	wp.Shutdown()
 	if wp.workers != 1 {
 		t.Fatalf("expected workers to remain at 1 after shutdown, got %d", wp.workers)

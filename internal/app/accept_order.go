@@ -2,21 +2,24 @@ package app
 
 import (
 	"context"
-	"strconv"
-	"sync"
-
+	"errors"
 	"github.com/shopspring/decimal"
-	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/errors"
+	buierr "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/errors"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
+	"gitlab.ozon.dev/gleb_evseev/homework/pkg/workerpool"
+	"strconv"
 )
 
 func (s *Service) Accept(ctx context.Context, order pvz.OrderCreate) error {
-	errCh := make(chan error, 1)
-	wg := sync.WaitGroup{}
-	wg.Add(1)
 
-	err := s.wp.Submit(func(ctx context.Context) {
-		defer wg.Done()
+	wp, ok := workerpool.WorkerPoolFromContext(ctx)
+	if !ok {
+		return errors.New("worker pool not found in context")
+	}
+
+	errCh := make(chan error, 1)
+
+	err := wp.Submit(func(ctx context.Context) {
 		errCh <- s.accept(ctx, order)
 	})
 	if err != nil {
@@ -25,7 +28,6 @@ func (s *Service) Accept(ctx context.Context, order pvz.OrderCreate) error {
 
 	select {
 	case <-ctx.Done():
-		wg.Wait()
 		return ctx.Err()
 	case err := <-errCh:
 		return err
@@ -35,7 +37,7 @@ func (s *Service) Accept(ctx context.Context, order pvz.OrderCreate) error {
 func (s *Service) accept(ctx context.Context, order pvz.OrderCreate) error {
 	now := s.nowFn().UTC()
 	if order.ExpiresAt.Before(now) {
-		return errors.EntityValidationError("Order", strconv.FormatUint(uint64(order.OrderID), 10))
+		return buierr.EntityValidationError("Order", strconv.FormatUint(uint64(order.OrderID), 10))
 	}
 
 	existing, err := s.repo.GetOrder(ctx, order.OrderID)
@@ -43,7 +45,7 @@ func (s *Service) accept(ctx context.Context, order pvz.OrderCreate) error {
 		return err
 	}
 	if existing != nil {
-		return errors.EntityAlreadyExistsError("Order", strconv.FormatUint(uint64(order.OrderID), 10))
+		return buierr.EntityAlreadyExistsError("Order", strconv.FormatUint(uint64(order.OrderID), 10))
 	}
 
 	finalPrice := order.Price
@@ -51,28 +53,28 @@ func (s *Service) accept(ctx context.Context, order pvz.OrderCreate) error {
 		switch *order.Package {
 		case pvz.PackageTypeBag:
 			if order.Weight > 10 {
-				return errors.EntityWeightError("Bag", strconv.FormatUint(uint64(order.OrderID), 10))
+				return buierr.EntityWeightError("Bag", strconv.FormatUint(uint64(order.OrderID), 10))
 			}
 			finalPrice = finalPrice.Add(decimal.NewFromInt(5))
 		case pvz.PackageTypeBox:
 			if order.Weight > 30 {
-				return errors.EntityWeightError("Box", strconv.FormatUint(uint64(order.OrderID), 10))
+				return buierr.EntityWeightError("Box", strconv.FormatUint(uint64(order.OrderID), 10))
 			}
 			finalPrice = finalPrice.Add(decimal.NewFromInt(20))
 		case pvz.PackageTypeTape:
 			finalPrice = finalPrice.Add(decimal.NewFromInt(1))
 		case pvz.PackageTypeBagTape:
 			if order.Weight > 10 {
-				return errors.EntityWeightError("Bag+Tape", strconv.FormatUint(uint64(order.OrderID), 10))
+				return buierr.EntityWeightError("Bag+Tape", strconv.FormatUint(uint64(order.OrderID), 10))
 			}
 			finalPrice = finalPrice.Add(decimal.NewFromInt(6))
 		case pvz.PackageTypeBoxTape:
 			if order.Weight > 30 {
-				return errors.EntityWeightError("Box+Tape", strconv.FormatUint(uint64(order.OrderID), 10))
+				return buierr.EntityWeightError("Box+Tape", strconv.FormatUint(uint64(order.OrderID), 10))
 			}
 			finalPrice = finalPrice.Add(decimal.NewFromInt(21))
 		default:
-			return errors.EntityPackageError("Package Type", strconv.FormatUint(uint64(order.OrderID), 10))
+			return buierr.EntityPackageError("Package Type", strconv.FormatUint(uint64(order.OrderID), 10))
 		}
 	}
 

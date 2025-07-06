@@ -4,12 +4,11 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
+	"gitlab.ozon.dev/gleb_evseev/homework/pkg/workerpool"
 )
 
 // ListOrdersCommand функция для выполнения команды list-orders
 func (h *FileHandler) ListOrdersCommand(cmd *cobra.Command, _ []string) error {
-	ctx := cmd.Context()
-
 	userID, err := cmd.Flags().GetUint64("user-id")
 	if err != nil {
 		return fmt.Errorf("ERROR: %w", err)
@@ -54,6 +53,7 @@ func (h *FileHandler) ListOrdersCommand(cmd *cobra.Command, _ []string) error {
 			Limit: limitPtr,
 		},
 	}
+	ctx := workerpool.WorkerPoolValue(cmd.Context(), h.workerPool)
 	ordersList, err := h.commandsHandler.ListOrders(ctx, options)
 	if err != nil {
 		return mapError(err)

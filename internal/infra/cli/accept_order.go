@@ -1,11 +1,11 @@
 package cli
 
 import (
-	"context"
 	"fmt"
 	"github.com/shopspring/decimal"
 	"github.com/spf13/cobra"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
+	"gitlab.ozon.dev/gleb_evseev/homework/pkg/workerpool"
 )
 
 func (h *FileHandler) AcceptOrderCommand(cmd *cobra.Command, _ []string) error {
@@ -61,7 +61,8 @@ func (h *FileHandler) AcceptOrderCommand(cmd *cobra.Command, _ []string) error {
 		Package:   pkg,
 	}
 
-	err = h.commandsHandler.Accept(context.Background(), order)
+	ctx := workerpool.WorkerPoolValue(cmd.Context(), h.workerPool)
+	err = h.commandsHandler.Accept(ctx, order)
 	if err != nil {
 		return mapError(err)
 	}

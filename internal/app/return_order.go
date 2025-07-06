@@ -2,12 +2,12 @@ package app
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"strconv"
-	"sync"
-
-	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/errors"
+	buierr "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/errors"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
+	"gitlab.ozon.dev/gleb_evseev/homework/pkg/workerpool"
+	"strconv"
 )
 
 type ReturnOrderInput struct {
@@ -16,13 +16,14 @@ type ReturnOrderInput struct {
 }
 
 func (s *Service) Return(ctx context.Context, input ReturnOrderInput) error {
+	wp, ok := workerpool.WorkerPoolFromContext(ctx)
+	if !ok {
+		return errors.New("worker pool not found in context")
+	}
 
 	errCh := make(chan error, 1)
-	wg := sync.WaitGroup{}
-	wg.Add(1)
 
-	err := s.wp.Submit(func(ctx context.Context) {
-		defer wg.Done()
+	err := wp.Submit(func(ctx context.Context) {
 		errCh <- s.returnOrder(ctx, input)
 	})
 	if err != nil {
@@ -31,7 +32,6 @@ func (s *Service) Return(ctx context.Context, input ReturnOrderInput) error {
 
 	select {
 	case <-ctx.Done():
-		wg.Wait()
 		return ctx.Err()
 	case err := <-errCh:
 		return err
@@ -45,15 +45,15 @@ func (s *Service) returnOrder(ctx context.Context, input ReturnOrderInput) error
 	}
 
 	if order == nil {
-		return errors.EntityNotFoundError("Order", strconv.FormatUint(uint64(input.OrderID), 10))
+		return buierr.EntityNotFoundError("Order", strconv.FormatUint(uint64(input.OrderID), 10))
 	}
 
 	if order.Status == pvz.OrderStatusReturned {
-		return errors.EntityValidationError("Order", strconv.FormatUint(uint64(order.OrderID), 10))
+		return buierr.EntityValidationError("Order", strconv.FormatUint(uint64(order.OrderID), 10))
 	}
 
 	if order.Status == pvz.OrderStatusAccepted && order.ExpiresAt.Before(s.nowFn().UTC()) {
-		return errors.EntityExpiredError("Order", strconv.FormatUint(uint64(order.OrderID), 10))
+		return buierr.EntityExpiredError("Order", strconv.FormatUint(uint64(order.OrderID), 10))
 	}
 
 	order.Status = pvz.OrderStatusReturned

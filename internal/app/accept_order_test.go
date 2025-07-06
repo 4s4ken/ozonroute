@@ -2,6 +2,7 @@ package app_test
 
 import (
 	"context"
+	"gitlab.ozon.dev/gleb_evseev/homework/pkg/workerpool"
 	"testing"
 	"time"
 
@@ -120,7 +121,7 @@ func TestService_Accept(t *testing.T) {
 				tt.mockSetup(repo, ctx, tt.input)
 			}
 
-			wp := app.NewWorkerPool(context.Background(), 1)
+			wp := workerpool.NewWorkerPool(context.Background(), 1)
 			svc := app.NewService(repo, func() time.Time { return now }, wp)
 			err := svc.Accept(ctx, tt.input)
 

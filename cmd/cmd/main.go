@@ -6,6 +6,7 @@ import (
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/config"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/infra/cli"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/storage/json"
+	"gitlab.ozon.dev/gleb_evseev/homework/pkg/workerpool"
 	"log"
 	"os"
 	"os/signal"
@@ -22,7 +23,7 @@ func main() {
 		log.Fatalf("Failed to initialize storage: %v", err)
 	}
 
-	wp := app.NewWorkerPool(ctx, 5)
+	wp := workerpool.NewWorkerPool(ctx, 5)
 	defer wp.Shutdown()
 
 	handler := app.NewService(js, func() time.Time { return time.Now().UTC() }, wp)

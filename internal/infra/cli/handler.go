@@ -9,6 +9,7 @@ import (
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/app"
 	berrors "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/errors"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
+	"gitlab.ozon.dev/gleb_evseev/homework/pkg/workerpool"
 	"os"
 	"strings"
 )
@@ -27,12 +28,12 @@ type commandsHandler interface {
 
 type FileHandler struct {
 	commandsHandler   commandsHandler
-	workerPool        *app.WorkerPool
+	workerPool        *workerpool.Pool
 	scanner           *bufio.Scanner
 	commandController *cobra.Command
 }
 
-func NewFileHandler(commandsHandler commandsHandler, wp *app.WorkerPool) *FileHandler {
+func NewFileHandler(commandsHandler commandsHandler, wp *workerpool.Pool) *FileHandler {
 	h := &FileHandler{
 		commandsHandler: commandsHandler,
 		workerPool:      wp,
@@ -44,6 +45,7 @@ func NewFileHandler(commandsHandler commandsHandler, wp *app.WorkerPool) *FileHa
 	return h
 }
 func (h *FileHandler) Run(ctx context.Context) error {
+	ctx = workerpool.WorkerPoolValue(ctx, h.workerPool)
 
 	for {
 		fmt.Print(">")

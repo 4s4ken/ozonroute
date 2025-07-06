@@ -4,6 +4,9 @@ endif
 # пожалуйста, не удаляйте и не перемещайте этот импорт, он помогает вашему верному тьютору быстрее смотреть ваше дз
 # вы можете описать ваш собственный makefile ниже
 
+include .env
+
+
 .PHONY: bin-deps .vendor-proto/validate .vendor-proto/google/api .vendor-proto/protoc-gen-openapiv2/options generate run \
         update linter start up goose-up\
         coverage
@@ -17,9 +20,6 @@ update:
 
 linter:
 	golangci-lint run
-
-start:
-	./$(BINARY_NAME)
 
 bin-deps: export GOBIN := $(LOCAL_BIN)
 bin-deps: export PROTOC_VERSION := protoc-31.1-win64
@@ -78,8 +78,6 @@ generate:
 
 run: bin-deps .vendor-proto/validate .vendor-proto/google/api .vendor-proto/protoc-gen-openapiv2/options generate
 
-include .env
-
 DATABASE_DSN=postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)?sslmode=disable
 
 up:
@@ -121,3 +119,20 @@ coverage:
 		./internal/storage/dbsuite
 	go tool cover -func=coverage.txt
 	go tool cover -html=coverage.txt -o coverage.html
+
+.PHONY: run-server run-cli
+
+run-cli:
+	go run ./cmd/cli/main.go
+
+run-server:
+	go run ./cmd/grpc/server/main.go
+
+run-solo-client:
+	go run ./cmd/grpc/client/solo_req/main.go
+
+run-par-client:
+	go run ./cmd/grpc/client/paralel_req/main.go
+
+
+
