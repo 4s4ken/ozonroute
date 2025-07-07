@@ -18,7 +18,11 @@ func (h *FileHandler) ReturnOrderCommand(cmd *cobra.Command, _ []string) error {
 	input := app.ReturnOrderInput{
 		OrderID: pvz.OrderID(orderID),
 	}
-	ctx := workerpool.WorkerPoolValue(cmd.Context(), h.workerPool)
+	ctx := cmd.Context()
+	_, ok := workerpool.WorkerPoolFromContext(ctx)
+	if !ok {
+		return fmt.Errorf("workerpool not found in context")
+	}
 	err = h.commandsHandler.Return(ctx, input)
 	if err != nil {
 		return fmt.Errorf("%w", err)

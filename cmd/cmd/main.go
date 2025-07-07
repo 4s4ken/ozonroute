@@ -38,7 +38,7 @@ func main() {
 		wp.Shutdown()
 	}()
 
-	if err := fileHandler.Run(ctx); err != nil {
+	if err := fileHandler.Run(ctx, wp); err != nil {
 		log.Fatalf("Error: %v", err)
 	}
 }

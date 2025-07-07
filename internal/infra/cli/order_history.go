@@ -8,7 +8,11 @@ import (
 
 // OrdersHistoryCommand функция для выполнения команды orders-history
 func (h *FileHandler) OrdersHistoryCommand(cmd *cobra.Command, args []string) error {
-	ctx := workerpool.WorkerPoolValue(cmd.Context(), h.workerPool)
+	ctx := cmd.Context()
+	_, ok := workerpool.WorkerPoolFromContext(ctx)
+	if !ok {
+		return fmt.Errorf("workerpool not found in context")
+	}
 	history, err := h.commandsHandler.OrderHistory(ctx)
 	if err != nil {
 		return mapError(err)

@@ -44,7 +44,11 @@ func (h *FileHandler) ProcessOrdersCommand(cmd *cobra.Command, _ []string) error
 		OrderIDs: orderIDs,
 	}
 
-	ctx := workerpool.WorkerPoolValue(cmd.Context(), h.workerPool)
+	ctx := cmd.Context()
+	_, ok := workerpool.WorkerPoolFromContext(ctx)
+	if !ok {
+		return fmt.Errorf("workerpool not found in context")
+	}
 	result, err := h.commandsHandler.Process(ctx, input)
 	if err != nil {
 		return mapError(err)

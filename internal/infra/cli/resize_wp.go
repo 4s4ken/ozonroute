@@ -11,6 +11,10 @@ func (h *FileHandler) ResizeWorkerPoolCommand(cmd *cobra.Command, _ []string) er
 	if err != nil || n < 1 {
 		return fmt.Errorf("invalid workers count: %v", err)
 	}
-	ctx := workerpool.WorkerPoolValue(cmd.Context(), h.workerPool)
+	ctx := cmd.Context()
+	_, ok := workerpool.WorkerPoolFromContext(ctx)
+	if !ok {
+		return fmt.Errorf("workerpool not found in context")
+	}
 	return h.commandsHandler.ResizeWorkerPool(ctx, n)
 }

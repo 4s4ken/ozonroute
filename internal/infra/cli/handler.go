@@ -28,7 +28,6 @@ type commandsHandler interface {
 
 type FileHandler struct {
 	commandsHandler   commandsHandler
-	workerPool        *workerpool.Pool
 	scanner           *bufio.Scanner
 	commandController *cobra.Command
 }
@@ -36,7 +35,6 @@ type FileHandler struct {
 func NewFileHandler(commandsHandler commandsHandler, wp *workerpool.Pool) *FileHandler {
 	h := &FileHandler{
 		commandsHandler: commandsHandler,
-		workerPool:      wp,
 		scanner:         bufio.NewScanner(os.Stdin),
 	}
 
@@ -44,8 +42,8 @@ func NewFileHandler(commandsHandler commandsHandler, wp *workerpool.Pool) *FileH
 
 	return h
 }
-func (h *FileHandler) Run(ctx context.Context) error {
-	ctx = workerpool.WorkerPoolValue(ctx, h.workerPool)
+func (h *FileHandler) Run(ctx context.Context, wp workerpool.WorkerPool) error {
+	ctx = workerpool.WorkerPoolValue(ctx, wp)
 
 	for {
 		fmt.Print(">")
@@ -58,6 +56,7 @@ func (h *FileHandler) Run(ctx context.Context) error {
 		}
 		parts := strings.Fields(line)
 		h.commandController.SetArgs(parts)
+		h.commandController.SetContext(ctx)
 
 		if err := h.commandController.Execute(); err != nil {
 			if isFlagParsingError(err) {

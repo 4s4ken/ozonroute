@@ -123,7 +123,7 @@ coverage:
 .PHONY: run-server run-cli
 
 run-cli:
-	go run ./cmd/cli/main.go
+	go run ./cmd/cmd/main.go
 
 run-server:
 	go run ./cmd/grpc/server/main.go

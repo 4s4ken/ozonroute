@@ -41,7 +41,12 @@ func (h *FileHandler) ListReturnsCommand(cmd *cobra.Command, _ []string) error {
 		fmt.Printf("PAGE: %d LIMIT: %d\n", *pagePtr, *limitPtr)
 	}
 
-	ctx := workerpool.WorkerPoolValue(cmd.Context(), h.workerPool)
+	ctx := cmd.Context()
+	_, ok := workerpool.WorkerPoolFromContext(ctx)
+	if !ok {
+		return fmt.Errorf("workerpool not found in context")
+	}
+
 	returnsList, err := h.commandsHandler.ListReturns(ctx, options)
 	if err != nil {
 		return mapError(err)

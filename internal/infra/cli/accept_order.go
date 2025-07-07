@@ -61,7 +61,11 @@ func (h *FileHandler) AcceptOrderCommand(cmd *cobra.Command, _ []string) error {
 		Package:   pkg,
 	}
 
-	ctx := workerpool.WorkerPoolValue(cmd.Context(), h.workerPool)
+	ctx := cmd.Context()
+	_, ok := workerpool.WorkerPoolFromContext(ctx)
+	if !ok {
+		return fmt.Errorf("workerpool not found in context")
+	}
 	err = h.commandsHandler.Accept(ctx, order)
 	if err != nil {
 		return mapError(err)

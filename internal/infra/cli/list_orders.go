@@ -53,7 +53,12 @@ func (h *FileHandler) ListOrdersCommand(cmd *cobra.Command, _ []string) error {
 			Limit: limitPtr,
 		},
 	}
-	ctx := workerpool.WorkerPoolValue(cmd.Context(), h.workerPool)
+
+	ctx := cmd.Context()
+	_, ok := workerpool.WorkerPoolFromContext(ctx)
+	if !ok {
+		return fmt.Errorf("workerpool not found in context")
+	}
 	ordersList, err := h.commandsHandler.ListOrders(ctx, options)
 	if err != nil {
 		return mapError(err)
