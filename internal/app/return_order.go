@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	buierr "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/errors"
+	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/outbox"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 	"gitlab.ozon.dev/gleb_evseev/homework/pkg/workerpool"
 	"strconv"
@@ -39,28 +41,45 @@ func (s *Service) Return(ctx context.Context, input ReturnOrderInput) error {
 }
 
 func (s *Service) returnOrder(ctx context.Context, input ReturnOrderInput) error {
+	now := s.nowFn().UTC()
+
 	order, err := s.repo.GetOrder(ctx, input.OrderID)
 	if err != nil {
 		return err
 	}
-
 	if order == nil {
 		return buierr.EntityNotFoundError("Order", strconv.FormatUint(uint64(input.OrderID), 10))
 	}
-
 	if order.Status == pvz.OrderStatusReturned {
 		return buierr.EntityValidationError("Order", strconv.FormatUint(uint64(order.OrderID), 10))
 	}
-
-	if order.Status == pvz.OrderStatusAccepted && order.ExpiresAt.Before(s.nowFn().UTC()) {
+	if order.Status == pvz.OrderStatusAccepted && order.ExpiresAt.Before(now) {
 		return buierr.EntityExpiredError("Order", strconv.FormatUint(uint64(order.OrderID), 10))
 	}
 
 	order.Status = pvz.OrderStatusReturned
-	order.ExpiresAt = s.nowFn().UTC()
+	order.ExpiresAt = now
 
-	err = s.repo.UpdateOrder(ctx, order)
-	if err != nil {
+	event := outbox.Event{
+		EventID:   uuid.New(),
+		EventType: outbox.OrderReturnedToCourier,
+		Timestamp: now,
+		Actor: outbox.Actor{
+			Type: outbox.ActorCourier,
+			ID:   int(input.UserID),
+		},
+		Order: outbox.Order{
+			ID:     int(order.OrderID),
+			UserID: strconv.FormatUint(uint64(order.UserID), 10),
+			Status: order.Status.String(),
+		},
+		Source: "pvz-api",
+	}
+
+	if err := s.outboxRepo.SaveEvent(ctx, event); err != nil {
+		return err
+	}
+	if err := s.repo.UpdateOrder(ctx, order); err != nil {
 		return fmt.Errorf("update order: %w", err)
 	}
 

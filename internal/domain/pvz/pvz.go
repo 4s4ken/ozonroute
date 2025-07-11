@@ -77,3 +77,18 @@ func (o *Order) IsExpiredForReturn(now time.Time) bool {
 	twoDaysAfterExpiry := o.ExpiresAt.Add(48 * time.Hour)
 	return now.After(twoDaysAfterExpiry)
 }
+
+func (s OrderStatus) String() string {
+	switch s {
+	case OrderStatusAccepted:
+		return "accepted"
+	case OrderStatusIssued:
+		return "issued"
+	case OrderStatusReturned:
+		return "returned"
+	case OrderStatusDeleted:
+		return "deleted"
+	default:
+		return "unspecified"
+	}
+}

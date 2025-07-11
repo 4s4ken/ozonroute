@@ -10,8 +10,12 @@ import (
 	"github.com/ulule/limiter/v3/drivers/store/memory"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/app"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/config"
+	"gitlab.ozon.dev/gleb_evseev/homework/internal/kafka/producer"
+	"gitlab.ozon.dev/gleb_evseev/homework/internal/kafka/worker"
+
 	hl "gitlab.ozon.dev/gleb_evseev/homework/internal/infra/grpc"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/storage/db"
+	ob "gitlab.ozon.dev/gleb_evseev/homework/internal/storage/outbox"
 	usecase "gitlab.ozon.dev/gleb_evseev/homework/pkg/pvz"
 	"gitlab.ozon.dev/gleb_evseev/homework/pkg/storage"
 	"gitlab.ozon.dev/gleb_evseev/homework/pkg/workerpool"
@@ -31,6 +35,8 @@ import (
 const (
 	grpcAddress    = "localhost:50051"
 	swaggerAddress = "localhost:7002"
+	kafkaBroker    = "localhost:9092"
+	kafkaTopic     = "pvz.events-log"
 )
 
 func main() {
@@ -47,7 +53,15 @@ func main() {
 
 	wp := workerpool.NewWorkerPool(ctx, 10)
 
-	handler := app.NewService(dbStorage, func() time.Time { return time.Now().UTC() }, wp)
+	outboxRepo := ob.NewOutboxRepo(database)
+	kafkaProducer, err := producer.NewProducer([]string{kafkaBroker}, kafkaTopic)
+	if err != nil {
+		log.Fatalf("failed to create kafka producer: %v", err)
+	}
+	outboxWorker := worker.NewOutboxWorker(outboxRepo, kafkaProducer, 10)
+	go outboxWorker.Run(ctx)
+
+	handler := app.NewService(dbStorage, outboxRepo, func() time.Time { return time.Now().UTC() }, wp)
 
 	lis, err := net.Listen("tcp", grpcAddress)
 	if err != nil {

@@ -4,9 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	buierr "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/errors"
+	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/outbox"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 	"gitlab.ozon.dev/gleb_evseev/homework/pkg/workerpool"
+	"strconv"
 	"sync"
 )
 
@@ -51,10 +54,45 @@ func (s *Service) Process(ctx context.Context, input ProcessOrdersInput) (Proces
 			order, err := s.repo.GetOrder(ctx, pvz.OrderID(idCopy))
 			if err != nil || order == nil {
 				errCh <- res{id: idCopy, err: fmt.Errorf("order not found or error")}
+
 				return
 			}
 
 			if err := ProcessActionOrder(order, input.Action, now); err != nil {
+				errCh <- res{id: idCopy, err: err}
+				return
+			}
+
+			var eventType outbox.EventType
+			var actorType outbox.ActorType
+
+			switch input.Action {
+			case pvz.ActionTypeIssue:
+				eventType = outbox.OrderIssued
+				actorType = outbox.ActorClient
+			case pvz.ActionTypeReturn:
+				eventType = outbox.OrderReturnedByClient
+				actorType = outbox.ActorClient
+			default:
+			}
+
+			event := outbox.Event{
+				EventID:   uuid.New(),
+				EventType: eventType,
+				Timestamp: now,
+				Actor: outbox.Actor{
+					Type: actorType,
+					ID:   int(input.UserID),
+				},
+				Order: outbox.Order{
+					ID:     int(order.OrderID),
+					UserID: strconv.FormatUint(uint64(order.UserID), 10),
+					Status: order.Status.String(),
+				},
+				Source: "pvz-api",
+			}
+
+			if err := s.outboxRepo.SaveEvent(ctx, event); err != nil {
 				errCh <- res{id: idCopy, err: err}
 				return
 			}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/errors"
+	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/outbox"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/store"
 	"gitlab.ozon.dev/gleb_evseev/homework/pkg/workerpool"
@@ -11,16 +12,18 @@ import (
 )
 
 type Service struct {
-	repo  store.OrderRepository
-	nowFn func() time.Time
-	wp    workerpool.WorkerPool
+	repo       store.OrderRepository
+	nowFn      func() time.Time
+	wp         workerpool.WorkerPool
+	outboxRepo outbox.OutboxRepository
 }
 
-func NewService(repo store.OrderRepository, nowFn func() time.Time, wp workerpool.WorkerPool) *Service {
+func NewService(repo store.OrderRepository, outboxRepo outbox.OutboxRepository, nowFn func() time.Time, wp workerpool.WorkerPool) *Service {
 	return &Service{
-		repo:  repo,
-		nowFn: nowFn,
-		wp:    wp,
+		repo:       repo,
+		nowFn:      nowFn,
+		wp:         wp,
+		outboxRepo: outboxRepo,
 	}
 }
 

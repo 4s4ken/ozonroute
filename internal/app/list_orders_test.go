@@ -98,7 +98,7 @@ func TestService_ListOrders(t *testing.T) {
 			}
 
 			wp := workerpool.NewWorkerPool(context.Background(), 1)
-			svc := app.NewService(repo, nil, wp)
+			svc := app.NewService(repo, nil, nil, wp)
 
 			out, err := svc.ListOrders(ctx, tt.input)
 

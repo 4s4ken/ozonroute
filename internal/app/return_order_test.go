@@ -143,7 +143,7 @@ func TestService_Return(t *testing.T) {
 			}
 
 			wp := workerpool.NewWorkerPool(context.Background(), 1)
-			svc := app.NewService(repo, func() time.Time { return now }, wp)
+			svc := app.NewService(repo, nil, func() time.Time { return now }, wp)
 
 			err := svc.Return(ctx, tt.input)
 

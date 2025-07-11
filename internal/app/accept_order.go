@@ -3,8 +3,10 @@ package app
 import (
 	"context"
 	"errors"
+	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 	buierr "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/errors"
+	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/outbox"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 	"gitlab.ozon.dev/gleb_evseev/homework/pkg/workerpool"
 	"strconv"
@@ -83,6 +85,24 @@ func (s *Service) accept(ctx context.Context, order pvz.OrderCreate) error {
 		Status:      pvz.OrderStatusAccepted,
 	}
 	newOrder.Price = finalPrice
+	event := outbox.Event{
+		EventID:   uuid.New(),
+		EventType: outbox.OrderAccepted,
+		Timestamp: now,
+		Actor: outbox.Actor{
+			Type: outbox.ActorCourier,
+			ID:   int(order.UserID),
+		},
+		Order: outbox.Order{
+			ID:     int(order.OrderID),
+			UserID: strconv.FormatUint(uint64(order.UserID), 10),
+			Status: pvz.OrderStatusAccepted.String(),
+		},
+		Source: "pvz-api",
+	}
 
+	if err := s.outboxRepo.SaveEvent(ctx, event); err != nil {
+		return err
+	}
 	return s.repo.SaveOrder(ctx, newOrder)
 }

@@ -134,5 +134,7 @@ run-solo-client:
 run-par-client:
 	go run ./cmd/grpc/client/paralel_req/main.go
 
+run-notifier:
+	go run ./cmd/grpc/norifier/main.go
 
 
