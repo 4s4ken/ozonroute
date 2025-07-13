@@ -26,7 +26,8 @@ func main() {
 	wp := workerpool.NewWorkerPool(ctx, 5)
 	defer wp.Shutdown()
 
-	handler := app.NewService(js, nil, func() time.Time { return time.Now().UTC() }, wp)
+	outboxRepo := json.New(config.OutboxPath)
+	handler := app.NewService(js, outboxRepo, func() time.Time { return time.Now().UTC() }, wp)
 	fileHandler := cli.NewFileHandler(handler, wp)
 
 	go func() {

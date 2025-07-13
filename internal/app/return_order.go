@@ -60,6 +60,10 @@ func (s *Service) returnOrder(ctx context.Context, input ReturnOrderInput) error
 	order.Status = pvz.OrderStatusReturned
 	order.ExpiresAt = now
 
+	if err := s.repo.UpdateOrder(ctx, order); err != nil {
+		return fmt.Errorf("update order: %w", err)
+	}
+
 	event := outbox.Event{
 		EventID:   uuid.New(),
 		EventType: outbox.OrderReturnedToCourier,
@@ -79,9 +83,5 @@ func (s *Service) returnOrder(ctx context.Context, input ReturnOrderInput) error
 	if err := s.outboxRepo.SaveEvent(ctx, event); err != nil {
 		return err
 	}
-	if err := s.repo.UpdateOrder(ctx, order); err != nil {
-		return fmt.Errorf("update order: %w", err)
-	}
-
 	return nil
 }

@@ -3,6 +3,7 @@ package app_test
 import (
 	"context"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/app"
+	ob "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/outbox"
 	"gitlab.ozon.dev/gleb_evseev/homework/pkg/workerpool"
 	"testing"
 	"time"
@@ -22,7 +23,7 @@ func TestService_Return(t *testing.T) {
 	tests := []struct {
 		name      string
 		input     app.ReturnOrderInput
-		mockSetup func(repo *mocks.OrderRepositoryMock, ctx context.Context, input app.ReturnOrderInput)
+		mockSetup func(repo *mocks.OrderRepositoryMock, outbox *mocks.OutboxRepositoryMock, ctx context.Context, input app.ReturnOrderInput)
 		wantErr   bool
 		errSubstr string
 	}{
@@ -32,7 +33,7 @@ func TestService_Return(t *testing.T) {
 				UserID:  77,
 				OrderID: 1,
 			},
-			mockSetup: func(repo *mocks.OrderRepositoryMock, ctx context.Context, input app.ReturnOrderInput) {
+			mockSetup: func(repo *mocks.OrderRepositoryMock, outbox *mocks.OutboxRepositoryMock, ctx context.Context, input app.ReturnOrderInput) {
 				order := &pvz.Order{
 					OrderCreate: pvz.OrderCreate{
 						OrderID:   input.OrderID,
@@ -42,10 +43,18 @@ func TestService_Return(t *testing.T) {
 					Status: pvz.OrderStatusAccepted,
 				}
 
-				repo.GetOrderMock.Expect(ctx, input.OrderID).Return(order, nil)
+				repo.GetOrderMock.Set(func(ctx context.Context, orderID pvz.OrderID) (*pvz.Order, error) {
+					assert.Equal(t, input.OrderID, orderID)
+					return order, nil
+				})
+
 				repo.UpdateOrderMock.Set(func(ctx context.Context, o *pvz.Order) error {
 					assert.Equal(t, pvz.OrderStatusReturned, o.Status)
 					assert.WithinDuration(t, now, o.OrderCreate.ExpiresAt, time.Second)
+					return nil
+				})
+				outbox.SaveEventMock.Set(func(ctx context.Context, e ob.Event) error {
+					assert.Equal(t, "order_returned_to_courier", string(e.EventType))
 					return nil
 				})
 			},
@@ -57,7 +66,7 @@ func TestService_Return(t *testing.T) {
 				UserID:  77,
 				OrderID: 2,
 			},
-			mockSetup: func(repo *mocks.OrderRepositoryMock, ctx context.Context, input app.ReturnOrderInput) {
+			mockSetup: func(repo *mocks.OrderRepositoryMock, outbox *mocks.OutboxRepositoryMock, ctx context.Context, input app.ReturnOrderInput) {
 				order := &pvz.Order{
 					OrderCreate: pvz.OrderCreate{
 						OrderID: input.OrderID,
@@ -65,7 +74,9 @@ func TestService_Return(t *testing.T) {
 					},
 					Status: pvz.OrderStatusReturned,
 				}
-				repo.GetOrderMock.Expect(ctx, input.OrderID).Return(order, nil)
+				repo.GetOrderMock.Set(func(ctx context.Context, orderID pvz.OrderID) (*pvz.Order, error) {
+					return order, nil
+				})
 			},
 			wantErr:   true,
 			errSubstr: "Ошибка валидации",
@@ -76,7 +87,7 @@ func TestService_Return(t *testing.T) {
 				UserID:  77,
 				OrderID: 3,
 			},
-			mockSetup: func(repo *mocks.OrderRepositoryMock, ctx context.Context, input app.ReturnOrderInput) {
+			mockSetup: func(repo *mocks.OrderRepositoryMock, outbox *mocks.OutboxRepositoryMock, ctx context.Context, input app.ReturnOrderInput) {
 				order := &pvz.Order{
 					OrderCreate: pvz.OrderCreate{
 						OrderID:   input.OrderID,
@@ -85,7 +96,9 @@ func TestService_Return(t *testing.T) {
 					},
 					Status: pvz.OrderStatusAccepted,
 				}
-				repo.GetOrderMock.Expect(ctx, input.OrderID).Return(order, nil)
+				repo.GetOrderMock.Set(func(ctx context.Context, OrderID pvz.OrderID) (*pvz.Order, error) {
+					return order, nil
+				})
 			},
 			wantErr:   true,
 			errSubstr: "просрочена",
@@ -97,8 +110,10 @@ func TestService_Return(t *testing.T) {
 				UserID:  77,
 				OrderID: 4,
 			},
-			mockSetup: func(repo *mocks.OrderRepositoryMock, ctx context.Context, input app.ReturnOrderInput) {
-				repo.GetOrderMock.Expect(ctx, input.OrderID).Return(nil, assert.AnError)
+			mockSetup: func(repo *mocks.OrderRepositoryMock, outbox *mocks.OutboxRepositoryMock, ctx context.Context, input app.ReturnOrderInput) {
+				repo.GetOrderMock.Set(func(ctx context.Context, orderID pvz.OrderID) (*pvz.Order, error) {
+					return nil, assert.AnError
+				})
 			},
 			wantErr:   true,
 			errSubstr: assert.AnError.Error(),
@@ -109,7 +124,7 @@ func TestService_Return(t *testing.T) {
 				UserID:  77,
 				OrderID: 5,
 			},
-			mockSetup: func(repo *mocks.OrderRepositoryMock, ctx context.Context, input app.ReturnOrderInput) {
+			mockSetup: func(repo *mocks.OrderRepositoryMock, outbox *mocks.OutboxRepositoryMock, ctx context.Context, input app.ReturnOrderInput) {
 				order := &pvz.Order{
 					OrderCreate: pvz.OrderCreate{
 						OrderID:   input.OrderID,
@@ -118,7 +133,9 @@ func TestService_Return(t *testing.T) {
 					},
 					Status: pvz.OrderStatusAccepted,
 				}
-				repo.GetOrderMock.Expect(ctx, input.OrderID).Return(order, nil)
+				repo.GetOrderMock.Set(func(ctx context.Context, OrderID pvz.OrderID) (*pvz.Order, error) {
+					return order, nil
+				})
 				repo.UpdateOrderMock.Set(func(ctx context.Context, o *pvz.Order) error {
 					return assert.AnError
 				})
@@ -136,14 +153,15 @@ func TestService_Return(t *testing.T) {
 			defer mc.Wait(time.Second)
 
 			ctx := context.Background()
+			wp := workerpool.NewWorkerPool(ctx, 1)
+			ctx = workerpool.WorkerPoolValue(ctx, wp)
 			repo := mocks.NewOrderRepositoryMock(mc)
+			outbox := mocks.NewOutboxRepositoryMock(mc)
 
 			if tt.mockSetup != nil {
-				tt.mockSetup(repo, ctx, tt.input)
+				tt.mockSetup(repo, outbox, ctx, tt.input)
 			}
-
-			wp := workerpool.NewWorkerPool(context.Background(), 1)
-			svc := app.NewService(repo, nil, func() time.Time { return now }, wp)
+			svc := app.NewService(repo, outbox, func() time.Time { return now }, wp)
 
 			err := svc.Return(ctx, tt.input)
 

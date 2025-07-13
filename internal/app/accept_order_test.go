@@ -40,7 +40,10 @@ func TestService_Accept(t *testing.T) {
 				Package:   &pkgBox,
 			},
 			mockSetup: func(repo *mocks.OrderRepositoryMock, ctx context.Context, input pvz.OrderCreate) {
-				repo.GetOrderMock.Expect(ctx, input.OrderID).Return(nil, nil)
+				repo.GetOrderMock.Set(func(ctx context.Context, id pvz.OrderID) (*pvz.Order, error) {
+					assert.Equal(t, input.OrderID, id)
+					return nil, nil
+				})
 				repo.SaveOrderMock.Set(func(ctx context.Context, order *pvz.Order) error {
 					assert.Equal(t, input.OrderID, order.OrderID)
 					assert.Equal(t, input.UserID, order.UserID)
@@ -81,7 +84,10 @@ func TestService_Accept(t *testing.T) {
 				Package:   &pkgBox,
 			},
 			mockSetup: func(repo *mocks.OrderRepositoryMock, ctx context.Context, input pvz.OrderCreate) {
-				repo.GetOrderMock.Expect(ctx, input.OrderID).Return(&pvz.Order{}, nil)
+				repo.GetOrderMock.Set(func(ctx context.Context, id pvz.OrderID) (*pvz.Order, error) {
+					assert.Equal(t, input.OrderID, id)
+					return &pvz.Order{}, nil
+				})
 			},
 			wantErr:   true,
 			errSubstr: "уже существует",
@@ -115,14 +121,18 @@ func TestService_Accept(t *testing.T) {
 			defer mc.Wait(time.Second)
 
 			ctx := context.Background()
+			wp := workerpool.NewWorkerPool(ctx, 1)
+			ctx = workerpool.WorkerPoolValue(ctx, wp)
 			repo := mocks.NewOrderRepositoryMock(mc)
+			outbox := mocks.NewOutboxRepositoryMock(mc)
 
+			if tt.name == "success" {
+				outbox.SaveEventMock.Return(nil)
+			}
 			if tt.mockSetup != nil {
 				tt.mockSetup(repo, ctx, tt.input)
 			}
-
-			wp := workerpool.NewWorkerPool(context.Background(), 1)
-			svc := app.NewService(repo, nil, func() time.Time { return now }, wp)
+			svc := app.NewService(repo, outbox, func() time.Time { return now }, wp)
 			err := svc.Accept(ctx, tt.input)
 
 			if tt.wantErr {

@@ -90,7 +90,7 @@ func (s *Service) accept(ctx context.Context, order pvz.OrderCreate) error {
 		EventType: outbox.OrderAccepted,
 		Timestamp: now,
 		Actor: outbox.Actor{
-			Type: outbox.ActorCourier,
+			Type: outbox.ActorClient,
 			ID:   int(order.UserID),
 		},
 		Order: outbox.Order{
