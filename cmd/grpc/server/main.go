@@ -5,15 +5,18 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/patrickmn/go-cache"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/swaggo/http-swagger"
 	"github.com/ulule/limiter/v3"
 	"github.com/ulule/limiter/v3/drivers/store/memory"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/app"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/config"
+	hl "gitlab.ozon.dev/gleb_evseev/homework/internal/infra/grpc"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/kafka/producer"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/kafka/worker"
-
-	hl "gitlab.ozon.dev/gleb_evseev/homework/internal/infra/grpc"
+	"gitlab.ozon.dev/gleb_evseev/homework/internal/metrics"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/storage/db"
 	ob "gitlab.ozon.dev/gleb_evseev/homework/internal/storage/outbox"
 	usecase "gitlab.ozon.dev/gleb_evseev/homework/pkg/pvz"
@@ -52,7 +55,7 @@ func main() {
 	}()
 
 	wp := workerpool.NewWorkerPool(ctx, 10)
-
+	orderCache := *cache.New(1*time.Minute, 10*time.Second)
 	outboxRepo := ob.NewOutboxRepo(database)
 	kafkaProducer, err := producer.NewProducer([]string{kafkaBroker}, kafkaTopic)
 	if err != nil {
@@ -61,7 +64,7 @@ func main() {
 	outboxWorker := worker.NewOutboxWorker(outboxRepo, kafkaProducer, 10)
 	go outboxWorker.Run(ctx)
 
-	handler := app.NewService(dbStorage, outboxRepo, func() time.Time { return time.Now().UTC() }, wp)
+	handler := app.NewService(dbStorage, outboxRepo, func() time.Time { return time.Now().UTC() }, wp, orderCache)
 
 	lis, err := net.Listen("tcp", grpcAddress)
 	if err != nil {
@@ -91,7 +94,15 @@ func main() {
 		}
 	}()
 
+	metricsMW := mw.NewMetricsMW()
+	metricsMW.Register(prometheus.DefaultRegisterer)
+	metrics.Register()
+
 	mux := chi.NewMux()
+
+	mux.Use(metricsMW.Handler)
+	mux.Handle("/metrics", promhttp.Handler())
+
 	gw := runtime.NewServeMux()
 	err = usecase.RegisterOrdersServiceHandlerFromEndpoint(
 		ctx,

@@ -43,7 +43,7 @@ func (s *Service) Return(ctx context.Context, input ReturnOrderInput) error {
 func (s *Service) returnOrder(ctx context.Context, input ReturnOrderInput) error {
 	now := s.nowFn().UTC()
 
-	order, err := s.repo.GetOrder(ctx, input.OrderID)
+	order, err := s.GetOrder(ctx, input.OrderID)
 	if err != nil {
 		return err
 	}
@@ -63,6 +63,8 @@ func (s *Service) returnOrder(ctx context.Context, input ReturnOrderInput) error
 	if err := s.repo.UpdateOrder(ctx, order); err != nil {
 		return fmt.Errorf("update order: %w", err)
 	}
+	
+	s.orderCache.Delete(strconv.FormatUint(uint64(order.OrderID), 10))
 
 	event := outbox.Event{
 		EventID:   uuid.New(),

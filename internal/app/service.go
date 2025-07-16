@@ -3,11 +3,13 @@ package app
 import (
 	"context"
 	"fmt"
+	"github.com/patrickmn/go-cache"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/errors"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/outbox"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/store"
 	"gitlab.ozon.dev/gleb_evseev/homework/pkg/workerpool"
+	"strconv"
 	"time"
 )
 
@@ -16,14 +18,16 @@ type Service struct {
 	nowFn      func() time.Time
 	wp         workerpool.WorkerPool
 	outboxRepo outbox.OutboxRepository
+	orderCache cache.Cache
 }
 
-func NewService(repo store.OrderRepository, outboxRepo outbox.OutboxRepository, nowFn func() time.Time, wp workerpool.WorkerPool) *Service {
+func NewService(repo store.OrderRepository, outboxRepo outbox.OutboxRepository, nowFn func() time.Time, wp workerpool.WorkerPool, orderCache cache.Cache) *Service {
 	return &Service{
 		repo:       repo,
 		nowFn:      nowFn,
 		wp:         wp,
 		outboxRepo: outboxRepo,
+		orderCache: orderCache,
 	}
 }
 
@@ -51,4 +55,24 @@ func ProcessActionOrder(order *pvz.Order, action pvz.ActionType, now time.Time) 
 		return errors.EntityValidationError("Action", "unsupported action")
 	}
 	return nil
+}
+
+func (s *Service) GetOrder(ctx context.Context, orderID pvz.OrderID) (*pvz.Order, error) {
+	key := strconv.FormatUint(uint64(orderID), 10)
+
+	if cached, found := s.orderCache.Get(key); found {
+		if order, ok := cached.(*pvz.Order); ok {
+			return order, nil
+		}
+	}
+
+	order, err := s.repo.GetOrder(ctx, orderID)
+	if err != nil {
+		return nil, err
+	}
+	if order != nil {
+		s.orderCache.Set(key, order, cache.DefaultExpiration)
+	}
+
+	return order, nil
 }

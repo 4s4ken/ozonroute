@@ -8,7 +8,9 @@ import (
 	buierr "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/errors"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/outbox"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
+	"gitlab.ozon.dev/gleb_evseev/homework/internal/metrics"
 	"gitlab.ozon.dev/gleb_evseev/homework/pkg/workerpool"
+	"log"
 	"strconv"
 	"sync"
 )
@@ -51,7 +53,7 @@ func (s *Service) Process(ctx context.Context, input ProcessOrdersInput) (Proces
 	for _, id := range input.OrderIDs {
 		idCopy := id
 		err := wp.Submit(func(ctx context.Context) {
-			order, err := s.repo.GetOrder(ctx, pvz.OrderID(idCopy))
+			order, err := s.GetOrder(ctx, pvz.OrderID(idCopy))
 			if err != nil || order == nil {
 				errCh <- res{id: idCopy, err: fmt.Errorf("order not found or error")}
 
@@ -70,6 +72,8 @@ func (s *Service) Process(ctx context.Context, input ProcessOrdersInput) (Proces
 			case pvz.ActionTypeIssue:
 				eventType = outbox.OrderIssued
 				actorType = outbox.ActorClient
+				log.Printf("Increment orders_issued_total for order %d", order.OrderID)
+				metrics.OrdersIssuedTotal.Inc()
 			case pvz.ActionTypeReturn:
 				eventType = outbox.OrderReturnedByClient
 				actorType = outbox.ActorClient
@@ -98,6 +102,9 @@ func (s *Service) Process(ctx context.Context, input ProcessOrdersInput) (Proces
 			}
 
 			err = s.repo.UpdateOrder(ctx, order)
+			if err == nil {
+				s.orderCache.Delete(strconv.FormatUint(uint64(order.OrderID), 10))
+			}
 			errCh <- res{id: idCopy, err: err}
 		})
 		if err != nil {

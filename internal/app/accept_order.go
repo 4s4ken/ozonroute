@@ -42,7 +42,7 @@ func (s *Service) accept(ctx context.Context, order pvz.OrderCreate) error {
 		return buierr.EntityValidationError("Order", strconv.FormatUint(uint64(order.OrderID), 10))
 	}
 
-	existing, err := s.repo.GetOrder(ctx, order.OrderID)
+	existing, err := s.GetOrder(ctx, order.OrderID)
 	if err != nil {
 		return err
 	}
@@ -104,5 +104,10 @@ func (s *Service) accept(ctx context.Context, order pvz.OrderCreate) error {
 	if err := s.outboxRepo.SaveEvent(ctx, event); err != nil {
 		return err
 	}
-	return s.repo.SaveOrder(ctx, newOrder)
+	if err := s.repo.SaveOrder(ctx, newOrder); err != nil {
+		return err
+	}
+	s.orderCache.Delete(strconv.FormatUint(uint64(order.OrderID), 10))
+
+	return nil
 }
