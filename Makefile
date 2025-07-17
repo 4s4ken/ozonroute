@@ -132,7 +132,10 @@ run-solo-client:
 	go run ./cmd/grpc/client/solo_req/main.go
 
 run-par-client:
-	go run ./cmd/grpc/client/paralel_req/main.go
+	go run ./cmd/grpc/client/paralel_req/accept/par_accept.go & \
+	wait
+	go run ./cmd/grpc/client/paralel_req/issue/par_issue.go & \
+	wait
 
 run-notifier:
 	go run ./cmd/grpc/norifier/main.go

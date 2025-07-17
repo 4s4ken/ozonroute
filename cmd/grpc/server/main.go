@@ -5,7 +5,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	_ "github.com/jackc/pgx/v5/stdlib"
-	"github.com/patrickmn/go-cache"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/swaggo/http-swagger"
@@ -13,12 +12,14 @@ import (
 	"github.com/ulule/limiter/v3/drivers/store/memory"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/app"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/config"
+	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 	hl "gitlab.ozon.dev/gleb_evseev/homework/internal/infra/grpc"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/kafka/producer"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/kafka/worker"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/metrics"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/storage/db"
 	ob "gitlab.ozon.dev/gleb_evseev/homework/internal/storage/outbox"
+	"gitlab.ozon.dev/gleb_evseev/homework/pkg/cache"
 	usecase "gitlab.ozon.dev/gleb_evseev/homework/pkg/pvz"
 	"gitlab.ozon.dev/gleb_evseev/homework/pkg/storage"
 	"gitlab.ozon.dev/gleb_evseev/homework/pkg/tracer"
@@ -59,7 +60,7 @@ func main() {
 	}()
 
 	wp := workerpool.NewWorkerPool(ctx, 10)
-	orderCache := *cache.New(1*time.Minute, 10*time.Second)
+	orderCache := cache.New[string, *pvz.Order](config.CacheCfg)
 	outboxRepo := ob.NewOutboxRepo(database)
 	kafkaProducer, err := producer.NewProducer([]string{kafkaBroker}, kafkaTopic)
 	if err != nil {

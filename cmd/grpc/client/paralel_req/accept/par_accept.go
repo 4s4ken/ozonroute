@@ -27,7 +27,7 @@ func main() {
 	client := usecase.NewOrdersServiceClient(conn)
 	now := time.Date(2027, 6, 26, 12, 0, 0, 0, time.UTC)
 	var wg sync.WaitGroup
-	for i := 345; i <= 346; i++ {
+	for i := 10; i <= 15; i++ {
 		wg.Add(1)
 		go func(id uint64) {
 			defer wg.Done()

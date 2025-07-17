@@ -8,6 +8,7 @@ import (
 	buierr "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/errors"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/outbox"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
+	"gitlab.ozon.dev/gleb_evseev/homework/internal/metrics"
 	"gitlab.ozon.dev/gleb_evseev/homework/pkg/workerpool"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -118,6 +119,7 @@ func (s *Service) accept(ctx context.Context, order pvz.OrderCreate) error {
 	if err := s.repo.SaveOrder(ctx, newOrder); err != nil {
 		return err
 	}
+	metrics.OrdersAccepted.Inc()
 	s.orderCache.Delete(strconv.FormatUint(uint64(order.OrderID), 10))
 
 	return nil

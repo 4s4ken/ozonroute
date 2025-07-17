@@ -3,11 +3,11 @@ package app
 import (
 	"context"
 	"fmt"
-	"github.com/patrickmn/go-cache"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/errors"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/outbox"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/store"
+	"gitlab.ozon.dev/gleb_evseev/homework/pkg/cache"
 	"gitlab.ozon.dev/gleb_evseev/homework/pkg/workerpool"
 	"strconv"
 	"time"
@@ -18,10 +18,10 @@ type Service struct {
 	nowFn      func() time.Time
 	wp         workerpool.WorkerPool
 	outboxRepo outbox.OutboxRepository
-	orderCache cache.Cache
+	orderCache cache.Cache[string, *pvz.Order]
 }
 
-func NewService(repo store.OrderRepository, outboxRepo outbox.OutboxRepository, nowFn func() time.Time, wp workerpool.WorkerPool, orderCache cache.Cache) *Service {
+func NewService(repo store.OrderRepository, outboxRepo outbox.OutboxRepository, nowFn func() time.Time, wp workerpool.WorkerPool, orderCache cache.Cache[string, *pvz.Order]) *Service {
 	return &Service{
 		repo:       repo,
 		nowFn:      nowFn,
@@ -61,17 +61,16 @@ func (s *Service) GetOrder(ctx context.Context, orderID pvz.OrderID) (*pvz.Order
 	key := strconv.FormatUint(uint64(orderID), 10)
 
 	if cached, found := s.orderCache.Get(key); found {
-		if order, ok := cached.(*pvz.Order); ok {
-			return order, nil
-		}
+		return cached, nil
 	}
 
 	order, err := s.repo.GetOrder(ctx, orderID)
 	if err != nil {
 		return nil, err
 	}
+
 	if order != nil {
-		s.orderCache.Set(key, order, cache.DefaultExpiration)
+		s.orderCache.Set(key, order)
 	}
 
 	return order, nil
