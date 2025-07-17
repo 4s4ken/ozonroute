@@ -9,6 +9,7 @@ import (
 	usecase "gitlab.ozon.dev/gleb_evseev/homework/pkg/pvz"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func main() {
@@ -24,31 +25,29 @@ func main() {
 	}(conn)
 
 	client := usecase.NewOrdersServiceClient(conn)
-	//now := time.Date(2027, 6, 26, 12, 0, 0, 0, time.UTC)
-	issuers := map[uint64][]uint64{
-		13: {505},
-	}
+	now := time.Date(2027, 6, 26, 12, 0, 0, 0, time.UTC)
 	var wg sync.WaitGroup
-	for userId, orderIds := range issuers {
+	for i := 345; i <= 346; i++ {
 		wg.Add(1)
-		go func(uid uint64, oids []uint64) {
+		go func(id uint64) {
 			defer wg.Done()
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
 
-			req := &usecase.ProcessOrdersRequest{
-				UserId:   uid,
-				Action:   usecase.ActionType_ACTION_TYPE_ISSUE,
-				OrderIds: oids,
-			}
-
-			resp, err := client.ProcessOrders(ctx, req)
+			_, err := client.AcceptOrder(ctx, &usecase.AcceptOrderRequest{
+				OrderId:   id,
+				UserId:    13,
+				ExpiresAt: timestamppb.New(now),
+				Package:   nil,
+				Weight:    10,
+				Price:     10,
+			})
 			if err != nil {
-				log.Printf("ProcessOrders failed for user %d: %v", uid, err)
-				return
+				log.Printf("AcceptOrder %d failed: %v", id, err)
+			} else {
+				log.Printf("AcceptOrder %d success", id)
 			}
-			log.Printf("ProcessOrders success for user %d: %v", uid, resp)
-		}(userId, orderIds)
+		}(uint64(i))
 	}
 
 	wg.Wait()

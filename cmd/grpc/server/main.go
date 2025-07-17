@@ -21,6 +21,7 @@ import (
 	ob "gitlab.ozon.dev/gleb_evseev/homework/internal/storage/outbox"
 	usecase "gitlab.ozon.dev/gleb_evseev/homework/pkg/pvz"
 	"gitlab.ozon.dev/gleb_evseev/homework/pkg/storage"
+	"gitlab.ozon.dev/gleb_evseev/homework/pkg/tracer"
 	"gitlab.ozon.dev/gleb_evseev/homework/pkg/workerpool"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -45,6 +46,9 @@ const (
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
+	shutdown := tracer.InitTracer(ctx, "pvz-app")
+	defer shutdown()
 
 	database := storage.NewPgxPool(ctx, config.DBConnString)
 	dbStorage := db.New(database)
@@ -75,6 +79,7 @@ func main() {
 		grpc.ChainUnaryInterceptor(
 			mw.LoggingInterceptor,
 			mw.ValidateInterceptor,
+			mw.TraceInterceptor,
 			mw.RateLimiterInterceptor(
 				limiter.New(
 					memory.NewStore(),

@@ -9,11 +9,12 @@ import (
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/outbox"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 	"gitlab.ozon.dev/gleb_evseev/homework/pkg/workerpool"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"strconv"
 )
 
 func (s *Service) Accept(ctx context.Context, order pvz.OrderCreate) error {
-
 	wp, ok := workerpool.WorkerPoolFromContext(ctx)
 	if !ok {
 		return errors.New("worker pool not found in context")
@@ -37,6 +38,16 @@ func (s *Service) Accept(ctx context.Context, order pvz.OrderCreate) error {
 }
 
 func (s *Service) accept(ctx context.Context, order pvz.OrderCreate) error {
+
+	tr := otel.Tracer("app.Service")
+	ctx, span := tr.Start(ctx, "Accept_order")
+	defer span.End()
+
+	span.SetAttributes(
+		attribute.Int("order.id", int(order.OrderID)),
+		attribute.Int("order.user_id", int(order.UserID)),
+	)
+
 	now := s.nowFn().UTC()
 	if order.ExpiresAt.Before(now) {
 		return buierr.EntityValidationError("Order", strconv.FormatUint(uint64(order.OrderID), 10))

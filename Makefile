@@ -137,4 +137,9 @@ run-par-client:
 run-notifier:
 	go run ./cmd/grpc/norifier/main.go
 
-
+down:
+	go get go.opentelemetry.io/otel \
+       go.opentelemetry.io/otel/sdk \
+       go.opentelemetry.io/otel/sdk/trace \
+       go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc \
+       google.golang.org/grpc

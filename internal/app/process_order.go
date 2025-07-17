@@ -10,7 +10,8 @@ import (
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/metrics"
 	"gitlab.ozon.dev/gleb_evseev/homework/pkg/workerpool"
-	"log"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 	"strconv"
 	"sync"
 )
@@ -27,15 +28,28 @@ type ProcessOrdersOutput struct {
 }
 
 func (s *Service) Process(ctx context.Context, input ProcessOrdersInput) (ProcessOrdersOutput, error) {
+
 	if input.Action != pvz.ActionTypeIssue && input.Action != pvz.ActionTypeReturn {
 		return ProcessOrdersOutput{}, buierr.EntityValidationError("Action", "unsupported action")
 	}
+
+	tr := otel.Tracer("app.Service")
+
+	var span trace.Span
+
+	switch input.Action {
+	case pvz.ActionTypeIssue:
+		ctx, span = tr.Start(ctx, "ProcessIssue")
+	case pvz.ActionTypeReturn:
+		ctx, span = tr.Start(ctx, "ProcessReturn")
+	default:
+	}
+	defer span.End()
 
 	wp, ok := workerpool.WorkerPoolFromContext(ctx)
 	if !ok {
 		return ProcessOrdersOutput{}, errors.New("worker pool not found in context")
 	}
-
 	var (
 		mu        sync.Mutex
 		processed []uint64
@@ -72,8 +86,7 @@ func (s *Service) Process(ctx context.Context, input ProcessOrdersInput) (Proces
 			case pvz.ActionTypeIssue:
 				eventType = outbox.OrderIssued
 				actorType = outbox.ActorClient
-				log.Printf("Increment orders_issued_total for order %d", order.OrderID)
-				metrics.OrdersIssuedTotal.Inc()
+				metrics.OrdersIssued.Inc()
 			case pvz.ActionTypeReturn:
 				eventType = outbox.OrderReturnedByClient
 				actorType = outbox.ActorClient

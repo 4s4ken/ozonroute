@@ -81,5 +81,15 @@ services:
     volumes:
       - grafana-storage:/var/lib/grafana
 
+
+  jaeger:
+    image: jaegertracing/all-in-one
+    ports:
+      - "14268:14268"
+      - "16686:16686"
+      - "4317:4317"
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+
 volumes:
   grafana-storage:

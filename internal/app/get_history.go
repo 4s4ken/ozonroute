@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"go.opentelemetry.io/otel"
 	"sort"
 	"time"
 
@@ -20,6 +21,10 @@ type OrderHistoryList struct {
 }
 
 func (s *Service) OrderHistory(ctx context.Context) (*OrderHistoryList, error) {
+	tr := otel.Tracer("app.Service")
+	ctx, span := tr.Start(ctx, "Orders_history")
+	defer span.End()
+
 	rawHistory, err := s.repo.GetHistory(ctx)
 	if err != nil {
 		return nil, err
@@ -42,6 +47,10 @@ func (s *Service) OrderHistory(ctx context.Context) (*OrderHistoryList, error) {
 }
 
 func (s *Service) StatusHistory(ctx context.Context, orderID pvz.OrderID) ([]*pvz.StatusChange, error) {
+	tr := otel.Tracer("app.Service")
+	ctx, span := tr.Start(ctx, "Order_status_history")
+	defer span.End()
+
 	rawHistory, err := s.repo.GetStatusHistory(ctx, orderID)
 	if err != nil {
 		return nil, err
