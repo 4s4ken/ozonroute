@@ -3,7 +3,9 @@ package app_test
 import (
 	"context"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/app"
+	"gitlab.ozon.dev/gleb_evseev/homework/internal/config"
 	ob "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/outbox"
+	"gitlab.ozon.dev/gleb_evseev/homework/pkg/cache"
 	"gitlab.ozon.dev/gleb_evseev/homework/pkg/workerpool"
 	"testing"
 	"time"
@@ -188,18 +190,20 @@ func TestService_Process(t *testing.T) {
 			repo := mocks.NewOrderRepositoryMock(mc)
 			outbox := mocks.NewOutboxRepositoryMock(mc)
 
+			orderCache := cache.New[string, *pvz.Order](config.CacheCfg)
+
 			if tt.mockSetup != nil {
 				tt.mockSetup(repo, outbox, ctx, tt.orderIDs)
 			}
 
-			svc := app.NewService(repo, outbox, func() time.Time { return now }, wp)
+			svc := app.NewService(repo, outbox, func() time.Time { return now }, wp, orderCache)
 
 			out, err := svc.Process(ctx, app.ProcessOrdersInput{
 				UserID:   77,
 				Action:   tt.action,
 				OrderIDs: tt.orderIDs,
 			})
-			
+
 			if tt.wantErr {
 				assert.Error(t, err)
 				return

@@ -25,7 +25,7 @@ func main() {
 
 	client := usecase.NewOrdersServiceClient(conn)
 	issuers := map[uint64][]uint64{
-		13: {10, 11},
+		13: {25, 26, 27, 28, 29},
 	}
 	var wg sync.WaitGroup
 	for userId, orderIds := range issuers {

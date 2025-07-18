@@ -3,7 +3,7 @@ package app
 import (
 	"context"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
-	"go.opentelemetry.io/otel"
+	tracerpackage "gitlab.ozon.dev/gleb_evseev/homework/pkg/tracer"
 )
 
 type OrdersListOutput struct {
@@ -12,8 +12,7 @@ type OrdersListOutput struct {
 }
 
 func (s *Service) ListOrders(ctx context.Context, input pvz.ListOptions) (*OrdersListOutput, error) {
-	tr := otel.Tracer("app.Service")
-	ctx, span := tr.Start(ctx, "List_orders")
+	ctx, span := tracerpackage.Start(ctx, "List_orders")
 	defer span.End()
 
 	orders, total, err := s.repo.ListOrders(ctx, input)

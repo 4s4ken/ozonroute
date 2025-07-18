@@ -42,13 +42,14 @@ const (
 	swaggerAddress = "localhost:7002"
 	kafkaBroker    = "localhost:9092"
 	kafkaTopic     = "pvz.events-log"
+	otlpEndpoint   = "localhost:4317"
 )
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	shutdown := tracer.InitTracer(ctx, "pvz-app")
+	shutdown := tracer.InitTracer(ctx, "pvz-app", otlpEndpoint)
 	defer shutdown()
 
 	database := storage.NewPgxPool(ctx, config.DBConnString)

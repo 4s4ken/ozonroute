@@ -8,8 +8,8 @@ import (
 	buierr "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/errors"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/outbox"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
+	tracerpackage "gitlab.ozon.dev/gleb_evseev/homework/pkg/tracer"
 	"gitlab.ozon.dev/gleb_evseev/homework/pkg/workerpool"
-	"go.opentelemetry.io/otel"
 	"strconv"
 )
 
@@ -42,8 +42,7 @@ func (s *Service) Return(ctx context.Context, input ReturnOrderInput) error {
 }
 
 func (s *Service) returnOrder(ctx context.Context, input ReturnOrderInput) error {
-	tr := otel.Tracer("app.Service")
-	ctx, span := tr.Start(ctx, "Return_order")
+	ctx, span := tracerpackage.Start(ctx, "Return_order")
 	defer span.End()
 
 	now := s.nowFn().UTC()

@@ -2,11 +2,12 @@ package main
 
 import (
 	"context"
-	"github.com/patrickmn/go-cache"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/app"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/config"
+	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/infra/cli"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/storage/json"
+	"gitlab.ozon.dev/gleb_evseev/homework/pkg/cache"
 	"gitlab.ozon.dev/gleb_evseev/homework/pkg/workerpool"
 	"log"
 	"os"
@@ -26,7 +27,7 @@ func main() {
 
 	wp := workerpool.NewWorkerPool(ctx, 5)
 	defer wp.Shutdown()
-	orderCache := *cache.New(1*time.Minute, 10*time.Second)
+	orderCache := cache.New[string, *pvz.Order](config.CacheCfg)
 	outboxRepo := json.New(config.OutboxPath)
 	handler := app.NewService(js, outboxRepo, func() time.Time { return time.Now().UTC() }, wp, orderCache)
 	fileHandler := cli.NewFileHandler(handler, wp)

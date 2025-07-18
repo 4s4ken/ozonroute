@@ -2,6 +2,8 @@ package app_test
 
 import (
 	"context"
+	"gitlab.ozon.dev/gleb_evseev/homework/internal/config"
+	"gitlab.ozon.dev/gleb_evseev/homework/pkg/cache"
 	"gitlab.ozon.dev/gleb_evseev/homework/pkg/workerpool"
 	"testing"
 	"time"
@@ -125,6 +127,7 @@ func TestService_Accept(t *testing.T) {
 			ctx = workerpool.WorkerPoolValue(ctx, wp)
 			repo := mocks.NewOrderRepositoryMock(mc)
 			outbox := mocks.NewOutboxRepositoryMock(mc)
+			orderCache := cache.New[string, *pvz.Order](config.CacheCfg)
 
 			if tt.name == "success" {
 				outbox.SaveEventMock.Return(nil)
@@ -132,7 +135,8 @@ func TestService_Accept(t *testing.T) {
 			if tt.mockSetup != nil {
 				tt.mockSetup(repo, ctx, tt.input)
 			}
-			svc := app.NewService(repo, outbox, func() time.Time { return now }, wp)
+
+			svc := app.NewService(repo, outbox, func() time.Time { return now }, wp, orderCache)
 			err := svc.Accept(ctx, tt.input)
 
 			if tt.wantErr {

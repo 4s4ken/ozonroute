@@ -38,7 +38,10 @@ func TestService_ListOrders(t *testing.T) {
 		{
 			name: "success empty list",
 			mockSetup: func(repo *mocks.OrderRepositoryMock, ctx context.Context, input pvz.ListOptions) {
-				repo.ListOrdersMock.Expect(ctx, input).Return([]*pvz.Order{}, 0, nil)
+				repo.ListOrdersMock.Set(func(ctx context.Context, options pvz.ListOptions) ([]*pvz.Order, int32, error) {
+					assert.Equal(t, input, options)
+					return []*pvz.Order{}, 0, nil
+				})
 			},
 			input:      pvz.ListOptions{},
 			wantOrders: []pvz.Order{},
@@ -57,7 +60,10 @@ func TestService_ListOrders(t *testing.T) {
 						Status:      pvz.OrderStatusIssued,
 					},
 				}
-				repo.ListOrdersMock.Expect(ctx, input).Return(orders, 2, nil)
+				repo.ListOrdersMock.Set(func(ctx context.Context, options pvz.ListOptions) ([]*pvz.Order, int32, error) {
+					assert.Equal(t, input, options)
+					return orders, 2, nil
+				})
 			},
 			input: pvz.ListOptions{
 				UserID: 42,
@@ -77,7 +83,10 @@ func TestService_ListOrders(t *testing.T) {
 		{
 			name: "ошибка репозитория",
 			mockSetup: func(repo *mocks.OrderRepositoryMock, ctx context.Context, input pvz.ListOptions) {
-				repo.ListOrdersMock.Expect(ctx, input).Return(nil, 0, errors.New("some error"))
+				repo.ListOrdersMock.Set(func(ctx context.Context, options pvz.ListOptions) ([]*pvz.Order, int32, error) {
+					assert.Equal(t, input, options)
+					return nil, 0, errors.New("some error")
+				})
 			},
 			input:       pvz.ListOptions{},
 			wantErr:     true,
@@ -98,7 +107,8 @@ func TestService_ListOrders(t *testing.T) {
 			}
 
 			wp := workerpool.NewWorkerPool(context.Background(), 1)
-			svc := app.NewService(repo, nil, nil, wp)
+			//orderCache := cache.New[string, *pvz.Order](config.CacheCfg)
+			svc := app.NewService(repo, nil, nil, wp, nil)
 
 			out, err := svc.ListOrders(ctx, tt.input)
 

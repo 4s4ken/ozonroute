@@ -9,12 +9,15 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
+	ottrace "go.opentelemetry.io/otel/trace"
 )
 
-func InitTracer(ctx context.Context, serviceName string) func() {
+var globalTracer = otel.Tracer("pvz-service")
+
+func InitTracer(ctx context.Context, serviceName, Endpoint string) func() {
 	exp, err := otlptracegrpc.New(ctx,
 		otlptracegrpc.WithInsecure(),
-		otlptracegrpc.WithEndpoint("localhost:4317"),
+		otlptracegrpc.WithEndpoint(Endpoint),
 		otlptracegrpc.WithDialOption(),
 	)
 	if err != nil {
@@ -40,4 +43,9 @@ func InitTracer(ctx context.Context, serviceName string) func() {
 			log.Fatalf("failed to shutdown tracer: %v", err)
 		}
 	}
+
+}
+
+func Start(ctx context.Context, spanName string) (context.Context, ottrace.Span) {
+	return globalTracer.Start(ctx, spanName)
 }
