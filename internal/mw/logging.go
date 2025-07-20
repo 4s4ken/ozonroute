@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
+// LoggingInterceptor — gRPC interceptor, логирующий входящие запросы, метаданные и время обработки.
 func LoggingInterceptor(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
 	log.Printf("SendMessage: %v", req)
 

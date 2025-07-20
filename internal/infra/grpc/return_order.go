@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// ReturnOrder обрабатывает gRPC-запрос на возвращение заказа.
+// ReturnOrder — обрабатывает gRPC-запрос на возвращение заказа.
 func (s *OrdersServer) ReturnOrder(ctx context.Context, req *pkg.ReturnOrderRequest) (*pkg.OrderResponse, error) {
 	input := app.ReturnOrderInput{
 		OrderID: pvz.OrderID(req.GetOrderId()),

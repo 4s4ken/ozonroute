@@ -9,6 +9,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+// GetStatusHistory — обрабатывает gRPC-запрос на отправку истории изменении статуса заказа.
 func (s *OrdersServer) GetStatusHistory(ctx context.Context, req *pkg.GetStatusHistoryRequest) (*pkg.StatusHistoryList, error) {
 	history, err := s.ordersHandler.StatusHistory(ctx, pvz.OrderID(req.OrderId))
 	if err != nil {

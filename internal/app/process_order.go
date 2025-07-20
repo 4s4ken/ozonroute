@@ -27,6 +27,7 @@ type ProcessOrdersOutput struct {
 	Errors    []uint64
 }
 
+// Process — бизнес-логика обработки заказа с параметрами выдачи и возврата от клиента.
 func (s *Service) Process(ctx context.Context, input ProcessOrdersInput) (ProcessOrdersOutput, error) {
 
 	if input.Action != pvz.ActionTypeIssue && input.Action != pvz.ActionTypeReturn {

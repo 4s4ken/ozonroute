@@ -7,6 +7,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// ResizeWorkerPool — обрабатывает gRPC-запрос на изменения количества воркеров в workerpool.
 func (s *OrdersServer) ResizeWorkerPool(ctx context.Context, req *pkg.ResizeWorkerPoolRequest) (*pkg.ResizeWorkerPoolResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "request is nil")

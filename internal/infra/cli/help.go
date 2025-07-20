@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-// HelpCommand выводит список доступных команд.
+// HelpCommand — выводит список доступных команд.
 func HelpCommand() error {
 	fmt.Println(`
 	help

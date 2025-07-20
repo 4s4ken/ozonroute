@@ -20,6 +20,7 @@ var handlerWhitelistWithoutRateLimiter = map[string]struct{}{
 	desc.OrdersService_ReturnOrder_FullMethodName:   {},
 }
 
+// RateLimiterInterceptor — gRPC interceptor, реализующий ограничение частоты запросов.
 func RateLimiterInterceptor(limiter *limiter.Limiter) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		if _, ok := handlerWhitelistWithoutRateLimiter[info.FullMethod]; ok {

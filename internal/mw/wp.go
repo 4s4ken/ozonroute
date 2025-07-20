@@ -6,6 +6,7 @@ import (
 	"google.golang.org/grpc"
 )
 
+// WorkerPoolInterceptor — gRPC interceptor, внедряющий WorkerPool в контекст запроса.
 func WorkerPoolInterceptor(wp workerpool.WorkerPool) grpc.UnaryServerInterceptor {
 	return func(
 		ctx context.Context,

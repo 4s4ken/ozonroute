@@ -10,6 +10,7 @@ import (
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/outbox"
 )
 
+// OutboxWorker — воркер для обработки событий outbox с двухпроходной логикой.
 type OutboxWorker struct {
 	outboxRepo outbox.OutboxRepository
 	producer   prod.Producer
@@ -40,6 +41,7 @@ func (w *OutboxWorker) Run(ctx context.Context) {
 	}
 }
 
+// firstPass — первый проход: перевод событий из CREATED в PROCESSING.
 func (w *OutboxWorker) firstPass(ctx context.Context) {
 	events, err := w.outboxRepo.MsgCreated(ctx, w.batchSize)
 	if err != nil {
@@ -58,6 +60,7 @@ func (w *OutboxWorker) firstPass(ctx context.Context) {
 	}
 }
 
+// secondPass — второй проход: отправка PROCESSING событий и обновление статусов.
 func (w *OutboxWorker) secondPass(ctx context.Context) {
 	events, err := w.outboxRepo.MsgProcessing(ctx, w.batchSize)
 	if err != nil {

@@ -7,6 +7,7 @@ import (
 	"google.golang.org/grpc"
 )
 
+// TraceInterceptor — gRPC interceptor, добавляющий трейсинги от запросов.
 func TraceInterceptor(
 	ctx context.Context,
 	req interface{},

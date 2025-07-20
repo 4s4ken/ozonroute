@@ -67,6 +67,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to create kafka producer: %v", err)
 	}
+	log.Println("Kafka producer started")
 	outboxWorker := worker.NewOutboxWorker(outboxRepo, kafkaProducer, 10)
 	go outboxWorker.Run(ctx)
 

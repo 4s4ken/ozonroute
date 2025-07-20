@@ -13,6 +13,7 @@ import (
 	"time"
 )
 
+// Service — структура бизнес-логики работы с заказами.
 type Service struct {
 	repo       store.OrderRepository
 	nowFn      func() time.Time
@@ -31,11 +32,13 @@ func NewService(repo store.OrderRepository, outboxRepo outbox.OutboxRepository, 
 	}
 }
 
+// ResizeWorkerPool — изменяет количество воркеров в пуле.
 func (s *Service) ResizeWorkerPool(_ context.Context, n int) error {
 	s.wp.Resize(n)
 	return nil
 }
 
+// ProcessActionOrder — обработка действия issue/return к заказу.
 func ProcessActionOrder(order *pvz.Order, action pvz.ActionType, now time.Time) error {
 	switch action {
 	case pvz.ActionTypeIssue:
@@ -57,6 +60,7 @@ func ProcessActionOrder(order *pvz.Order, action pvz.ActionType, now time.Time) 
 	return nil
 }
 
+// GetOrder — проверяет, находится ли заказ в кеше, в ином случае загружает из репозитория.
 func (s *Service) GetOrder(ctx context.Context, orderID pvz.OrderID) (*pvz.Order, error) {
 	key := strconv.FormatUint(uint64(orderID), 10)
 

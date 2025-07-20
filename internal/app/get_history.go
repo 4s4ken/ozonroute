@@ -21,6 +21,7 @@ type OrderHistoryList struct {
 	History []OrderHistory
 }
 
+// OrderHistory — возвращает список изменений статусов заказов.
 func (s *Service) OrderHistory(ctx context.Context) (*OrderHistoryList, error) {
 	ctx, span := tracerpackage.Start(ctx, "Orders_history")
 	defer span.End()
@@ -46,6 +47,7 @@ func (s *Service) OrderHistory(ctx context.Context) (*OrderHistoryList, error) {
 	return &OrderHistoryList{History: result}, nil
 }
 
+// StatusHistory — возвращает список изменений статуса одного заказа.
 func (s *Service) StatusHistory(ctx context.Context, orderID pvz.OrderID) ([]*pvz.StatusChange, error) {
 	tr := otel.Tracer("app.Service")
 	ctx, span := tr.Start(ctx, "Order_status_history")

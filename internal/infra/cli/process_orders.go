@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-// ProcessOrdersCommand функция для выполнения команды process-orders
+// ProcessOrdersCommand — обрабатывает CLI команду на обработку заказа.
 func (h *FileHandler) ProcessOrdersCommand(cmd *cobra.Command, _ []string) error {
 	userID, err := cmd.Flags().GetUint64("user-id")
 	if err != nil {

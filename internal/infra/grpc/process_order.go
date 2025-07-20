@@ -7,7 +7,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// ProcessOrders обрабатывает gRPC-запрос на обработку заказа.
+// ProcessOrders — обрабатывает gRPC-запрос на обработку заказа.
 func (s *OrdersServer) ProcessOrders(ctx context.Context, req *pkg.ProcessOrdersRequest) (*pkg.ProcessResult, error) {
 	input := mapProcessOrdersRequestToInput(req)
 

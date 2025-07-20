@@ -11,6 +11,7 @@ type OrdersListOutput struct {
 	Total  int32
 }
 
+// ListOrders — возвращает список заказов c фильтрами [IN-PVZ, Page & limit, LastN].
 func (s *Service) ListOrders(ctx context.Context, input pvz.ListOptions) (*OrdersListOutput, error) {
 	ctx, span := tracerpackage.Start(ctx, "List_orders")
 	defer span.End()

@@ -9,7 +9,7 @@ import (
 	"gitlab.ozon.dev/gleb_evseev/homework/pkg/workerpool"
 )
 
-// ListReturnsCommand функция для выполнения команды list-returns
+// ListReturnsCommand — обрабатывает CLI команду на вывод списка возвратов.
 func (h *FileHandler) ListReturnsCommand(cmd *cobra.Command, _ []string) error {
 	pagePtr := (*uint64)(nil)
 	if cmd.Flags().Changed("page") {

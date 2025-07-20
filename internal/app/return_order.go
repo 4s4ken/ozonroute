@@ -18,6 +18,7 @@ type ReturnOrderInput struct {
 	OrderID pvz.OrderID
 }
 
+// Return — контроль конкурентности через каналы.
 func (s *Service) Return(ctx context.Context, input ReturnOrderInput) error {
 	wp, ok := workerpool.WorkerPoolFromContext(ctx)
 	if !ok {
@@ -41,6 +42,7 @@ func (s *Service) Return(ctx context.Context, input ReturnOrderInput) error {
 	}
 }
 
+// Return — бизнес-логика возврата заказа курьеру по истечению срока хранения.
 func (s *Service) returnOrder(ctx context.Context, input ReturnOrderInput) error {
 	ctx, span := tracerpackage.Start(ctx, "Return_order")
 	defer span.End()

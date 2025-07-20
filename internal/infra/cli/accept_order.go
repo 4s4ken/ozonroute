@@ -8,6 +8,7 @@ import (
 	"gitlab.ozon.dev/gleb_evseev/homework/pkg/workerpool"
 )
 
+// AcceptOrderCommand — обрабатывает CLI команду на принятия заказа.
 func (h *FileHandler) AcceptOrderCommand(cmd *cobra.Command, _ []string) error {
 	orderID, err := cmd.Flags().GetUint64("order-id")
 	if err != nil || orderID == 0 {

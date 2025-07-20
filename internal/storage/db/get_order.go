@@ -7,6 +7,7 @@ import (
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 )
 
+// GetOrder — получает заказ из БД по orderID.
 func (s *Storage) GetOrder(ctx context.Context, orderID pvz.OrderID) (*pvz.Order, error) {
 	const query = `
 		SELECT order_id, user_id, status, expires_at, weight, price, package_type

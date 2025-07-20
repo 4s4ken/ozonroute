@@ -7,7 +7,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// AcceptOrder обрабатывает gRPC-запрос на приём заказа.
+// AcceptOrder — обрабатывает gRPC-запрос на принятие заказа.
 func (s *OrdersServer) AcceptOrder(ctx context.Context, req *pkg.AcceptOrderRequest) (*pkg.OrderResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "request is nil")

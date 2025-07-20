@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// ListOrders обрабатывает gRPC-запрос на отправку списка заказов.
+// ListOrders — обрабатывает gRPC-запрос на отправку списка заказов.
 func (s *OrdersServer) ListOrders(ctx context.Context, req *pkg.ListOrdersRequest) (*pkg.OrdersList, error) {
 	var lastN *uint64
 	if req.LastN != nil {

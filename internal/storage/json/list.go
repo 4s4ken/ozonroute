@@ -8,6 +8,7 @@ import (
 	"sort"
 )
 
+// ListOrders — возвращает список заказов с фильтрацией, пагинацией и общее количество.
 func (s *Storage) ListOrders(ctx context.Context, options pvz.ListOptions) ([]*pvz.Order, int32, error) {
 	userID := pvz.UserID(options.UserID)
 	userOrders, ok := s.store[userID]
@@ -60,6 +61,7 @@ func (s *Storage) ListOrders(ctx context.Context, options pvz.ListOptions) ([]*p
 	return filtered, int32(len(userOrders)), nil
 }
 
+// ListReturns — возвращает список возвращённых заказов с пагинацией.
 func (s *Storage) ListReturns(ctx context.Context, pagination *pvz.Pagination) ([]*pvz.Order, error) {
 	var returns []*pvz.Order
 	for _, userOrders := range s.store {
@@ -98,6 +100,7 @@ func (s *Storage) ListReturns(ctx context.Context, pagination *pvz.Pagination) (
 	return returns, nil
 }
 
+// GetHistory — возвращает историю статусов всех заказов, отсортированную по времени изменения.
 func (s *Storage) GetHistory(ctx context.Context) ([]*pvz.StatusChange, error) {
 	var result []*pvz.StatusChange
 	for _, userOrders := range s.store {
@@ -112,6 +115,7 @@ func (s *Storage) GetHistory(ctx context.Context) ([]*pvz.StatusChange, error) {
 	return result, nil
 }
 
+// GetStatusHistory - заглушка для json репозитория из-за неэффективности метода.
 func (s *Storage) GetStatusHistory(ctx context.Context, orderID pvz.OrderID) ([]*pvz.StatusChange, error) {
 	return nil, nil
 }

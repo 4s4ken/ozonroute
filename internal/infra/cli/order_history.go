@@ -6,7 +6,7 @@ import (
 	"gitlab.ozon.dev/gleb_evseev/homework/pkg/workerpool"
 )
 
-// OrdersHistoryCommand функция для выполнения команды orders-history
+// OrdersHistoryCommand — обрабатывает CLI команду на вывод списка истории изменений заказов.
 func (h *FileHandler) OrdersHistoryCommand(cmd *cobra.Command, args []string) error {
 	ctx := cmd.Context()
 	_, ok := workerpool.WorkerPoolFromContext(ctx)

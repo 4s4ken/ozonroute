@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+// SaveOrder — сохраняет заказ и записывает изменение статуса в историю.
 func (s *Storage) SaveOrder(ctx context.Context, order *pvz.Order) error {
 	if s.store[order.UserID] == nil {
 		s.store[order.UserID] = make(map[pvz.OrderID]*pvz.Order)

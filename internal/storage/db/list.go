@@ -10,6 +10,7 @@ import (
 	"time"
 )
 
+// ListOrders — возвращает список заказов с фильтрацией, пагинацией и общее количество.
 func (s *Storage) ListOrders(ctx context.Context, options pvz.ListOptions) ([]*pvz.Order, int32, error) {
 	var (
 		whereClauses []string
@@ -81,10 +82,11 @@ func (s *Storage) ListOrders(ctx context.Context, options pvz.ListOptions) ([]*p
 		}
 		orders = append(orders, &o)
 	}
-	
+
 	return orders, total, nil
 }
 
+// ListReturns — возвращает список возвращённых заказов с пагинацией.
 func (s *Storage) ListReturns(ctx context.Context, pagination *pvz.Pagination) ([]*pvz.Order, error) {
 	query := `
 		SELECT order_id, user_id, status, expires_at, weight, price, package_type
@@ -134,6 +136,7 @@ func (s *Storage) ListReturns(ctx context.Context, pagination *pvz.Pagination) (
 	return returns, nil
 }
 
+// GetHistory — возвращает историю статусов всех заказов, отсортированную по времени изменения.
 func (s *Storage) GetHistory(ctx context.Context) ([]*pvz.StatusChange, error) {
 	query := `
 		SELECT order_id, status, changed_at
@@ -159,6 +162,7 @@ func (s *Storage) GetHistory(ctx context.Context) ([]*pvz.StatusChange, error) {
 	return history, nil
 }
 
+// GetStatusHistory — возвращает историю статусов одного заказа, отсортированную по времени изменения.
 func (s *Storage) GetStatusHistory(ctx context.Context, orderID pvz.OrderID) ([]*pvz.StatusChange, error) {
 	const query = `
 		SELECT status, changed_at

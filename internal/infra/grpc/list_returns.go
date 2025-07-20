@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// ListReturns обрабатывает gRPC-запрос на отправку списка вернувшихся заказов.
+// ListReturns — обрабатывает gRPC-запрос на отправку списка вернувшихся заказов.
 func (s *OrdersServer) ListReturns(ctx context.Context, req *pkg.ListReturnsRequest) (*pkg.ReturnsList, error) {
 
 	page := uint64(req.Pagination.Page)

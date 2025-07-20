@@ -10,6 +10,7 @@ import (
 	"sync"
 )
 
+// Симуляция отслеживания событий для Json хранилища.
 type storage struct {
 	mu       sync.Mutex
 	filepath string

@@ -8,7 +8,7 @@ import (
 	"gitlab.ozon.dev/gleb_evseev/homework/pkg/workerpool"
 )
 
-// ReturnOrderCommand функция для выполнения команды return-order
+// ReturnOrderCommand — обрабатывает CLI команду на возвращение заказа.
 func (h *FileHandler) ReturnOrderCommand(cmd *cobra.Command, _ []string) error {
 	orderID, err := cmd.Flags().GetUint64("order-id")
 	if err != nil {

@@ -15,6 +15,7 @@ import (
 	"strconv"
 )
 
+// Accept — контроль конкурентности через каналы.
 func (s *Service) Accept(ctx context.Context, order pvz.OrderCreate) error {
 	wp, ok := workerpool.WorkerPoolFromContext(ctx)
 	if !ok {
@@ -38,6 +39,7 @@ func (s *Service) Accept(ctx context.Context, order pvz.OrderCreate) error {
 	}
 }
 
+// Accept — бизнес-логика принятия и валидации заказа.
 func (s *Service) accept(ctx context.Context, order pvz.OrderCreate) error {
 
 	ctx, span := tracerpackage.Start(ctx, "Accept_order")

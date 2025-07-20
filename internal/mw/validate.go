@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// ValidateInterceptor — gRPC interceptor, проверяющий валидацию запроса.
 func ValidateInterceptor(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
 	if reqV, ok := req.(interface{ ValidateAll() error }); ok {
 		if err := reqV.ValidateAll(); err != nil {

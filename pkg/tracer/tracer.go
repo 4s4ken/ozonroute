@@ -1,3 +1,16 @@
+// Package tracer предоставляет инициализацию и работу с OpenTelemetry трассировкой,
+//
+// Основные возможности:
+//   - Инициализация трассировщика с OTLP-экспортером (InitTracer)
+//   - Создание новых спанов (Start)
+//
+// Использование:
+//
+//	shutdown := tracer.InitTracer(ctx, "app-name", otlpEndpoint)
+//	defer shutdown()
+//
+//	ctx, span := tracer.Start(ctx, "operation")
+//	defer span.End()
 package tracer
 
 import (
@@ -14,6 +27,7 @@ import (
 
 var globalTracer = otel.Tracer("pvz-service")
 
+// InitTracer — инициализирует OpenTelemetry трассировку с OTLP-экспортером по gRPC.
 func InitTracer(ctx context.Context, serviceName, Endpoint string) func() {
 	exp, err := otlptracegrpc.New(ctx,
 		otlptracegrpc.WithInsecure(),

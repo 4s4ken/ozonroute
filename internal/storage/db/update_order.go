@@ -8,6 +8,7 @@ import (
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 )
 
+// UpdateOrder — удаляет заказ и сохраняет новую запись о статусе в истории.
 func (s *Storage) UpdateOrder(ctx context.Context, order *pvz.Order) (err error) {
 	tx, err := s.db.Begin(ctx)
 	if err != nil {

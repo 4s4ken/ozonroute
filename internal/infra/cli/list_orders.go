@@ -7,7 +7,7 @@ import (
 	"gitlab.ozon.dev/gleb_evseev/homework/pkg/workerpool"
 )
 
-// ListOrdersCommand функция для выполнения команды list-orders
+// ListOrdersCommand — обрабатывает CLI команду на вывод списка заказов.
 func (h *FileHandler) ListOrdersCommand(cmd *cobra.Command, _ []string) error {
 	userID, err := cmd.Flags().GetUint64("user-id")
 	if err != nil {

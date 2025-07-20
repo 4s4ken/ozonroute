@@ -7,6 +7,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+// MetricsMW — middleware для сбора метрик HTTP-запросов Prometheus.
 type MetricsMW struct {
 	requestsTotal    *prometheus.CounterVec
 	requestDurations *prometheus.HistogramVec
@@ -32,6 +33,7 @@ func NewMetricsMW() *MetricsMW {
 	}
 }
 
+// Handler — HTTP mw, собирающий метрики по каждому запросу.
 func (m *MetricsMW) Handler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path

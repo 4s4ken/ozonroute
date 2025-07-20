@@ -6,6 +6,7 @@ import (
 	"gitlab.ozon.dev/gleb_evseev/homework/pkg/workerpool"
 )
 
+// ResizeWorkerPoolCommand — обрабатывает CLI команду на изменения количества воркеров в workerpool.
 func (h *FileHandler) ResizeWorkerPoolCommand(cmd *cobra.Command, _ []string) error {
 	n, err := cmd.Flags().GetInt("workers")
 	if err != nil || n < 1 {

@@ -6,6 +6,7 @@ import (
 	"log"
 )
 
+// NewPgxPool — создает подключение к БД.
 func NewPgxPool(ctx context.Context, connString string) *pgxpool.Pool {
 	pool, err := pgxpool.New(ctx, connString)
 	if err != nil {

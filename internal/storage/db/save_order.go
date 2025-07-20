@@ -5,6 +5,7 @@ import (
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 )
 
+// SaveOrder — сохраняет заказ и записывает изменение статуса в историю.
 func (s *Storage) SaveOrder(ctx context.Context, order *pvz.Order) error {
 	tx, err := s.db.Begin(ctx)
 	if err != nil {

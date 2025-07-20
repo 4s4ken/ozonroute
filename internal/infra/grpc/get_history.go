@@ -7,7 +7,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// GetHistory обрабатывает gRPC-запрос на отправку истории заказов
+// GetHistory — обрабатывает gRPC-запрос на отправку истории заказов
 func (s *OrdersServer) GetHistory(ctx context.Context, req *pkg.GetHistoryRequest) (*pkg.OrderHistoryList, error) {
 	domainResp, err := s.ordersHandler.OrderHistory(ctx)
 	if err != nil {

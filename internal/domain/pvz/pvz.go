@@ -14,6 +14,7 @@ type (
 	OrderIDS    []OrderID
 )
 
+// PackageType — параметры упаковки заказов.
 const (
 	NoPackage          PackageType = 0
 	PackageTypeBag     PackageType = 1
@@ -23,6 +24,7 @@ const (
 	PackageTypeBoxTape PackageType = 5
 )
 
+// OrderStatus — параметры статуса заказа.
 const (
 	OrderStatusUnspecified OrderStatus = iota
 	OrderStatusAccepted
@@ -31,12 +33,14 @@ const (
 	OrderStatusDeleted
 )
 
+// ActionType — параметры статуса обработки заказа.
 const (
 	ActionTypeUnspecified ActionType = iota
 	ActionTypeIssue
 	ActionTypeReturn
 )
 
+// OrderCreate — параметры заказа при создании.
 type OrderCreate struct {
 	OrderID   OrderID         `json:"order_id,"`
 	UserID    UserID          `json:"user_id"`
@@ -46,16 +50,21 @@ type OrderCreate struct {
 	Package   *PackageType    `json:"package_type,omitempty"`
 }
 
+// Order — представление заказа с текущим статусом.
 type Order struct {
 	OrderCreate
 	Status     OrderStatus `json:"status"`
 	LastUpdate time.Time   `json:"last_update,omitempty"`
 }
+
+// StatusChange — параметр для отслеживания изменения статуса/истории статусов заказа.
 type StatusChange struct {
 	OrderID OrderID
 	Status  OrderStatus
 	Time    time.Time
 }
+
+// ListOptions — параметры получения списка заказов.
 type ListOptions struct {
 	UserID     uint64
 	InPVZ      bool
@@ -67,12 +76,12 @@ type Pagination struct {
 	Limit *uint64
 }
 
-// IsExpired проверяет, истёк ли срок хранения заказа.
+// IsExpired — проверяет, истёк ли срок хранения заказа.
 func (o *Order) IsExpired(now time.Time) bool {
 	return time.Time(o.ExpiresAt).Before(now)
 }
 
-// IsExpiredForReturn проверяет, истёк ли срок возврата заказа.
+// IsExpiredForReturn — проверяет, истёк ли срок возврата заказа.
 func (o *Order) IsExpiredForReturn(now time.Time) bool {
 	twoDaysAfterExpiry := o.ExpiresAt.Add(48 * time.Hour)
 	return now.After(twoDaysAfterExpiry)
