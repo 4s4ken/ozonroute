@@ -8,7 +8,7 @@ import (
 	buierr "gitlab.ozon.dev/gleb_evseev/homework/internal/domain/errors"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/outbox"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
-	tracerpackage "gitlab.ozon.dev/gleb_evseev/homework/pkg/tracer"
+	"gitlab.ozon.dev/gleb_evseev/homework/pkg/tracer"
 	"gitlab.ozon.dev/gleb_evseev/homework/pkg/workerpool"
 	"strconv"
 )
@@ -44,7 +44,7 @@ func (s *Service) Return(ctx context.Context, input ReturnOrderInput) error {
 
 // Return — бизнес-логика возврата заказа курьеру по истечению срока хранения.
 func (s *Service) returnOrder(ctx context.Context, input ReturnOrderInput) error {
-	ctx, span := tracerpackage.Start(ctx, "Return_order")
+	ctx, span := tracer.Start(ctx, "Return_order")
 	defer span.End()
 
 	now := s.nowFn().UTC()

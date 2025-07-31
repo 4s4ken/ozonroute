@@ -3,7 +3,7 @@ package app
 import (
 	"context"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
-	tracerpackage "gitlab.ozon.dev/gleb_evseev/homework/pkg/tracer"
+	"gitlab.ozon.dev/gleb_evseev/homework/pkg/tracer"
 )
 
 type OrdersListOutput struct {
@@ -13,7 +13,7 @@ type OrdersListOutput struct {
 
 // ListOrders — возвращает список заказов c фильтрами [IN-PVZ, Page & limit, LastN].
 func (s *Service) ListOrders(ctx context.Context, input pvz.ListOptions) (*OrdersListOutput, error) {
-	ctx, span := tracerpackage.Start(ctx, "List_orders")
+	ctx, span := tracer.Start(ctx, "List_orders")
 	defer span.End()
 
 	orders, total, err := s.repo.ListOrders(ctx, input)

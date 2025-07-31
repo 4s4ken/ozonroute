@@ -3,7 +3,7 @@ package app
 import (
 	"context"
 	"fmt"
-	tracerpackage "gitlab.ozon.dev/gleb_evseev/homework/pkg/tracer"
+	"gitlab.ozon.dev/gleb_evseev/homework/pkg/tracer"
 	"go.opentelemetry.io/otel"
 	"sort"
 	"time"
@@ -23,7 +23,7 @@ type OrderHistoryList struct {
 
 // OrderHistory — возвращает список изменений статусов заказов.
 func (s *Service) OrderHistory(ctx context.Context) (*OrderHistoryList, error) {
-	ctx, span := tracerpackage.Start(ctx, "Orders_history")
+	ctx, span := tracer.Start(ctx, "Orders_history")
 	defer span.End()
 
 	rawHistory, err := s.repo.GetHistory(ctx)

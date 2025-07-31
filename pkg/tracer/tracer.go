@@ -28,10 +28,10 @@ import (
 var globalTracer = otel.Tracer("pvz-service")
 
 // InitTracer — инициализирует OpenTelemetry трассировку с OTLP-экспортером по gRPC.
-func InitTracer(ctx context.Context, serviceName, Endpoint string) func() {
+func InitTracer(ctx context.Context, serviceName, endpoint string) func() {
 	exp, err := otlptracegrpc.New(ctx,
 		otlptracegrpc.WithInsecure(),
-		otlptracegrpc.WithEndpoint(Endpoint),
+		otlptracegrpc.WithEndpoint(endpoint),
 		otlptracegrpc.WithDialOption(),
 	)
 	if err != nil {

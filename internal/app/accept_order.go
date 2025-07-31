@@ -9,7 +9,7 @@ import (
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/outbox"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/metrics"
-	tracerpackage "gitlab.ozon.dev/gleb_evseev/homework/pkg/tracer"
+	"gitlab.ozon.dev/gleb_evseev/homework/pkg/tracer"
 	"gitlab.ozon.dev/gleb_evseev/homework/pkg/workerpool"
 	"go.opentelemetry.io/otel/attribute"
 	"strconv"
@@ -42,7 +42,7 @@ func (s *Service) Accept(ctx context.Context, order pvz.OrderCreate) error {
 // Accept — бизнес-логика принятия и валидации заказа.
 func (s *Service) accept(ctx context.Context, order pvz.OrderCreate) error {
 
-	ctx, span := tracerpackage.Start(ctx, "Accept_order")
+	ctx, span := tracer.Start(ctx, "Accept_order")
 	defer span.End()
 
 	span.SetAttributes(

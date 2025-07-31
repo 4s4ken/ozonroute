@@ -9,7 +9,7 @@ import (
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/outbox"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/domain/pvz"
 	"gitlab.ozon.dev/gleb_evseev/homework/internal/metrics"
-	tracerpackage "gitlab.ozon.dev/gleb_evseev/homework/pkg/tracer"
+	"gitlab.ozon.dev/gleb_evseev/homework/pkg/tracer"
 	"gitlab.ozon.dev/gleb_evseev/homework/pkg/workerpool"
 	"go.opentelemetry.io/otel/trace"
 	"strconv"
@@ -37,9 +37,9 @@ func (s *Service) Process(ctx context.Context, input ProcessOrdersInput) (Proces
 	var span trace.Span
 	switch input.Action {
 	case pvz.ActionTypeIssue:
-		ctx, span = tracerpackage.Start(ctx, "Process_issue")
+		ctx, span = tracer.Start(ctx, "Process_issue")
 	case pvz.ActionTypeReturn:
-		ctx, span = tracerpackage.Start(ctx, "Process_return")
+		ctx, span = tracer.Start(ctx, "Process_return")
 	default:
 	}
 	defer span.End()
