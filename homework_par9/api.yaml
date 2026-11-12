@@ -1,0 +1,286 @@
+openapi: 3.0.3
+info:
+  title: API заказов ПВЗ ozonroute
+  version: 1.0.0
+  description: Учебный REST-контракт для операций с заказами в пункте выдачи.
+servers:
+  - url: http://localhost:8080
+tags:
+  - name: Orders
+    description: Заказы пункта выдачи
+paths:
+  /v1/orders:
+    get:
+      tags: [Orders]
+      operationId: listOrders
+      summary: Получить список заказов клиента
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          description: Идентификатор клиента
+          schema:
+            $ref: '#/components/schemas/Identifier'
+        - name: inPvz
+          in: query
+          description: При true вернуть только заказы со статусом ACCEPTED
+          schema:
+            type: boolean
+            default: false
+        - name: page
+          in: query
+          description: Номер страницы, начиная с 1
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: countOnPage
+          in: query
+          description: Количество заказов на странице
+          schema:
+            type: integer
+            minimum: 1
+            default: 20
+      responses:
+        '200':
+          description: Страница заказов, в том числе пустая
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderPage'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+    post:
+      tags: [Orders]
+      operationId: acceptOrder
+      summary: Принять заказ от курьера
+      requestBody:
+        required: true
+        description: Данные заказа для приёмки в ПВЗ
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AcceptOrderRequest'
+      responses:
+        '200':
+          description: Заказ принят в ПВЗ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderStatusResult'
+        '400':
+          description: Неверные данные, срок хранения истёк или вес превышает лимит упаковки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Заказ с указанным идентификатором уже существует
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/orders/{orderId}:
+    parameters:
+      - $ref: '#/components/parameters/OrderId'
+    get:
+      tags: [Orders]
+      operationId: getOrder
+      summary: Получить один заказ по идентификатору
+      responses:
+        '200':
+          description: Карточка заказа
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '404':
+          $ref: '#/components/responses/OrderNotFound'
+    patch:
+      tags: [Orders]
+      operationId: processOrder
+      summary: Выдать заказ клиенту или принять возврат от клиента
+      description: Применяет действие к одному заказу.
+      requestBody:
+        required: true
+        description: Идентификатор клиента и действие с заказом
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProcessOrderRequest'
+      responses:
+        '200':
+          description: Действие выполнено, статус заказа обновлён
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderStatusResult'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '404':
+          $ref: '#/components/responses/OrderNotFound'
+        '409':
+          description: Истёк срок хранения для выдачи или прошло больше 48 часов после срока хранения для возврата от клиента
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/orders/{orderId}/custody:
+    delete:
+      tags: [Orders]
+      operationId: returnOrderToCourier
+      summary: Снять заказ с учёта ПВЗ при возврате курьеру
+      description: Устанавливает статус RETURNED. Карточка заказа сохраняется для последующего просмотра.
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        '200':
+          description: Возврат курьеру оформлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderStatusResult'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '404':
+          $ref: '#/components/responses/OrderNotFound'
+        '409':
+          description: Заказ уже возвращён либо заказ в статусе ACCEPTED и срок хранения истёк
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  parameters:
+    OrderId:
+      name: orderId
+      in: path
+      required: true
+      description: Идентификатор заказа
+      schema:
+        $ref: '#/components/schemas/Identifier'
+  responses:
+    InvalidRequest:
+      description: Идентификатор, параметры запроса или тело не соответствуют формату контракта
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    OrderNotFound:
+      description: Заказ с таким идентификатором не найден
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    Identifier:
+      type: string
+      description: Положительный десятичный uint64, максимум 18446744073709551615. Строка сохраняет точность в JSON.
+      pattern: '^[1-9][0-9]{0,19}$'
+      example: '1024'
+    PackageType:
+      type: string
+      enum: [BAG, BOX, TAPE, BAG_TAPE, BOX_TAPE]
+    OrderStatus:
+      type: string
+      enum: [ACCEPTED, ISSUED, RETURNED, DELETED]
+      description: DELETED зарезервирован для чтения существующих записей с этим статусом.
+    Order:
+      type: object
+      required: [orderId, userId, status, expiresAt, weight, totalPrice]
+      properties:
+        orderId:
+          $ref: '#/components/schemas/Identifier'
+        userId:
+          $ref: '#/components/schemas/Identifier'
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        expiresAt:
+          type: string
+          format: date-time
+        weight:
+          type: number
+          format: float
+          minimum: 0
+        totalPrice:
+          type: number
+          format: float
+          description: Итоговая стоимость с учётом упаковки
+        package:
+          $ref: '#/components/schemas/PackageType'
+    OrderPage:
+      type: object
+      required: [orders, total]
+      properties:
+        orders:
+          type: array
+          items:
+            $ref: '#/components/schemas/Order'
+        total:
+          type: integer
+          format: int32
+          minimum: 0
+          description: Количество заказов клиента с учётом фильтра, до разбиения на страницы
+    AcceptOrderRequest:
+      type: object
+      required: [orderId, userId, expiresAt, weight, price]
+      properties:
+        orderId:
+          $ref: '#/components/schemas/Identifier'
+        userId:
+          $ref: '#/components/schemas/Identifier'
+        expiresAt:
+          type: string
+          format: date-time
+          description: Срок хранения заказа
+        weight:
+          type: number
+          format: float
+          minimum: 0
+          description: Вес заказа в кг. Для пакета максимум 10 кг, для коробки максимум 30 кг. Скотч лимит не меняет.
+        price:
+          type: number
+          format: float
+          description: Стоимость до добавления упаковки
+        package:
+          $ref: '#/components/schemas/PackageType'
+      example:
+        orderId: '1024'
+        userId: '42'
+        expiresAt: '2027-01-15T18:00:00Z'
+        weight: 2.5
+        price: 990
+        package: BOX
+    ProcessOrderRequest:
+      type: object
+      required: [userId, action]
+      properties:
+        userId:
+          $ref: '#/components/schemas/Identifier'
+        action:
+          type: string
+          description: ISSUE - выдать клиенту, RETURN - принять возврат от клиента
+          enum: [ISSUE, RETURN]
+      example:
+        userId: '42'
+        action: ISSUE
+    OrderStatusResult:
+      type: object
+      required: [orderId, status]
+      properties:
+        orderId:
+          $ref: '#/components/schemas/Identifier'
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          example: ORDER_NOT_FOUND
+        message:
+          type: string
+          example: Заказ не найден

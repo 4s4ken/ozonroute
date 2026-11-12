@@ -1,0 +1,453 @@
+openapi: 3.0.3
+info:
+  description: Учебный REST-контракт для операций с заказами в пункте выдачи.
+  title: API заказов ПВЗ ozonroute
+  version: 1.0.0
+servers:
+- url: http://localhost:8080
+tags:
+- description: Заказы пункта выдачи
+  name: Orders
+paths:
+  /v1/orders:
+    get:
+      operationId: listOrders
+      parameters:
+      - description: Идентификатор клиента
+        explode: true
+        in: query
+        name: userId
+        required: true
+        schema:
+          $ref: "#/components/schemas/Identifier"
+        style: form
+      - description: При true вернуть только заказы со статусом ACCEPTED
+        explode: true
+        in: query
+        name: inPvz
+        required: false
+        schema:
+          default: false
+          type: boolean
+        style: form
+      - description: "Номер страницы, начиная с 1"
+        explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 1
+          minimum: 1
+          type: integer
+        style: form
+      - description: Количество заказов на странице
+        explode: true
+        in: query
+        name: countOnPage
+        required: false
+        schema:
+          default: 20
+          minimum: 1
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderPage"
+          description: "Страница заказов, в том числе пустая"
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: "Идентификатор, параметры запроса или тело не соответствуют\
+            \ формату контракта"
+      summary: Получить список заказов клиента
+      tags:
+      - Orders
+    post:
+      operationId: acceptOrder
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AcceptOrderRequest"
+        description: Данные заказа для приёмки в ПВЗ
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderStatusResult"
+          description: Заказ принят в ПВЗ
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: "Неверные данные, срок хранения истёк или вес превышает лим\
+            ит упаковки"
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Заказ с указанным идентификатором уже существует
+      summary: Принять заказ от курьера
+      tags:
+      - Orders
+  /v1/orders/{orderId}:
+    get:
+      operationId: getOrder
+      parameters:
+      - description: Идентификатор заказа
+        explode: false
+        in: path
+        name: orderId
+        required: true
+        schema:
+          $ref: "#/components/schemas/Identifier"
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+          description: Карточка заказа
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: "Идентификатор, параметры запроса или тело не соответствуют\
+            \ формату контракта"
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Заказ с таким идентификатором не найден
+      summary: Получить один заказ по идентификатору
+      tags:
+      - Orders
+    patch:
+      description: Применяет действие к одному заказу.
+      operationId: processOrder
+      parameters:
+      - description: Идентификатор заказа
+        explode: false
+        in: path
+        name: orderId
+        required: true
+        schema:
+          $ref: "#/components/schemas/Identifier"
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProcessOrderRequest"
+        description: Идентификатор клиента и действие с заказом
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderStatusResult"
+          description: "Действие выполнено, статус заказа обновлён"
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: "Идентификатор, параметры запроса или тело не соответствуют\
+            \ формату контракта"
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Заказ с таким идентификатором не найден
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Истёк срок хранения для выдачи или прошло больше 48 часов после
+            срока хранения для возврата от клиента
+      summary: Выдать заказ клиенту или принять возврат от клиента
+      tags:
+      - Orders
+  /v1/orders/{orderId}/custody:
+    delete:
+      description: Устанавливает статус RETURNED. Карточка заказа сохраняется для
+        последующего просмотра.
+      operationId: returnOrderToCourier
+      parameters:
+      - description: Идентификатор заказа
+        explode: false
+        in: path
+        name: orderId
+        required: true
+        schema:
+          $ref: "#/components/schemas/Identifier"
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderStatusResult"
+          description: Возврат курьеру оформлен
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: "Идентификатор, параметры запроса или тело не соответствуют\
+            \ формату контракта"
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Заказ с таким идентификатором не найден
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Заказ уже возвращён либо заказ в статусе ACCEPTED и срок хранения
+            истёк
+      summary: Снять заказ с учёта ПВЗ при возврате курьеру
+      tags:
+      - Orders
+components:
+  parameters:
+    OrderId:
+      description: Идентификатор заказа
+      explode: false
+      in: path
+      name: orderId
+      required: true
+      schema:
+        $ref: "#/components/schemas/Identifier"
+      style: simple
+  responses:
+    InvalidRequest:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+      description: "Идентификатор, параметры запроса или тело не соответствуют фор\
+        мату контракта"
+    OrderNotFound:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+      description: Заказ с таким идентификатором не найден
+  schemas:
+    Identifier:
+      description: "Положительный десятичный uint64, максимум 18446744073709551615.\
+        \ Строка сохраняет точность в JSON."
+      example: "1024"
+      pattern: "^[1-9][0-9]{0,19}$"
+      type: string
+    PackageType:
+      enum:
+      - BAG
+      - BOX
+      - TAPE
+      - BAG_TAPE
+      - BOX_TAPE
+      type: string
+    OrderStatus:
+      description: DELETED зарезервирован для чтения существующих записей с этим статусом.
+      enum:
+      - ACCEPTED
+      - ISSUED
+      - RETURNED
+      - DELETED
+      type: string
+    Order:
+      example:
+        package: BAG
+        orderId: "1024"
+        totalPrice: 6.0274563
+        weight: 0.08008282
+        userId: "1024"
+        expiresAt: 2000-01-23T04:56:07.000+00:00
+        status: ACCEPTED
+      properties:
+        orderId:
+          description: "Положительный десятичный uint64, максимум 18446744073709551615.\
+            \ Строка сохраняет точность в JSON."
+          example: "1024"
+          pattern: "^[1-9][0-9]{0,19}$"
+          type: string
+        userId:
+          description: "Положительный десятичный uint64, максимум 18446744073709551615.\
+            \ Строка сохраняет точность в JSON."
+          example: "1024"
+          pattern: "^[1-9][0-9]{0,19}$"
+          type: string
+        status:
+          $ref: "#/components/schemas/OrderStatus"
+        expiresAt:
+          format: date-time
+          type: string
+        weight:
+          format: float
+          minimum: 0
+          type: number
+        totalPrice:
+          description: Итоговая стоимость с учётом упаковки
+          format: float
+          type: number
+        package:
+          $ref: "#/components/schemas/PackageType"
+      required:
+      - expiresAt
+      - orderId
+      - status
+      - totalPrice
+      - userId
+      - weight
+      type: object
+    OrderPage:
+      example:
+        total: 0
+        orders:
+        - package: BAG
+          orderId: "1024"
+          totalPrice: 6.0274563
+          weight: 0.08008282
+          userId: "1024"
+          expiresAt: 2000-01-23T04:56:07.000+00:00
+          status: ACCEPTED
+        - package: BAG
+          orderId: "1024"
+          totalPrice: 6.0274563
+          weight: 0.08008282
+          userId: "1024"
+          expiresAt: 2000-01-23T04:56:07.000+00:00
+          status: ACCEPTED
+      properties:
+        orders:
+          items:
+            $ref: "#/components/schemas/Order"
+          type: array
+        total:
+          description: "Количество заказов клиента с учётом фильтра, до разбиения\
+            \ на страницы"
+          format: int32
+          minimum: 0
+          type: integer
+      required:
+      - orders
+      - total
+      type: object
+    AcceptOrderRequest:
+      example:
+        orderId: "1024"
+        userId: "42"
+        expiresAt: 2027-01-15T18:00:00Z
+        weight: 2.5
+        price: 990
+        package: BOX
+      properties:
+        orderId:
+          description: "Положительный десятичный uint64, максимум 18446744073709551615.\
+            \ Строка сохраняет точность в JSON."
+          example: "1024"
+          pattern: "^[1-9][0-9]{0,19}$"
+          type: string
+        userId:
+          description: "Положительный десятичный uint64, максимум 18446744073709551615.\
+            \ Строка сохраняет точность в JSON."
+          example: "1024"
+          pattern: "^[1-9][0-9]{0,19}$"
+          type: string
+        expiresAt:
+          description: Срок хранения заказа
+          format: date-time
+          type: string
+        weight:
+          description: "Вес заказа в кг. Для пакета максимум 10 кг, для коробки ма\
+            ксимум 30 кг. Скотч лимит не меняет."
+          format: float
+          minimum: 0
+          type: number
+        price:
+          description: Стоимость до добавления упаковки
+          format: float
+          type: number
+        package:
+          $ref: "#/components/schemas/PackageType"
+      required:
+      - expiresAt
+      - orderId
+      - price
+      - userId
+      - weight
+      type: object
+    ProcessOrderRequest:
+      example:
+        userId: "42"
+        action: ISSUE
+      properties:
+        userId:
+          description: "Положительный десятичный uint64, максимум 18446744073709551615.\
+            \ Строка сохраняет точность в JSON."
+          example: "1024"
+          pattern: "^[1-9][0-9]{0,19}$"
+          type: string
+        action:
+          description: "ISSUE - выдать клиенту, RETURN - принять возврат от клиент\
+            а"
+          enum:
+          - ISSUE
+          - RETURN
+          type: string
+      required:
+      - action
+      - userId
+      type: object
+    OrderStatusResult:
+      example:
+        orderId: "1024"
+        status: ACCEPTED
+      properties:
+        orderId:
+          description: "Положительный десятичный uint64, максимум 18446744073709551615.\
+            \ Строка сохраняет точность в JSON."
+          example: "1024"
+          pattern: "^[1-9][0-9]{0,19}$"
+          type: string
+        status:
+          $ref: "#/components/schemas/OrderStatus"
+      required:
+      - orderId
+      - status
+      type: object
+    Error:
+      example:
+        code: ORDER_NOT_FOUND
+        message: Заказ не найден
+      properties:
+        code:
+          example: ORDER_NOT_FOUND
+          type: string
+        message:
+          example: Заказ не найден
+          type: string
+      required:
+      - code
+      - message
+      type: object
